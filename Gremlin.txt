@@ -65,6 +65,17 @@ Using ogre font from http://www.network-science.de/ascii/ for headings
               |__/                                    
 
 v0.1
-* Basic Game Loop
-* Static Debug Shapes
-* Temporary Camera Movement System via WASD + mouse look by mouse pos being close to the edges of the canvas
+* Inline Shaders
+* Inline Game Script
+	* Basic Game Loop - add reset timer if large time between updates
+	* Temporary Camera Movement System via WASD + mouse look by mouse pos being close to the edges of the canvas
+* External Engine Script
+	* Basic Render Obj at Position
+	* Basic Camera
+	* Static Debug Shapes
+	
+Using LearningWebGL lesson 4 as a basis
+
+v0.2
+* Textures!
+* External Shader Scripts
