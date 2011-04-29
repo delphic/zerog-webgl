@@ -348,7 +348,7 @@
 
 
     function tick() {
-        requestAnimFrame(tick);
+        if(controller.isRunning()) { requestAnimFrame(tick); }
         drawScene();
         animate();
     }
@@ -365,10 +365,41 @@
 
         tick();
     }
+	
+	function _controller() {
+		
+		var running = true;
+		
+		function handlePause() { 
+			if(running) { 
+				running = false; 
+				// TODO: save the control objects
+				var btn = document.getElementById("btnPause").value = "Start"; 
+			} 
+			else { 
+				running = true; 
+				// TODO: when the game timer moves to an object adjust this
+				lastTime = new Date().getTime(); 
+				requestAnimFrame(tick); 
+				var btn = document.getElementById("btnPause").value = "Stop"; 
+			}
+		}
+		
+		function isRunning() { return running; }
+		
+		return { isRunning: isRunning, handlePause: handlePause };
+	}
+	var controller = _controller();
+	
 		</script>
-		<style>html, body { margin: 0; padding: 0; overflow: hidden; }</style>
+		<style>
+			html, body { margin: 0; padding: 0; overflow: hidden; }
+			input { font-size: 16px; margin: 5px 10px; padding: 3px; background: #000; color: #EEE; border: 1px solid #222; }
+			#controls { width: 100%; position: fixed; top: 0; left: 0; background-color: rgba(127,127,127,0.5); z-index: 10; }
+		</style>
 	</head>
 	<body onload="webGLStart();">
+		<div id="controls"><input id="btnPause" type="button" onclick="controller.handlePause();" value="Stop" /></div>
 		<canvas id="gremlinCanvas">Your browser does not support the HTML5 canvas element, consider upgrading. </canvas>
 		<!-- Temporary Full Screen -->
 		<script type="text/javascript">
