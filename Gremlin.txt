@@ -64,6 +64,10 @@ Using ogre font from http://www.network-science.de/ascii/ for headings
 \/    |_|  \___// |\___|\___|\__| \/    |_|\__,_|_| |_|
               |__/                                    
 
+Preparation Work:
+Used WAMP to set up a local server. (Chrome doesn't allow you to make HTTP requests when viewing a file locally)
+Set up Mercurial as a version control system.
+
 v0.1
 * Inline Shaders
 * Inline Game Script

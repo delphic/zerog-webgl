@@ -8,3 +8,12 @@
 //
 // 		Delph 2011
 
+function _Gremlin() {
+
+	function init() {
+	}
+	
+	return { init: init };
+}
+
+var Gremlin = _Gremlin();

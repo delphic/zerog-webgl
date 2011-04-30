@@ -35,8 +35,10 @@
 		<script type="text/javascript" src="gremlin.js"></script>
 		<!-- Game Script -->
 		<script type="text/javascript">
-		   var gl;
+	// To Engine
+	var gl;
 
+	// To Engine
     function initGL(canvas) {
         try {
             gl = canvas.getContext("experimental-webgl");
@@ -49,7 +51,7 @@
         }
     }
 
-
+	// To Engine
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript) {
@@ -88,7 +90,7 @@
 
     var shaderProgram;
 
-    function initShaders() {
+	function initShaders() {
         var fragmentShader = getShader(gl, "shader-fs");
         var vertexShader = getShader(gl, "shader-vs");
 
@@ -113,7 +115,7 @@
         shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
     }
 
-
+	// To Engine
     var mvMatrix = mat4.create();
     var mvMatrixStack = [];
     var pMatrix = mat4.create();
@@ -142,13 +144,14 @@
         return degrees * Math.PI / 180;
     }
 
-
+	// To Engine but should go into a manager
     var pyramidVertexPositionBuffer;
     var pyramidVertexColorBuffer;
     var cubeVertexPositionBuffer;
     var cubeVertexColorBuffer;
     var cubeVertexIndexBuffer;
 
+	// To Engine
     function initBuffers() {
         pyramidVertexPositionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
@@ -284,10 +287,11 @@
         cubeVertexIndexBuffer.numItems = 36;
     }
 
-
+	// Again should be in a manager
     var rPyramid = 0;
     var rCube = 0;
 
+	// To Engine
     function drawScene() {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -339,14 +343,14 @@
         var timeNow = new Date().getTime();
         if (lastTime != 0) {
             var elapsed = timeNow - lastTime;
-
+			
             rPyramid += (90 * elapsed) / 1000.0;
             rCube -= (75 * elapsed) / 1000.0;
         }
         lastTime = timeNow;
     }
 
-
+	// Stay here
     function tick() {
         if(controller.isRunning()) { requestAnimFrame(tick); }
         drawScene();
@@ -355,57 +359,91 @@
 
 
     function webGLStart() {
+		Gremlin.init();
+		// To Engine (init)
         var canvas = document.getElementById("gremlinCanvas");
-        initGL(canvas);
-        initShaders()
+		initGL(canvas);
+        
+		// Shaders are inline so this stays here for now
+		initShaders()
+		
+		// To Engine (init)
         initBuffers();
 
+		// To Engine (init)
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
 
+		// Game Loop stays here
         tick();
     }
 	
 	function _controller() {
-		
+		// TODO: Move pause functions to Engine.
 		var running = true;
+		var windowPaused = false;
 		
 		function handlePause() { 
 			if(running) { 
-				running = false; 
+				_pause();
 				// TODO: save the control objects
 				var btn = document.getElementById("btnPause").value = "Start"; 
 			} 
 			else { 
-				running = true; 
-				// TODO: when the game timer moves to an object adjust this
-				lastTime = new Date().getTime(); 
-				requestAnimFrame(tick); 
+				_unpause();
 				var btn = document.getElementById("btnPause").value = "Stop"; 
 			}
 		}
 		
+		function handleWindowBlur() {
+			if(running) {
+				windowPaused = true;
+				_pause();
+			}
+		}
+		
+		function handleWindowFocus() {
+			if(windowPaused) {
+				windowPaused = false;
+				_unpause();
+			}
+		}		
 		function isRunning() { return running; }
 		
-		return { isRunning: isRunning, handlePause: handlePause };
+		function _pause() { running = false; }
+		// TODO: when the game timer moves to an object adjust this		
+		function _unpause() { running = true; lastTime = new Date().getTime(); requestAnimFrame(tick); }
+		
+		return { isRunning: isRunning, handlePause: handlePause, handleWindowBlur: handleWindowBlur, handleWindowFocus: handleWindowFocus };
 	}
 	var controller = _controller();
 	
+	function fullScreen() {
+		var canvas = document.getElementById("gremlinCanvas");
+		canvas.width = document.width;
+		canvas.height = document.height;
+	}
+	
+	// TODO: move window focus handling to Engine
+	window.onblur = function() { controller.handleWindowBlur(); }
+	window.onfocus = function() { controller.handleWindowFocus(); }
+	// window.onresize = function() { fullScreen(); }
+	
 		</script>
 		<style>
-			html, body { margin: 0; padding: 0; overflow: hidden; }
+			html, body { margin: 0; padding: 0; overflow: hidden; font-family: monospace; }
 			input { font-size: 16px; margin: 5px 10px; padding: 3px; background: #000; color: #EEE; border: 1px solid #222; }
 			#controls { width: 100%; position: fixed; top: 0; left: 0; background-color: rgba(127,127,127,0.5); z-index: 10; }
 		</style>
 	</head>
 	<body onload="webGLStart();">
-		<div id="controls"><input id="btnPause" type="button" onclick="controller.handlePause();" value="Stop" /></div>
+		<div id="controls">
+			<input id="btnPause" type="button" onclick="controller.handlePause();" value="Stop" />
+		</div>
 		<canvas id="gremlinCanvas">Your browser does not support the HTML5 canvas element, consider upgrading. </canvas>
 		<!-- Temporary Full Screen -->
 		<script type="text/javascript">
-			var canvas = document.getElementById("gremlinCanvas");
-			canvas.width = document.width;
-			canvas.height = document.height;
+			fullScreen();
 		</script>
 	</body>
 </html>
