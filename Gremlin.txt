@@ -81,5 +81,6 @@ v0.1
 Using LearningWebGL lesson 4 as a basis
 
 v0.2
-* Textures!
+* Element Buffers
+* Basic Textures
 * External Shader Scripts
