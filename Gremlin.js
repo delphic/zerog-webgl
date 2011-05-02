@@ -10,22 +10,23 @@
 
 function _Gremlin() {
 
-	// Public
+	//				 _     _ _      
+	//	 _ __  _   _| |__ | (_) ___ 
+	//	| '_ \| | | | '_ \| | |/ __|
+	//	| |_) | |_| | |_) | | | (__ 
+	//	| .__/ \__,_|_.__/|_|_|\___|
+	//	|_| 
+
 	function init() {
 		var canvas = document.getElementById("gremlinCanvas");
 		_initGL(canvas);        
 		_initShaders();
-		_initBuffers();
-		
+		_initBuffers();		
 
 		_gl.clearColor(0.0, 0.0, 0.0, 1.0);
         _gl.enable(_gl.DEPTH_TEST);
 	}
 	
-	// Maths Functions
-    function degToRad(degrees) {
-        return degrees * Math.PI / 180;
-    }
 
 	// Draw Scene
     function drawScene() {
@@ -34,10 +35,15 @@ function _Gremlin() {
 
         mat4.perspective(45, _gl.viewportWidth / _gl.viewportHeight, 0.1, 100.0, _pMatrix);
 
+		// Set Camera View
+		mat4.identity(_mvMatrix);
+		// TODO: Add Roll
+        mat4.rotate(_mvMatrix, -degToRad(_playerCamera.pitch), [1, 0, 0]);
+		mat4.rotate(_mvMatrix, -degToRad(_playerCamera.yaw), [0, 1, 0]);
+        mat4.translate(_mvMatrix, [-_playerCamera.x, -_playerCamera.y, -_playerCamera.z]);
+
 		// TODO : Add Render Object Method
 		// Render Object
-        mat4.identity(_mvMatrix);
-
         mat4.translate(_mvMatrix, [-1.5, 0.0, -8.0]);
 
         _mvPushMatrix();
@@ -56,7 +62,7 @@ function _Gremlin() {
         _mvPopMatrix();
 		// End Render Object
 
-		// TODO: Switch to rendering relative to origin rather than last object, these two objects are independant.
+		// TODO: Switch to rendering relative to origin (defined by camera) rather than last object, these two objects are independant.
 		// Render Object
         mat4.translate(_mvMatrix, [3.0, 0.0, 0.0]);
 
@@ -83,7 +89,21 @@ function _Gremlin() {
 		rCube -= (75 * elapsed) / 1000.0;
 	}
 	
-	// TODO: Place in an  array in a manager
+	// Camera Functions
+	function movePlayerCamera(dx,dy,dz) {
+		_playerCamera.moveCamera(dx, dy, dz);
+	}
+	function rotatePlayerCamera(dyaw, dpitch) {
+		_playerCamera.rotateCamera(dyaw, dpitch);
+	}
+	
+	// Maths Functions
+    function degToRad(degrees) {
+        return degrees * Math.PI / 180;
+    }
+
+	
+	// TODO: Place in an array in a manager
     var pyramidVertexPositionBuffer;
     var pyramidVertexColorBuffer;
     var cubeVertexPositionBuffer;
@@ -94,7 +114,13 @@ function _Gremlin() {
     var rPyramid = 0;
     var rCube = 0;	
 	
-	// Private
+	//				_            _       
+	//	 _ __  _ __(_)_   ____ _| |_ ___ 
+	//	| '_ \| '__| \ \ / / _` | __/ _ \
+	//	| |_) | |  | |\ V / (_| | ||  __/
+	//	| .__/|_|  |_| \_/ \__,_|\__\___|
+	//	|_| 
+	
 	// WebGL Obj
 	var _gl;
 	
@@ -104,6 +130,39 @@ function _Gremlin() {
     // Perspective Matrix
 	var _pMatrix = mat4.create();
 
+	// Basic Camera Obj
+	// TODO: Add Roll
+	// TODO: Convert to Matrix - remove Pitch Clamping
+	function camera(x,y,z, yaw, pitch) {
+		this.x = x;
+		this.y = y; 
+		this.z = z;
+		this.yaw = yaw;
+		this.pitch = pitch;
+		
+		this.rotateCamera = rotateCamera;
+		this.moveCamera = moveCamera;
+		
+		// TODO: Add rotate around axis function
+		function rotateCamera(dyaw, dpitch) {
+			this.yaw += dyaw;
+			this.pitch += dpitch;
+			// Pitch Clamp
+			if (this.pitch > 89.9) this.pitch = 89.8;
+			else if (this.pitch < -89.9) this.pitch = 89.8;
+		}
+		function moveCamera(dx,dy,dz) {
+			var syaw = Math.sin(degToRad(this.yaw));
+			var cyaw = Math.cos(degToRad(this.yaw));
+			
+			this.x += dz*syaw+dx*cyaw;
+			this.z += -dx*syaw+dz*cyaw;
+			this.y += dy; // TODO: Implement Unfixed Up Axis
+		}
+	}
+	
+	var _playerCamera = new camera(0,0,5, 0, 0);
+	
 	// Init functions
     function _initGL(canvas) {
         try {
@@ -276,7 +335,7 @@ function _Gremlin() {
         _gl.uniformMatrix4fv(_shaderProgram.mvMatrixUniform, false, _mvMatrix);
     }
 	
-		// Shader Code
+	// Shader Code
 	// TODO: Move programs to a manager in render
 	// TODO: Move shader specific stuff to it's own JS file
 	var _shaderProgram;	
@@ -341,8 +400,20 @@ function _Gremlin() {
         _shaderProgram.mvMatrixUniform = _gl.getUniformLocation(_shaderProgram, "uMVMatrix");
     }	
 	
-	// Return
-	return { init: init, drawScene: drawScene, animate: animate, degToRad: degToRad };
+	//	 _                     _ _           
+	//	| |__   __ _ _ __   __| | | ___  ___ 
+	//	| '_ \ / _` | '_ \ / _` | |/ _ \/ __|
+	//	| | | | (_| | | | | (_| | |  __/\__ \
+	//	|_| |_|\__,_|_| |_|\__,_|_|\___||___/
+
+	return { 
+		init: 				init, 
+		drawScene: 			drawScene, 
+		animate: 			animate,
+		movePlayerCamera:	movePlayerCamera,
+		rotatePlayerCamera:	rotatePlayerCamera,
+		degToRad: 			degToRad 
+	};
 }
 
 var Gremlin = _Gremlin();
