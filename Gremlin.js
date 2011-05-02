@@ -42,51 +42,15 @@ function _Gremlin() {
 		mat4.rotate(_mvMatrix, -degToRad(_playerCamera.yaw), [0, 1, 0]);
         mat4.translate(_mvMatrix, [-_playerCamera.x, -_playerCamera.y, -_playerCamera.z]);
 
-		// TODO : Add Render Object Method
-		// Render Object
-        mat4.translate(_mvMatrix, [-1.5, 0.0, -8.0]);
-
-        _mvPushMatrix();
-        mat4.rotate(_mvMatrix, degToRad(rPyramid), [0, 1, 0]);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
-        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, pyramidVertexPositionBuffer.itemSize, _gl.FLOAT, false, 0, 0);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexColorBuffer);
-        _gl.vertexAttribPointer(_shaderProgram.vertexColorAttribute, pyramidVertexColorBuffer.itemSize, _gl.FLOAT, false, 0, 0);
-
-        _setMatrixUniforms();
-		// NB: Debug objects to be drawn depedent on flag (render as - wireframe or solid)
-        _gl.drawArrays(_gl.TRIANGLES, 0, pyramidVertexPositionBuffer.numItems);
-
-        _mvPopMatrix();
-		// End Render Object
-
-		// TODO: Switch to rendering relative to origin (defined by camera) rather than last object, these two objects are independant.
-		// Render Object
-        mat4.translate(_mvMatrix, [3.0, 0.0, 0.0]);
-
-        _mvPushMatrix();
-        mat4.rotate(_mvMatrix, degToRad(rCube), [1, 1, 1]);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, _gl.FLOAT, false, 0, 0);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexColorBuffer);
-        _gl.vertexAttribPointer(_shaderProgram.vertexColorAttribute, cubeVertexColorBuffer.itemSize, _gl.FLOAT, false, 0, 0);
-
-        _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-        _setMatrixUniforms();
-        _gl.drawElements(_gl.TRIANGLES, cubeVertexIndexBuffer.numItems, _gl.UNSIGNED_SHORT, 0);
-
-        _mvPopMatrix();
-		// End Render Object
+		// TODO: Use Manager
+		_renderObject(pyramid);
+		_renderObject(cube);
     }
 	
 	// Animate Function
 	function animate(elapsed) {
-		rPyramid += (90 * elapsed) / 1000.0;
-		rCube -= (75 * elapsed) / 1000.0;
+		pyramid.rotate( ( (180 * elapsed) / 1000.0), 0, 1, 0);
+		cube.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1);
 	}
 	
 	// Camera Functions
@@ -102,17 +66,6 @@ function _Gremlin() {
         return degrees * Math.PI / 180;
     }
 
-	
-	// TODO: Place in an array in a manager
-    var pyramidVertexPositionBuffer;
-    var pyramidVertexColorBuffer;
-    var cubeVertexPositionBuffer;
-    var cubeVertexColorBuffer;
-    var cubeVertexIndexBuffer;
-	
-	// Again should be in a manager
-    var rPyramid = 0;
-    var rCube = 0;	
 	
 	//				_            _       
 	//	 _ __  _ __(_)_   ____ _| |_ ___ 
@@ -163,6 +116,49 @@ function _Gremlin() {
 	
 	var _playerCamera = new camera(0,0,5, 0, 0);
 	
+	// Game Object Obj
+	function gameObject(x,y,z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		
+		this.rotation = mat4.create();
+		mat4.identity(this.rotation);
+		
+		this.buffers = [];
+		
+		this.move = move;
+		this.setPosition = setPosition;
+		this.rotate = rotate;
+		this.setRotation = setRotation;
+		this.assignBuffer = assignBuffer;
+		this.useIndices = false;
+		
+		function setPosition(x,y,z) {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+		function move(dx, dy, dz) {
+			this.x += dx;
+			this.y += dy;
+			this.z += dz;
+		}
+		function rotate(amount, X, Y, Z) {
+			mat4.rotate(this.rotation, degToRad(amount), [X, Y, Z]);
+		}
+		function setRotation(yaw, pitch, roll) {
+			mat4.identity(this.rotation);
+			// TODO: Check order of rotations
+			mat4.rotate(this.rotation, degToRad(yaw), [0,1,0]);
+			mat4.rotate(this.rotation, degToRad(pitch), [1,0,0]);
+			mat4.rotate(this.rotation, degToRad(roll), [0,0,0]);
+		}
+		function assignBuffer(name, buffer) {
+			this.buffers[name] = buffer;
+		}
+	}
+	
 	// Init functions
     function _initGL(canvas) {
         try {
@@ -176,12 +172,15 @@ function _Gremlin() {
         }
     }
 	
+	// TODO: Place in an array in a manager
+	var pyramid = new gameObject(-1.5,0,-8.0);
+	var cube = new gameObject(1.5,0,-8.0);
+	
 	// TODO: Alter to use manager
 	// Vertices for Debug Shapes to be stored in engine
 	// Debug shapes to have a single colour
-	// TODO: Include element buffers
     function _initBuffers() {
-        pyramidVertexPositionBuffer = _gl.createBuffer();
+        var pyramidVertexPositionBuffer = _gl.createBuffer();
         _gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
         var vertices = [
             // Front face
@@ -207,8 +206,10 @@ function _Gremlin() {
         _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
         pyramidVertexPositionBuffer.itemSize = 3;
         pyramidVertexPositionBuffer.numItems = 12;
+		
+		pyramid.assignBuffer("vertexPosition", pyramidVertexPositionBuffer);
 
-        pyramidVertexColorBuffer = _gl.createBuffer();
+        var pyramidVertexColorBuffer = _gl.createBuffer();
         _gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexColorBuffer);
         var colors = [
             // Front face
@@ -235,8 +236,9 @@ function _Gremlin() {
         pyramidVertexColorBuffer.itemSize = 4;
         pyramidVertexColorBuffer.numItems = 12;
 
+		pyramid.assignBuffer("vertexColor", pyramidVertexColorBuffer);
 
-        cubeVertexPositionBuffer = _gl.createBuffer();
+        var cubeVertexPositionBuffer = _gl.createBuffer();
         _gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
         vertices = [
             // Front face
@@ -278,8 +280,10 @@ function _Gremlin() {
         _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
         cubeVertexPositionBuffer.itemSize = 3;
         cubeVertexPositionBuffer.numItems = 24;
+		
+		cube.assignBuffer("vertexPosition", cubeVertexPositionBuffer);
 
-        cubeVertexColorBuffer = _gl.createBuffer();
+        var cubeVertexColorBuffer = _gl.createBuffer();
         _gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexColorBuffer);
         colors = [
             [1.0, 0.0, 0.0, 1.0], // Front face
@@ -299,8 +303,10 @@ function _Gremlin() {
         _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(unpackedColors), _gl.STATIC_DRAW);
         cubeVertexColorBuffer.itemSize = 4;
         cubeVertexColorBuffer.numItems = 24;
-
-        cubeVertexIndexBuffer = _gl.createBuffer();
+		
+		cube.assignBuffer("vertexColor", cubeVertexColorBuffer);
+		
+        var cubeVertexIndexBuffer = _gl.createBuffer();
         _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
         var cubeVertexIndices = [
             0, 1, 2,      0, 2, 3,    // Front face
@@ -313,7 +319,42 @@ function _Gremlin() {
         _gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), _gl.STATIC_DRAW);
         cubeVertexIndexBuffer.itemSize = 1;
         cubeVertexIndexBuffer.numItems = 36;
+		
+		cube.assignBuffer("vertexIndex", cubeVertexIndexBuffer);
+		cube.useIndices = true; 
     }
+
+	// Render Game Object
+	function _renderObject(object) {
+		_mvPushMatrix();
+		mat4.translate(_mvMatrix, [object.x, object.y, object.z]);
+        
+		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
+
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexPosition);
+        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, object.buffers.vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
+
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexColor);
+        _gl.vertexAttribPointer(_shaderProgram.vertexColorAttribute, object.buffers.vertexColor.itemSize, _gl.FLOAT, false, 0, 0);
+
+		if (object.useIndices) {
+			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cube.buffers.vertexIndex);
+		}
+		
+		// TODO: Add Textures!
+		
+        _setMatrixUniforms();
+		
+		// TODO: Debug objects to be drawn depedent on flag (render as - wireframe or solid)
+		// Should be flag on rendering engine?
+        if(object.useIndices) {
+			_gl.drawElements(_gl.TRIANGLES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+		}
+		else {
+			_gl.drawArrays(_gl.TRIANGLES, 0, object.buffers.vertexPosition.numItems);
+		}
+        _mvPopMatrix();
+	}
 	
 	// Matrix Functions - Stack functions and Set Shader Uniforms
 	function _mvPushMatrix() {

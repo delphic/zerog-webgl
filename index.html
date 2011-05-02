@@ -44,33 +44,40 @@
             var elapsed = timeNow - lastTime;
 			Gremlin.animate(elapsed);
 			
+			
+			// Handle Input
+			// TODO: Separate into function
+			// TODO: game state variable... switch on this to control handling of input e.g. Menus
+			// TODO: Should not trigger on overlays.
+			// BUG: Keys get 'stuck down'
 			var dyaw, dpitch, dx, dz;
 			dyaw = 0.05 * elapsed * ((canvas.width*0.5)-xPos)/(0.5*canvas.width);
-			dpitch = 0.025 * elapsed * ((canvas.height*0.5)-yPos)/(0.5*canvas.height);
+			dpitch = 0.05 * elapsed * ((canvas.height*0.5)-yPos)/(0.5*canvas.height);
 			if (mouseDown) Gremlin.rotatePlayerCamera(dyaw, dpitch);
 			
 			if (currentlyPressedKeys[37] || currentlyPressedKeys[65]) {
 				// Left cursor key or A
 				// Strafe Left
-				dx = -0.003 * elapsed;
+				dx = -0.005 * elapsed;
 			} 
 			else if (currentlyPressedKeys[39] || currentlyPressedKeys[68]) {
 				// Right cursor key or D
 				// Strafe Right
-				dx = 0.003  * elapsed;
+				dx = 0.005  * elapsed;
 			}
 			else dx = 0;
 
 			if (currentlyPressedKeys[38] || currentlyPressedKeys[87]) {
 				// Up cursor key or W
 				// Move Forward
-				dz = -0.003  * elapsed;
+				dz = -0.005  * elapsed;
 			} else if (currentlyPressedKeys[40] || currentlyPressedKeys[83]) {
 				// Down cursor key or S
 				// Move Backward
-				dz = 0.003  * elapsed;
-			} 
+				dz = 0.005  * elapsed;
+			} 			
 			else dz = 0;
+			// TODO: Fix diagonal movement speed
 			Gremlin.movePlayerCamera(dx,0,dz);
         }
         lastTime = timeNow;
@@ -110,6 +117,7 @@
 		yPos = event.pageY;
 	}
 	function handleMouseDown(event) {
+		// TODO: Add vars for middle and right
 		// 0 = left, 1 = middle, 2 = right
 		if (!event.button) { mouseDown = true; }
 	}
@@ -172,15 +180,18 @@
 		<style>
 			html, body { margin: 0; padding: 0; overflow: hidden; font-family: monospace; }
 			input { font-size: 16px; margin: 5px 10px; padding: 3px; background: #000; color: #EEE; border: 1px solid #222; }
-			#controls { width: 100%; position: fixed; top: 0; left: 0; background-color: rgba(127,127,127,0.5); z-index: 10; }
+			canvas { cursor: crosshair; }
+			#controls { width: 100%; position: fixed; top: 0; left: 0; background-color: rgba(127,127,127,0.5); z-index: 10; cursor: default; }
 		</style>
 	</head>
 	<body onload="webGLStart();">
 		<div id="controls">
 			<input id="btnPause" type="button" onclick="controller.handlePause();" value="Stop" />
+			<!-- TODO: Add spawn debug solid -->
 		</div>
+		<!-- TODO: add inital screen telling you controls -->
 		<canvas id="gremlinCanvas">Your browser does not support the HTML5 canvas element, consider upgrading. </canvas>
-		<!-- Temporary Full Screen -->
+		<!-- Temporary Full Screen, TODO: add to controls -->
 		<script type="text/javascript">
 			fullScreen();
 		</script>
