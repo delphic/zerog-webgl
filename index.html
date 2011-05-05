@@ -42,7 +42,10 @@
         var timeNow = new Date().getTime();
         if (lastTime != 0) {
             var elapsed = timeNow - lastTime;
-			Gremlin.animate(elapsed);
+			
+			// Animate Objects - TODO: Use manager
+			gameObjects["pyramid"].rotate( ( (180 * elapsed) / 1000.0), 0, 1, 0);
+			gameObjects["cube"].rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1);
 			
 			
 			// Handle Input
@@ -85,13 +88,79 @@
 
     function tick() {
         if(controller.isRunning()) { requestAnimFrame(tick); }
-        Gremlin.drawScene();
+
+		// Render Scene
+		// TODO: Make separate function
+        Gremlin.prepareScene();
+		// TODO: Use Manager
+		Gremlin.renderObject(gameObjects["pyramid"]);
+		Gremlin.renderObject(gameObjects["cube"]);
         animate();
     }
 
-
+	// Game Objects Array
+	var gameObjects = [];
+	
+	// Game Object Obj
+	function gameObject(x,y,z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		
+		this.rotation = mat4.create();
+		mat4.identity(this.rotation);
+		
+		this.buffers = [];
+		
+		this.move = move;
+		this.setPosition = setPosition;
+		this.rotate = rotate;
+		this.setRotation = setRotation;
+		this.assignBuffer = assignBuffer;
+		this.useIndices = false;
+		
+		function setPosition(x,y,z) {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+		function move(dx, dy, dz) {
+			this.x += dx;
+			this.y += dy;
+			this.z += dz;
+		}
+		function rotate(amount, X, Y, Z) {
+			mat4.rotate(this.rotation, Gremlin.degToRad(amount), [X, Y, Z]);
+		}
+		function setRotation(yaw, pitch, roll) {
+			mat4.identity(this.rotation);
+			// TODO: Check order of rotations
+			mat4.rotate(this.rotation, Gremlin.degToRad(yaw), [0,1,0]);
+			mat4.rotate(this.rotation, Gremlin.degToRad(pitch), [1,0,0]);
+			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,0]);
+		}
+		function assignBuffer(name, buffer) {
+			this.buffers[name] = buffer;
+		}
+	}
+	
+	// Game Init
+	function gameInit() {
+		// TODO: Place array in a manager
+		var pyramid = new gameObject(-1.5,0,-8.0);
+		var cube = new gameObject(1.5,0,-8.0);
+		// TODO: Make per object and again use manager
+		Gremlin.createDebugBuffers(pyramid, "pyramid");
+		Gremlin.createDebugBuffers(cube, "sphere");
+		gameObjects["pyramid"] = pyramid;
+		gameObjects["cube"] = cube;
+	}
+	
+	// WebGL Start
+	
     function webGLStart() {
 		Gremlin.init();
+		gameInit();
         tick();
 		
 		document.onkeydown = handleKeyDown;
@@ -100,6 +169,8 @@
 		document.onmousedown = handleMouseDown;
 		document.onmouseup = handleMouseUp;
     }
+	
+	// Input Handling
 	
 	var xPos, yPos;
 	var currentlyPressedKeys = {};
@@ -124,6 +195,8 @@
 	function handleMouseUp(event) {
 		if (!event.button) { mouseDown = false; }
 	}
+	
+	// Controller Bar
 	
 	function _controller() {
 		// TODO: Move pause functions to Engine.

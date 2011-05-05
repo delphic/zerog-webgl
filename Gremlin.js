@@ -5,7 +5,7 @@
 //	\____/|_|  \___|_| |_| |_|_|_|_| |_|  \___|_| |_|\__, |_|_| |_|\___|
 //													 |___/             
 // 		A simultaneous learning WebGL & JavaScript Experiment!
-//
+//		v0.1
 // 		Delph 2011
 
 function _Gremlin() {
@@ -21,15 +21,15 @@ function _Gremlin() {
 		var canvas = document.getElementById("gremlinCanvas");
 		_initGL(canvas);        
 		_initShaders();
-		_initBuffers();		
 
 		_gl.clearColor(0.0, 0.0, 0.0, 1.0);
         _gl.enable(_gl.DEPTH_TEST);
 	}
 	
 
-	// Draw Scene
-    function drawScene() {
+	// Prepare Scene - Clears View, and sets perspective and camera 
+	// TODO: Should separate this into several functions
+    function prepareScene() {
         _gl.viewport(0, 0, _gl.viewportWidth, _gl.viewportHeight);
         _gl.clear(_gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT);
 
@@ -41,16 +41,295 @@ function _Gremlin() {
         mat4.rotate(_mvMatrix, -degToRad(_playerCamera.pitch), [1, 0, 0]);
 		mat4.rotate(_mvMatrix, -degToRad(_playerCamera.yaw), [0, 1, 0]);
         mat4.translate(_mvMatrix, [-_playerCamera.x, -_playerCamera.y, -_playerCamera.z]);
-
-		// TODO: Use Manager
-		_renderObject(pyramid);
-		_renderObject(cube);
     }
 	
-	// Animate Function
-	function animate(elapsed) {
-		pyramid.rotate( ( (180 * elapsed) / 1000.0), 0, 1, 0);
-		cube.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1);
+	// Render Game Object
+	function renderObject(object) {
+		_mvPushMatrix();
+		mat4.translate(_mvMatrix, [object.x, object.y, object.z]);
+        
+		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
+
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexPosition);
+        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, object.buffers.vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
+
+		if(object.buffers.vertexColor) {
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexColor);
+			_gl.vertexAttribPointer(_shaderProgram.vertexColorAttribute, object.buffers.vertexColor.itemSize, _gl.FLOAT, false, 0, 0);
+		}
+		if (object.useIndices) {
+			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, object.buffers.vertexIndex);
+		}
+		
+		// TODO: Add Textures!
+		
+        _setMatrixUniforms();
+		
+		// TODO: Debug objects to be drawn depedent on flag (render as - wireframe or solid)
+		// Should be flag on rendering engine?
+        if(object.useIndices) {
+			_gl.drawElements(_gl.TRIANGLES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+		}
+		else {
+			_gl.drawArrays(_gl.TRIANGLES, 0, object.buffers.vertexPosition.numItems);
+		}
+        _mvPopMatrix();
+	}
+	
+	// TODO: Should have an init buffer for object method - manager for objects in game code
+	// Debug shapes vertex info stored in engine
+	// Debug shapes to have a single colour
+    function createDebugBuffers(object, objectType) {
+		if (objectType === "pyramid") {
+			var pyramidVertexPositionBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
+			var vertices = [
+				// Front face
+				 0.0,  1.0,  0.0,
+				-1.0, -1.0,  1.0,
+				 1.0, -1.0,  1.0,
+
+				// Right face
+				 0.0,  1.0,  0.0,
+				 1.0, -1.0,  1.0,
+				 1.0, -1.0, -1.0,
+
+				// Back face
+				 0.0,  1.0,  0.0,
+				 1.0, -1.0, -1.0,
+				-1.0, -1.0, -1.0,
+
+				// Left face
+				 0.0,  1.0,  0.0,
+				-1.0, -1.0, -1.0,
+				-1.0, -1.0,  1.0
+			];
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+			pyramidVertexPositionBuffer.itemSize = 3;
+			pyramidVertexPositionBuffer.numItems = 12;
+			
+			object.assignBuffer("vertexPosition", pyramidVertexPositionBuffer);
+
+			var pyramidVertexColorBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexColorBuffer);
+			var colors = [
+				// Front face
+				1.0, 0.0, 0.0, 1.0,
+				0.0, 1.0, 0.0, 1.0,
+				0.0, 0.0, 1.0, 1.0,
+
+				// Right face
+				1.0, 0.0, 0.0, 1.0,
+				0.0, 0.0, 1.0, 1.0,
+				0.0, 1.0, 0.0, 1.0,
+
+				// Back face
+				1.0, 0.0, 0.0, 1.0,
+				0.0, 1.0, 0.0, 1.0,
+				0.0, 0.0, 1.0, 1.0,
+
+				// Left face
+				1.0, 0.0, 0.0, 1.0,
+				0.0, 0.0, 1.0, 1.0,
+				0.0, 1.0, 0.0, 1.0
+			];
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(colors), _gl.STATIC_DRAW);
+			pyramidVertexColorBuffer.itemSize = 4;
+			pyramidVertexColorBuffer.numItems = 12;
+
+			object.assignBuffer("vertexColor", pyramidVertexColorBuffer);
+		}
+		else if (objectType === "cube"){
+			var cubeVertexPositionBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+			vertices = [
+				// Front face
+				-1.0, -1.0,  1.0,
+				 1.0, -1.0,  1.0,
+				 1.0,  1.0,  1.0,
+				-1.0,  1.0,  1.0,
+
+				// Back face
+				-1.0, -1.0, -1.0,
+				-1.0,  1.0, -1.0,
+				 1.0,  1.0, -1.0,
+				 1.0, -1.0, -1.0,
+
+				// Top face
+				-1.0,  1.0, -1.0,
+				-1.0,  1.0,  1.0,
+				 1.0,  1.0,  1.0,
+				 1.0,  1.0, -1.0,
+
+				// Bottom face
+				-1.0, -1.0, -1.0,
+				 1.0, -1.0, -1.0,
+				 1.0, -1.0,  1.0,
+				-1.0, -1.0,  1.0,
+
+				// Right face
+				 1.0, -1.0, -1.0,
+				 1.0,  1.0, -1.0,
+				 1.0,  1.0,  1.0,
+				 1.0, -1.0,  1.0,
+
+				// Left face
+				-1.0, -1.0, -1.0,
+				-1.0, -1.0,  1.0,
+				-1.0,  1.0,  1.0,
+				-1.0,  1.0, -1.0
+			];
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+			cubeVertexPositionBuffer.itemSize = 3;
+			cubeVertexPositionBuffer.numItems = 24;
+			
+			object.assignBuffer("vertexPosition", cubeVertexPositionBuffer);
+
+			var cubeVertexColorBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexColorBuffer);
+			colors = [
+				[1.0, 0.0, 0.0, 1.0], // Front face
+				[1.0, 1.0, 0.0, 1.0], // Back face
+				[0.0, 1.0, 0.0, 1.0], // Top face
+				[1.0, 0.5, 0.5, 1.0], // Bottom face
+				[1.0, 0.0, 1.0, 1.0], // Right face
+				[0.0, 0.0, 1.0, 1.0]  // Left face
+			];
+			var unpackedColors = [];
+			for (var i in colors) {
+				var color = colors[i];
+				for (var j=0; j < 4; j++) {
+					unpackedColors = unpackedColors.concat(color);
+				}
+			}
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(unpackedColors), _gl.STATIC_DRAW);
+			cubeVertexColorBuffer.itemSize = 4;
+			cubeVertexColorBuffer.numItems = 24;
+		
+			object.assignBuffer("vertexColor", cubeVertexColorBuffer);
+		
+			var cubeVertexIndexBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
+			var cubeVertexIndices = [
+				0, 1, 2,      0, 2, 3,    // Front face
+				4, 5, 6,      4, 6, 7,    // Back face
+				8, 9, 10,     8, 10, 11,  // Top face
+				12, 13, 14,   12, 14, 15, // Bottom face
+				16, 17, 18,   16, 18, 19, // Right face
+				20, 21, 22,   20, 22, 23  // Left face
+			];
+			_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), _gl.STATIC_DRAW);
+			cubeVertexIndexBuffer.itemSize = 1;
+			cubeVertexIndexBuffer.numItems = 36;
+			
+			object.assignBuffer("vertexIndex", cubeVertexIndexBuffer);
+			object.useIndices = true; 
+		}
+		else if (objectType==="sphere") {
+			// TODO: Ability to set latitude and longitude in function
+			// - will require a number of createDebugBuffer functions
+			// Method taken from Lesson 11 of learningWebGL.com
+			var latitudeBands = 30;
+			var longitudeBands = 30;
+			var radius = 1;
+
+			var vertexPositionData = [];
+			var normalData = [];
+			var textureCoordData = [];
+			for (var latNumber=0; latNumber <= latitudeBands; latNumber++) {
+				var theta = latNumber * Math.PI / latitudeBands;
+				var sinTheta = Math.sin(theta);
+				var cosTheta = Math.cos(theta);
+
+				for (var longNumber=0; longNumber <= longitudeBands; longNumber++) {
+					var phi = longNumber * 2 * Math.PI / longitudeBands;
+					var sinPhi = Math.sin(phi);
+					var cosPhi = Math.cos(phi);
+
+					var x = cosPhi * sinTheta;
+					var y = cosTheta;
+					var z = sinPhi * sinTheta;
+					var u = 1 - (longNumber / longitudeBands);
+					var v = 1 - (latNumber / latitudeBands);
+
+					normalData.push(x);
+					normalData.push(y);
+					normalData.push(z);
+					textureCoordData.push(u);
+					textureCoordData.push(v);
+					vertexPositionData.push(radius * x);
+					vertexPositionData.push(radius * y);
+					vertexPositionData.push(radius * z);
+				}
+			}
+
+			var indexData = [];
+			for (var latNumber=0; latNumber < latitudeBands; latNumber++) {
+				for (var longNumber=0; longNumber < longitudeBands; longNumber++) {
+					var first = (latNumber * (longitudeBands + 1)) + longNumber;
+					var second = first + longitudeBands + 1;
+					indexData.push(first);
+					indexData.push(second);
+					indexData.push(first + 1);
+
+					indexData.push(second);
+					indexData.push(second + 1);
+					indexData.push(first + 1);
+				}
+			}
+
+			// TODO: Include textures (although not for debug shapes or at least not yet) and normals (yes for debug shapes too)!
+			/*var sphereVertexNormalBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexNormalBuffer);
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(normalData), _gl.STATIC_DRAW);
+			sphereVertexNormalBuffer.itemSize = 3;
+			sphereVertexNormalBuffer.numItems = normalData.length / 3;
+
+			var sphereVertexTextureCoordBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexTextureCoordBuffer);
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordData), _gl.STATIC_DRAW);
+			sphereVertexTextureCoordBuffer.itemSize = 2;
+			sphereVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
+			*/
+			
+			var sphereVertexPositionBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexPositionBuffer);
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexPositionData), _gl.STATIC_DRAW);
+			sphereVertexPositionBuffer.itemSize = 3;
+			sphereVertexPositionBuffer.numItems = vertexPositionData.length / 3;
+			
+			object.assignBuffer("vertexPosition", sphereVertexPositionBuffer);
+			
+			var sphereVertexColorBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexColorBuffer);
+			colors = []
+			// Weyhey! Random Stripey Sphere!
+			for (var i=0; i < sphereVertexPositionBuffer.numItems; i++) {
+				if(i%3 === 0) {
+					colors = colors.concat([1.0, 0.0, 0.0, 1.0]);
+				}
+				else if (i%3 === 1){
+					colors = colors.concat([0.0, 0.0, 1.0, 1.0]);
+				}
+				else {
+					colors = colors.concat([0.0, 1.0, 0.0, 1.0]);
+				}
+			}
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(colors), _gl.STATIC_DRAW);
+			sphereVertexColorBuffer.itemSize = 4;
+			sphereVertexColorBuffer.numItems = sphereVertexPositionBuffer.numItems;
+			
+			object.assignBuffer("vertexColor", sphereVertexColorBuffer);
+
+			var sphereVertexIndexBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer);
+			_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), _gl.STATIC_DRAW);
+			sphereVertexIndexBuffer.itemSize = 1;
+			sphereVertexIndexBuffer.numItems = indexData.length;
+			
+			object.assignBuffer("vertexIndex", sphereVertexIndexBuffer);
+			object.useIndices = true; 
+		}
 	}
 	
 	// Camera Functions
@@ -116,49 +395,6 @@ function _Gremlin() {
 	
 	var _playerCamera = new camera(0,0,5, 0, 0);
 	
-	// Game Object Obj
-	function gameObject(x,y,z) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		
-		this.rotation = mat4.create();
-		mat4.identity(this.rotation);
-		
-		this.buffers = [];
-		
-		this.move = move;
-		this.setPosition = setPosition;
-		this.rotate = rotate;
-		this.setRotation = setRotation;
-		this.assignBuffer = assignBuffer;
-		this.useIndices = false;
-		
-		function setPosition(x,y,z) {
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
-		function move(dx, dy, dz) {
-			this.x += dx;
-			this.y += dy;
-			this.z += dz;
-		}
-		function rotate(amount, X, Y, Z) {
-			mat4.rotate(this.rotation, degToRad(amount), [X, Y, Z]);
-		}
-		function setRotation(yaw, pitch, roll) {
-			mat4.identity(this.rotation);
-			// TODO: Check order of rotations
-			mat4.rotate(this.rotation, degToRad(yaw), [0,1,0]);
-			mat4.rotate(this.rotation, degToRad(pitch), [1,0,0]);
-			mat4.rotate(this.rotation, degToRad(roll), [0,0,0]);
-		}
-		function assignBuffer(name, buffer) {
-			this.buffers[name] = buffer;
-		}
-	}
-	
 	// Init functions
     function _initGL(canvas) {
         try {
@@ -171,190 +407,6 @@ function _Gremlin() {
             alert("Could not initialise WebGL");
         }
     }
-	
-	// TODO: Place in an array in a manager
-	var pyramid = new gameObject(-1.5,0,-8.0);
-	var cube = new gameObject(1.5,0,-8.0);
-	
-	// TODO: Alter to use manager
-	// Vertices for Debug Shapes to be stored in engine
-	// Debug shapes to have a single colour
-    function _initBuffers() {
-        var pyramidVertexPositionBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
-        var vertices = [
-            // Front face
-             0.0,  1.0,  0.0,
-            -1.0, -1.0,  1.0,
-             1.0, -1.0,  1.0,
-
-            // Right face
-             0.0,  1.0,  0.0,
-             1.0, -1.0,  1.0,
-             1.0, -1.0, -1.0,
-
-            // Back face
-             0.0,  1.0,  0.0,
-             1.0, -1.0, -1.0,
-            -1.0, -1.0, -1.0,
-
-            // Left face
-             0.0,  1.0,  0.0,
-            -1.0, -1.0, -1.0,
-            -1.0, -1.0,  1.0
-        ];
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
-        pyramidVertexPositionBuffer.itemSize = 3;
-        pyramidVertexPositionBuffer.numItems = 12;
-		
-		pyramid.assignBuffer("vertexPosition", pyramidVertexPositionBuffer);
-
-        var pyramidVertexColorBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexColorBuffer);
-        var colors = [
-            // Front face
-            1.0, 0.0, 0.0, 1.0,
-            0.0, 1.0, 0.0, 1.0,
-            0.0, 0.0, 1.0, 1.0,
-
-            // Right face
-            1.0, 0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0, 1.0,
-            0.0, 1.0, 0.0, 1.0,
-
-            // Back face
-            1.0, 0.0, 0.0, 1.0,
-            0.0, 1.0, 0.0, 1.0,
-            0.0, 0.0, 1.0, 1.0,
-
-            // Left face
-            1.0, 0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0, 1.0,
-            0.0, 1.0, 0.0, 1.0
-        ];
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(colors), _gl.STATIC_DRAW);
-        pyramidVertexColorBuffer.itemSize = 4;
-        pyramidVertexColorBuffer.numItems = 12;
-
-		pyramid.assignBuffer("vertexColor", pyramidVertexColorBuffer);
-
-        var cubeVertexPositionBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-        vertices = [
-            // Front face
-            -1.0, -1.0,  1.0,
-             1.0, -1.0,  1.0,
-             1.0,  1.0,  1.0,
-            -1.0,  1.0,  1.0,
-
-            // Back face
-            -1.0, -1.0, -1.0,
-            -1.0,  1.0, -1.0,
-             1.0,  1.0, -1.0,
-             1.0, -1.0, -1.0,
-
-            // Top face
-            -1.0,  1.0, -1.0,
-            -1.0,  1.0,  1.0,
-             1.0,  1.0,  1.0,
-             1.0,  1.0, -1.0,
-
-            // Bottom face
-            -1.0, -1.0, -1.0,
-             1.0, -1.0, -1.0,
-             1.0, -1.0,  1.0,
-            -1.0, -1.0,  1.0,
-
-            // Right face
-             1.0, -1.0, -1.0,
-             1.0,  1.0, -1.0,
-             1.0,  1.0,  1.0,
-             1.0, -1.0,  1.0,
-
-            // Left face
-            -1.0, -1.0, -1.0,
-            -1.0, -1.0,  1.0,
-            -1.0,  1.0,  1.0,
-            -1.0,  1.0, -1.0
-        ];
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
-        cubeVertexPositionBuffer.itemSize = 3;
-        cubeVertexPositionBuffer.numItems = 24;
-		
-		cube.assignBuffer("vertexPosition", cubeVertexPositionBuffer);
-
-        var cubeVertexColorBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexColorBuffer);
-        colors = [
-            [1.0, 0.0, 0.0, 1.0], // Front face
-            [1.0, 1.0, 0.0, 1.0], // Back face
-            [0.0, 1.0, 0.0, 1.0], // Top face
-            [1.0, 0.5, 0.5, 1.0], // Bottom face
-            [1.0, 0.0, 1.0, 1.0], // Right face
-            [0.0, 0.0, 1.0, 1.0]  // Left face
-        ];
-        var unpackedColors = [];
-        for (var i in colors) {
-            var color = colors[i];
-            for (var j=0; j < 4; j++) {
-                unpackedColors = unpackedColors.concat(color);
-            }
-        }
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(unpackedColors), _gl.STATIC_DRAW);
-        cubeVertexColorBuffer.itemSize = 4;
-        cubeVertexColorBuffer.numItems = 24;
-		
-		cube.assignBuffer("vertexColor", cubeVertexColorBuffer);
-		
-        var cubeVertexIndexBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-        var cubeVertexIndices = [
-            0, 1, 2,      0, 2, 3,    // Front face
-            4, 5, 6,      4, 6, 7,    // Back face
-            8, 9, 10,     8, 10, 11,  // Top face
-            12, 13, 14,   12, 14, 15, // Bottom face
-            16, 17, 18,   16, 18, 19, // Right face
-            20, 21, 22,   20, 22, 23  // Left face
-        ];
-        _gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), _gl.STATIC_DRAW);
-        cubeVertexIndexBuffer.itemSize = 1;
-        cubeVertexIndexBuffer.numItems = 36;
-		
-		cube.assignBuffer("vertexIndex", cubeVertexIndexBuffer);
-		cube.useIndices = true; 
-    }
-
-	// Render Game Object
-	function _renderObject(object) {
-		_mvPushMatrix();
-		mat4.translate(_mvMatrix, [object.x, object.y, object.z]);
-        
-		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexPosition);
-        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, object.buffers.vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexColor);
-        _gl.vertexAttribPointer(_shaderProgram.vertexColorAttribute, object.buffers.vertexColor.itemSize, _gl.FLOAT, false, 0, 0);
-
-		if (object.useIndices) {
-			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cube.buffers.vertexIndex);
-		}
-		
-		// TODO: Add Textures!
-		
-        _setMatrixUniforms();
-		
-		// TODO: Debug objects to be drawn depedent on flag (render as - wireframe or solid)
-		// Should be flag on rendering engine?
-        if(object.useIndices) {
-			_gl.drawElements(_gl.TRIANGLES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
-		}
-		else {
-			_gl.drawArrays(_gl.TRIANGLES, 0, object.buffers.vertexPosition.numItems);
-		}
-        _mvPopMatrix();
-	}
 	
 	// Matrix Functions - Stack functions and Set Shader Uniforms
 	function _mvPushMatrix() {
@@ -449,8 +501,9 @@ function _Gremlin() {
 
 	return { 
 		init: 				init, 
-		drawScene: 			drawScene, 
-		animate: 			animate,
+		createDebugBuffers:	createDebugBuffers,
+		prepareScene: 		prepareScene, 
+		renderObject:		renderObject,
 		movePlayerCamera:	movePlayerCamera,
 		rotatePlayerCamera:	rotatePlayerCamera,
 		degToRad: 			degToRad 
