@@ -61,12 +61,10 @@ function _Gremlin() {
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, object.buffers.vertexIndex);
 		}
 		
-		// TODO: Add Textures!
+		// TODO: Add Textures & Normals
 		
         _setMatrixUniforms();
 		
-		// TODO: Debug objects to be drawn depedent on flag (render as - wireframe or solid)
-		// Should be flag on rendering engine?
         if(object.useIndices) {
 			_gl.drawElements(_gl.TRIANGLES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
 		}
@@ -75,11 +73,45 @@ function _Gremlin() {
 		}
         _mvPopMatrix();
 	}
+	// Render as Wireframe
+	// TODO: Remove duplicated code
+	// Consider if this should be a flag on render function instead or a state on the Gremlin object
+	function renderObjectAsWireFrame(object) {
+		_mvPushMatrix();
+		mat4.translate(_mvMatrix, [object.x, object.y, object.z]);
+        
+		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
+
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexPosition);
+        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, object.buffers.vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
+
+		if(object.buffers.vertexColor) {
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexColor);
+			_gl.vertexAttribPointer(_shaderProgram.vertexColorAttribute, object.buffers.vertexColor.itemSize, _gl.FLOAT, false, 0, 0);
+		}
+		if (object.useIndices) {
+			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, object.buffers.vertexIndex);
+		}
+		
+		// TODO: Add Textures & Normals!
+		
+        _setMatrixUniforms();
+		
+		if(object.useIndices) {
+			_gl.drawElements(_gl.LINES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+		}
+		else {
+			_gl.drawArrays(_gl.LINES, 0, object.buffers.vertexPosition.numItems);
+		}
+        _mvPopMatrix();
+	}
 	
 	// TODO: Should have an init buffer for object method - manager for objects in game code
 	// Debug shapes vertex info stored in engine
 	// Debug shapes to have a single colour
     function createDebugBuffers(object, objectType) {
+		// TODO: Add Cylinders, Generalise to Cuboids & Elipsoids and add 2D shapes Rays, Elipses, Rectangles 
+		// TODO: add parameters for creation (i.e. size, number of sides for spheres / cylinders etc)
 		if (objectType === "pyramid") {
 			var pyramidVertexPositionBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
@@ -500,13 +532,14 @@ function _Gremlin() {
 	//	|_| |_|\__,_|_| |_|\__,_|_|\___||___/
 
 	return { 
-		init: 				init, 
-		createDebugBuffers:	createDebugBuffers,
-		prepareScene: 		prepareScene, 
-		renderObject:		renderObject,
-		movePlayerCamera:	movePlayerCamera,
-		rotatePlayerCamera:	rotatePlayerCamera,
-		degToRad: 			degToRad 
+		init: 						init, 
+		createDebugBuffers:			createDebugBuffers,
+		prepareScene: 				prepareScene, 
+		renderObject:				renderObject,
+		renderObjectAsWireFrame: 	renderObjectAsWireFrame,
+		movePlayerCamera:			movePlayerCamera,
+		rotatePlayerCamera:			rotatePlayerCamera,
+		degToRad: 					degToRad 
 	};
 }
 

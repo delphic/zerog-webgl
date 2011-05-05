@@ -77,9 +77,14 @@ v0.1
 	* Basic Render Obj at Position
 	* Basic Camera
 	* Static Debug Shapes
+		Cubes, Spheres and Pyramids
 	
-Using LearningWebGL lesson 4 as a basis
+Using LearningWebGL lesson 4 as a basis, stole the moon from Lesson 11 though!
 
 v0.2
+* Fix input not working for not fullscreen
+	* Also investigate speed up of timing for smaller canvas - think this is due to canvas.width being undefined!
+* Basic Loading Objects from Files
 * Basic Textures
 * External Shader Scripts
+* Game Object Manager

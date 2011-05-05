@@ -93,8 +93,14 @@
 		// TODO: Make separate function
         Gremlin.prepareScene();
 		// TODO: Use Manager
-		Gremlin.renderObject(gameObjects["pyramid"]);
-		Gremlin.renderObject(gameObjects["cube"]);
+		if(controller.useWireFrames()) {
+			Gremlin.renderObjectAsWireFrame(gameObjects["pyramid"]);
+			Gremlin.renderObjectAsWireFrame(gameObjects["cube"]);
+		}
+		else {
+			Gremlin.renderObject(gameObjects["pyramid"]);
+			Gremlin.renderObject(gameObjects["cube"]);
+		}
         animate();
     }
 
@@ -201,6 +207,7 @@
 	function _controller() {
 		// TODO: Move pause functions to Engine.
 		var running = true;
+		var usingWireFrames = false;
 		var windowPaused = false;
 		
 		function handlePause() { 
@@ -229,12 +236,20 @@
 			}
 		}		
 		function isRunning() { return running; }
-		
+		function toggleWireFrames() { if (usingWireFrames) { usingWireFrames = false; } else { usingWireFrames = true; } }
+		function useWireFrames() { return usingWireFrames; }
 		function _pause() { running = false; }
 		// TODO: when the game timer moves to an object adjust this		
 		function _unpause() { running = true; lastTime = new Date().getTime(); requestAnimFrame(tick); }
 		
-		return { isRunning: isRunning, handlePause: handlePause, handleWindowBlur: handleWindowBlur, handleWindowFocus: handleWindowFocus };
+		return { 
+			isRunning: isRunning, 
+			handlePause: handlePause, 
+			useWireFrames: useWireFrames, 
+			toggleWireFrames: toggleWireFrames, 
+			handleWindowBlur: handleWindowBlur, 
+			handleWindowFocus: handleWindowFocus 
+		};
 	}
 	var controller = _controller();
 	
@@ -260,6 +275,7 @@
 	<body onload="webGLStart();">
 		<div id="controls">
 			<input id="btnPause" type="button" onclick="controller.handlePause();" value="Stop" />
+			<input id="btnWireFrames" type="button" onclick="controller.toggleWireFrames();" value="Toggle Wireframes" />
 			<!-- TODO: Add spawn debug solid -->
 		</div>
 		<!-- TODO: add inital screen telling you controls -->
