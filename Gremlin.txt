@@ -84,6 +84,7 @@ Using LearningWebGL lesson 4 as a basis, stole the moon from Lesson 11 though!
 v0.2
 * Fix input not working for not fullscreen
 	* Also investigate speed up of timing for smaller canvas - think this is due to canvas.width being undefined!
+		- Setting canvas object width to something fixes this.
 * Basic Loading Objects from Files
 * Basic Textures
 * External Shader Scripts

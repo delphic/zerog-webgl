@@ -171,13 +171,13 @@
 		
 		document.onkeydown = handleKeyDown;
 		document.onkeyup = handleKeyUp;
-		document.onmousemove = handleMouseMove;
-		document.onmousedown = handleMouseDown;
-		document.onmouseup = handleMouseUp;
+		canvas.onmousemove = handleMouseMove;
+		canvas.onmousedown = handleMouseDown;
+		canvas.onmouseup = handleMouseUp;
     }
 	
 	// Input Handling
-	
+	// TODO: Should not effect the canvas if mousemoves outside of the canvas.
 	var xPos, yPos;
 	var currentlyPressedKeys = {};
 	var mouseDown = false;
@@ -256,7 +256,12 @@
 	function fullScreen() {
 		canvas = document.getElementById("gremlinCanvas");
 		canvas.width = document.width;
-		canvas.height = document.height;
+		canvas.height = document.height - 40; // TODO - Adjust for controls div properly
+	}
+	function partScreen(x,y) {
+		canvas = document.getElementById("gremlinCanvas");
+		canvas.width = x;
+		canvas.height = y;
 	}
 	
 	// TODO: move window focus handling to Engine
@@ -267,9 +272,9 @@
 		</script>
 		<style>
 			html, body { margin: 0; padding: 0; overflow: hidden; font-family: monospace; }
-			input { font-size: 16px; margin: 5px 10px; padding: 3px; background: #000; color: #EEE; border: 1px solid #222; }
+			input { margin-top: 10px; font-size: 16px; margin: 5px 10px; padding: 3px; background: #000; color: #EEE; border: 1px solid #222; }
 			canvas { cursor: crosshair; }
-			#controls { width: 100%; position: fixed; top: 0; left: 0; background-color: rgba(127,127,127,0.5); z-index: 10; cursor: default; }
+			#controls { width: 100%; background-color: #666; cursor: default; height: 40px; }
 		</style>
 	</head>
 	<body onload="webGLStart();">
@@ -283,6 +288,7 @@
 		<!-- Temporary Full Screen, TODO: add to controls -->
 		<script type="text/javascript">
 			fullScreen();
+			//partScreen(1000,800);
 		</script>
 	</body>
 </html>
