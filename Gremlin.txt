@@ -85,6 +85,8 @@ v0.2
 * Fix input not working for not fullscreen
 	* Also investigate speed up of timing for smaller canvas - think this is due to canvas.width being undefined!
 		- Setting canvas object width to something fixes this.
+* Fix Cursor Issues - override default action (also invisible cursor)
+* Finish Debug Shapes
 * Basic Loading Objects from Files
 * Basic Textures
 * External Shader Scripts

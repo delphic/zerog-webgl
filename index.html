@@ -165,8 +165,15 @@
 	// WebGL Start
 	
     function webGLStart() {
+		// Set Canvas Size
+		fullScreen();
+		//setSize(800,800);
+		
+		// Initialise
 		Gremlin.init();
 		gameInit();
+		
+		// Start Game Loop
         tick();
 		
 		document.onkeydown = handleKeyDown;
@@ -197,6 +204,7 @@
 		// TODO: Add vars for middle and right
 		// 0 = left, 1 = middle, 2 = right
 		if (!event.button) { mouseDown = true; }
+		return false;
 	}
 	function handleMouseUp(event) {
 		if (!event.button) { mouseDown = false; }
@@ -234,7 +242,7 @@
 				windowPaused = false;
 				_unpause();
 			}
-		}		
+		}
 		function isRunning() { return running; }
 		function toggleWireFrames() { if (usingWireFrames) { usingWireFrames = false; } else { usingWireFrames = true; } }
 		function useWireFrames() { return usingWireFrames; }
@@ -245,7 +253,7 @@
 		return { 
 			isRunning: isRunning, 
 			handlePause: handlePause, 
-			useWireFrames: useWireFrames, 
+			useWireFrames: useWireFrames,
 			toggleWireFrames: toggleWireFrames, 
 			handleWindowBlur: handleWindowBlur, 
 			handleWindowFocus: handleWindowFocus 
@@ -258,10 +266,12 @@
 		canvas.width = document.width;
 		canvas.height = document.height - 40; // TODO - Adjust for controls div properly
 	}
-	function partScreen(x,y) {
+	// TODO: Change to Set Canvas Size.
+	function setSize(x,y) {
 		canvas = document.getElementById("gremlinCanvas");
 		canvas.width = x;
 		canvas.height = y;
+		document.getElementById("container").style.width = x+"px";
 	}
 	
 	// TODO: move window focus handling to Engine
@@ -271,24 +281,25 @@
 	
 		</script>
 		<style>
+			#container { margin: 0 auto; }
 			html, body { margin: 0; padding: 0; overflow: hidden; font-family: monospace; }
 			input { margin-top: 10px; font-size: 16px; margin: 5px 10px; padding: 3px; background: #000; color: #EEE; border: 1px solid #222; }
-			canvas { cursor: crosshair; }
+			canvas { /*cursor: url('data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto; */ cursor: crosshair; }
 			#controls { width: 100%; background-color: #666; cursor: default; height: 40px; }
 		</style>
 	</head>
 	<body onload="webGLStart();">
-		<div id="controls">
-			<input id="btnPause" type="button" onclick="controller.handlePause();" value="Stop" />
-			<input id="btnWireFrames" type="button" onclick="controller.toggleWireFrames();" value="Toggle Wireframes" />
-			<!-- TODO: Add spawn debug solid -->
+		<div id="container">
+			<div id="controls">
+				<input id="btnPause" type="button" onclick="controller.handlePause();" value="Stop" />
+				<input id="btnWireFrames" type="button" onclick="controller.toggleWireFrames();" value="Toggle Wireframes" />
+				<!-- TODO: Add Screen Size Adjuster -->
+				<!--<input id="canvasWidth" type="number" />
+				<input id="canvasHeight" type="number" />
+				<input id="btnSetSize" type="button" onclick="controller.resize();" value="Set Game Size" />-->
+			</div>
+			<!-- TODO: add inital screen telling you controls -->
+			<canvas id="gremlinCanvas"></canvas>
 		</div>
-		<!-- TODO: add inital screen telling you controls -->
-		<canvas id="gremlinCanvas">Your browser does not support the HTML5 canvas element, consider upgrading. </canvas>
-		<!-- Temporary Full Screen, TODO: add to controls -->
-		<script type="text/javascript">
-			fullScreen();
-			//partScreen(1000,800);
-		</script>
 	</body>
 </html>
