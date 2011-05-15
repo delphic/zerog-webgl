@@ -6,18 +6,20 @@
 		<script type="text/javascript" src="libs/glMatrix-0.9.5.min.js"></script>
 		<script type="text/javascript" src="libs/webgl-utils.js"></script>
 		<!-- Shaders -->
-		<script id="shader-fs" type="x-shader/x-fragment">
+		<script id="colour-shader-fs" type="x-shader/x-fragment">
 			#ifdef GL_ES
 			precision highp float;
 			#endif
 
 			varying vec4 vColor;
 
-			void main(void) {
+			uniform sampler2D uSampler;
+
+			void main(void) {			
 				gl_FragColor = vColor;
 			}
 		</script>
-		<script id="shader-vs" type="x-shader/x-vertex">
+		<script id="colour-shader-vs" type="x-shader/x-vertex">
 			attribute vec3 aVertexPosition;
 			attribute vec4 aVertexColor;
 
@@ -29,6 +31,33 @@
 			void main(void) {
 				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
 				vColor = aVertexColor;
+			}
+		</script>
+		<script id="texture-shader-fs" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision highp float;
+			#endif
+
+			varying vec2 vTextureCoord;
+
+			uniform sampler2D uSampler;
+
+			void main(void) {			
+				gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+			}
+		</script>
+		<script id="texture-shader-vs" type="x-shader/x-vertex">
+			attribute vec3 aVertexPosition;
+			attribute vec2 aTextureCoord;
+
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+
+			varying vec2 vTextureCoord;
+
+			void main(void) {
+				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+				vTextureCoord = aTextureCoord;
 			}
 		</script>
 		<!-- Gremlin Engine -->
@@ -44,9 +73,10 @@
             var elapsed = timeNow - lastTime;
 			
 			// Animate Objects - TODO: Use manager
-			gameObjects["pyramid"].rotate( ( (180 * elapsed) / 1000.0), 0, 1, 0);
-			gameObjects["cube"].rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1);
-			
+			for(object in gameObjects)
+			{
+				gameObjects[object].animate(elapsed);
+			}
 			
 			// Handle Input
 			// TODO: Separate into function
@@ -92,15 +122,14 @@
 		// Render Scene
 		// TODO: Make separate function
         Gremlin.prepareScene();
-		// TODO: Use Manager
-		if(controller.useWireFrames()) {
-			Gremlin.renderObjectAsWireFrame(gameObjects["pyramid"]);
-			Gremlin.renderObjectAsWireFrame(gameObjects["cube"]);
+		for(object in gameObjects)
+		{
+			if(gameObjects[object].visible) {
+				Gremlin.renderObject(gameObjects[object]);
+			}
 		}
-		else {
-			Gremlin.renderObject(gameObjects["pyramid"]);
-			Gremlin.renderObject(gameObjects["cube"]);
-		}
+		
+		// Animate Scene
         animate();
     }
 
@@ -117,13 +146,22 @@
 		mat4.identity(this.rotation);
 		
 		this.buffers = [];
+		// TODO: Make into array for multiple texture IDs
+		this.texture;
 		
 		this.move = move;
 		this.setPosition = setPosition;
 		this.rotate = rotate;
 		this.setRotation = setRotation;
+		this.animate;
 		this.assignBuffer = assignBuffer;
+
+		// Render Flags
+		// Consider: Moving to Renderer
+		this.visible = true;
+		this.wireFrame = false;
 		this.useIndices = false;
+		this.useTextures = false;
 		
 		function setPosition(x,y,z) {
 			this.x = x;
@@ -152,14 +190,22 @@
 	
 	// Game Init
 	function gameInit() {
-		// TODO: Place array in a manager
 		var pyramid = new gameObject(-1.5,0,-8.0);
 		var cube = new gameObject(1.5,0,-8.0);
-		// TODO: Make per object and again use manager
+		
 		Gremlin.createDebugBuffers(pyramid, "pyramid");
-		Gremlin.createDebugBuffers(cube, "sphere");
+		Gremlin.createDebugBuffers(cube, "cube");
+		
 		gameObjects["pyramid"] = pyramid;
 		gameObjects["cube"] = cube;
+		
+		// TODO: Move to texture and handle event to Texture List in Engine, store index in gameobject
+		gameObjects.cube.texture = Gremlin.createTexture("textures/delph.png");
+		gameObjects.cube.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.cube.texture); } 
+		
+		gameObjects.pyramid.animate = function(elapsed) { this.rotate( ( (180 * elapsed) / 1000.0), 0, 1, 0); };
+		gameObjects.cube.animate = function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); };
+		
 	}
 	
 	// WebGL Start
@@ -264,7 +310,7 @@
 	function fullScreen() {
 		canvas = document.getElementById("gremlinCanvas");
 		canvas.width = document.width;
-		canvas.height = document.height - 40; // TODO - Adjust for controls div properly
+		canvas.height = document.height;
 	}
 	// TODO: Change to Set Canvas Size.
 	function setSize(x,y) {
@@ -290,14 +336,10 @@
 	</head>
 	<body onload="webGLStart();">
 		<div id="container">
-			<div id="controls">
+			<!--<div id="controls">
 				<input id="btnPause" type="button" onclick="controller.handlePause();" value="Stop" />
 				<input id="btnWireFrames" type="button" onclick="controller.toggleWireFrames();" value="Toggle Wireframes" />
-				<!-- TODO: Add Screen Size Adjuster -->
-				<!--<input id="canvasWidth" type="number" />
-				<input id="canvasHeight" type="number" />
-				<input id="btnSetSize" type="button" onclick="controller.resize();" value="Set Game Size" />-->
-			</div>
+			</div>-->
 			<!-- TODO: add inital screen telling you controls -->
 			<canvas id="gremlinCanvas"></canvas>
 		</div>

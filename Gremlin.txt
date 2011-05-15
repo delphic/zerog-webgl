@@ -82,12 +82,13 @@ v0.1
 Using LearningWebGL lesson 4 as a basis, stole the moon from Lesson 11 though!
 
 v0.2
-* Fix input not working for not fullscreen
-	* Also investigate speed up of timing for smaller canvas - think this is due to canvas.width being undefined!
-		- Setting canvas object width to something fixes this.
+* Fix input not working for not fullscreen - (need to set width)
 * Fix Cursor Issues - override default action (also invisible cursor)
-* Finish Debug Shapes
-* Basic Loading Objects from Files
+* MultiShader Programs and Multiple Shader Scripts
+* Convert from Debug Shapes to primitives
 * Basic Textures
-* External Shader Scripts
+* Basic Loading Objects from Files
 * Game Object Manager
+
+v0.25 
+* External Shader Scripts

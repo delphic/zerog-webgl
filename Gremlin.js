@@ -45,6 +45,11 @@ function _Gremlin() {
 	
 	// Render Game Object
 	function renderObject(object) {
+		
+		// Set Shader
+		// Question: Should we really be switching shader by object? If we have to surely we should do all of each type to cut down the changes.
+		_setShaderByObject(object);
+		
 		_mvPushMatrix();
 		mat4.translate(_mvMatrix, [object.x, object.y, object.z]);
         
@@ -62,50 +67,36 @@ function _Gremlin() {
 		}
 		
 		// TODO: Add Textures & Normals
+		if (object.useTextures) {
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.textureCoords);
+			_gl.vertexAttribPointer(_shaderProgram.textureCoordAttribute, object.buffers.textureCoords.itemSize, _gl.FLOAT, false, 0, 0);
+
+			_gl.activeTexture(_gl.TEXTURE0);
+			_gl.bindTexture(_gl.TEXTURE_2D, object.texture);
+			_gl.uniform1i(_shaderProgram.samplerUniform, 0);
+		}
 		
         _setMatrixUniforms();
 		
-        if(object.useIndices) {
-			_gl.drawElements(_gl.TRIANGLES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+		if (!object.wireFrame) {
+			if(object.useIndices) {
+				_gl.drawElements(_gl.TRIANGLES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+			}
+			else {
+				_gl.drawArrays(_gl.TRIANGLES, 0, object.buffers.vertexPosition.numItems);
+			}
 		}
 		else {
-			_gl.drawArrays(_gl.TRIANGLES, 0, object.buffers.vertexPosition.numItems);
-		}
-        _mvPopMatrix();
-	}
-	// Render as Wireframe
-	// TODO: Remove duplicated code
-	// Consider if this should be a flag on render function instead or a state on the Gremlin object
-	function renderObjectAsWireFrame(object) {
-		_mvPushMatrix();
-		mat4.translate(_mvMatrix, [object.x, object.y, object.z]);
-        
-		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
-
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexPosition);
-        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, object.buffers.vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
-
-		if(object.buffers.vertexColor) {
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexColor);
-			_gl.vertexAttribPointer(_shaderProgram.vertexColorAttribute, object.buffers.vertexColor.itemSize, _gl.FLOAT, false, 0, 0);
-		}
-		if (object.useIndices) {
-			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, object.buffers.vertexIndex);
-		}
-		
-		// TODO: Add Textures & Normals!
-		
-        _setMatrixUniforms();
-		
-		if(object.useIndices) {
+			if(object.useIndices) {
 			_gl.drawElements(_gl.LINES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
-		}
-		else {
-			_gl.drawArrays(_gl.LINES, 0, object.buffers.vertexPosition.numItems);
+			}
+			else {
+				_gl.drawArrays(_gl.LINES, 0, object.buffers.vertexPosition.numItems);
+			}
 		}
         _mvPopMatrix();
 	}
-	
+		
 	// TODO: Should have an init buffer for object method - manager for objects in game code
 	// Debug shapes vertex info stored in engine
 	// Debug shapes to have a single colour
@@ -172,6 +163,7 @@ function _Gremlin() {
 			object.assignBuffer("vertexColor", pyramidVertexColorBuffer);
 		}
 		else if (objectType === "cube"){
+			// Vertex Buffer
 			var cubeVertexPositionBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
 			vertices = [
@@ -216,7 +208,8 @@ function _Gremlin() {
 			cubeVertexPositionBuffer.numItems = 24;
 			
 			object.assignBuffer("vertexPosition", cubeVertexPositionBuffer);
-
+		
+			// Color Buffer
 			var cubeVertexColorBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexColorBuffer);
 			colors = [
@@ -240,6 +233,56 @@ function _Gremlin() {
 		
 			object.assignBuffer("vertexColor", cubeVertexColorBuffer);
 		
+			// Texture Buffer
+			// TODO: Remove from Debug Buffer
+			var cubeVertexTextureCoordBuffer;
+			cubeVertexTextureCoordBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
+			var textureCoords = [
+			  // Front face
+			  0.0, 0.0,
+			  1.0, 0.0,
+			  1.0, 1.0,
+			  0.0, 1.0,
+
+			  // Back face
+			  1.0, 0.0,
+			  1.0, 1.0,
+			  0.0, 1.0,
+			  0.0, 0.0,
+
+			  // Top face
+			  0.0, 1.0,
+			  0.0, 0.0,
+			  1.0, 0.0,
+			  1.0, 1.0,
+
+			  // Bottom face
+			  1.0, 1.0,
+			  0.0, 1.0,
+			  0.0, 0.0,
+			  1.0, 0.0,
+
+			  // Right face
+			  1.0, 0.0,
+			  1.0, 1.0,
+			  0.0, 1.0,
+			  0.0, 0.0,
+
+			  // Left face
+			  0.0, 0.0,
+			  1.0, 0.0,
+			  1.0, 1.0,
+			  0.0, 1.0,
+			];
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
+			cubeVertexTextureCoordBuffer.itemSize = 2;
+			cubeVertexTextureCoordBuffer.numItems = 24;
+			
+			object.assignBuffer("textureCoords", cubeVertexTextureCoordBuffer);
+			object.useTextures = true;
+		
+			// Index Buffer
 			var cubeVertexIndexBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
 			var cubeVertexIndices = [
@@ -364,6 +407,23 @@ function _Gremlin() {
 		}
 	}
 	
+	// TODO: Add engine texture manager
+	function createTexture(fileName) {
+		var texture;
+		texture = _gl.createTexture();
+		texture.image = new Image();
+		texture.image.src = fileName;
+		return texture;
+	}
+	function handleLoadedTexture(texture) {
+		_gl.bindTexture(_gl.TEXTURE_2D, texture);
+		_gl.pixelStorei(_gl.UNPACK_FLIP_Y_WEBGL, true);
+		_gl.texImage2D(_gl.TEXTURE_2D, 0, _gl.RGBA, _gl.RGBA, _gl.UNSIGNED_BYTE, texture.image);
+		_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.NEAREST);
+		_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.NEAREST);
+		_gl.bindTexture(_gl.TEXTURE_2D, null);
+	}
+	
 	// Camera Functions
 	function movePlayerCamera(dx,dy,dz) {
 		_playerCamera.moveCamera(dx, dy, dz);
@@ -464,6 +524,7 @@ function _Gremlin() {
 	// TODO: Move programs to a manager in render
 	// TODO: Move shader specific stuff to it's own JS file
 	var _shaderProgram;	
+	var _shaderPrograms = [];
 	
 	function _getShader(gl, id) {
         var shaderScript = document.getElementById(id);
@@ -500,29 +561,45 @@ function _Gremlin() {
         return shader;
     }
 
-	function _initShaders() {
-        var fragmentShader = _getShader(_gl, "shader-fs");
-        var vertexShader = _getShader(_gl, "shader-vs");
+	function _createShader(vertexShaderID, fragmentShaderID, type) {
+		var fragmentShader = _getShader(_gl, vertexShaderID);
+        var vertexShader = _getShader(_gl, fragmentShaderID);
 
-        _shaderProgram = _gl.createProgram();
-        _gl.attachShader(_shaderProgram, vertexShader);
-        _gl.attachShader(_shaderProgram, fragmentShader);
-        _gl.linkProgram(_shaderProgram);
+        var program = _gl.createProgram();
+        _gl.attachShader(program, vertexShader);
+        _gl.attachShader(program, fragmentShader);
+        _gl.linkProgram(program);
 
-        if (!_gl.getProgramParameter(_shaderProgram, _gl.LINK_STATUS)) {
+        if (!_gl.getProgramParameter(program, _gl.LINK_STATUS)) {
             alert("Could not initialise shaders");
         }
 
-        _gl.useProgram(_shaderProgram);
+        program.vertexPositionAttribute = _gl.getAttribLocation(program, "aVertexPosition");
+        _gl.enableVertexAttribArray(program.vertexPositionAttribute);
+		
+		if(type == "Colour") {
+			program.vertexColorAttribute = _gl.getAttribLocation(program, "aVertexColor");
+			_gl.enableVertexAttribArray(program.vertexColorAttribute);
+		}
+		else if (type == "Textured") {
+			program.textureCoordAttribute = _gl.getAttribLocation(program, "aTextureCoord");
+			_gl.enableVertexAttribArray(program.textureCoordAttribute);
+		}
 
-        _shaderProgram.vertexPositionAttribute = _gl.getAttribLocation(_shaderProgram, "aVertexPosition");
-        _gl.enableVertexAttribArray(_shaderProgram.vertexPositionAttribute);
-
-        _shaderProgram.vertexColorAttribute = _gl.getAttribLocation(_shaderProgram, "aVertexColor");
-        _gl.enableVertexAttribArray(_shaderProgram.vertexColorAttribute);
-
-        _shaderProgram.pMatrixUniform = _gl.getUniformLocation(_shaderProgram, "uPMatrix");
-        _shaderProgram.mvMatrixUniform = _gl.getUniformLocation(_shaderProgram, "uMVMatrix");
+        program.pMatrixUniform = _gl.getUniformLocation(program, "uPMatrix");
+        program.mvMatrixUniform = _gl.getUniformLocation(program, "uMVMatrix");
+		
+		return program
+	}
+	
+	function _setShaderByObject(object) {
+		if (object.useTextures) { _shaderProgram = _shaderPrograms.Texture; }
+		else { _shaderProgram = _shaderPrograms.Colour; }
+		_gl.useProgram(_shaderProgram);
+	}
+	function _initShaders() {
+		_shaderPrograms["Colour"] = _createShader("colour-shader-vs", "colour-shader-fs", "Colour");
+		_shaderPrograms["Texture"] = _createShader("texture-shader-vs", "texture-shader-fs", "Textured");         
     }	
 	
 	//	 _                     _ _           
@@ -534,9 +611,10 @@ function _Gremlin() {
 	return { 
 		init: 						init, 
 		createDebugBuffers:			createDebugBuffers,
+		createTexture:				createTexture,
+		handleLoadedTexture:		handleLoadedTexture,
 		prepareScene: 				prepareScene, 
 		renderObject:				renderObject,
-		renderObjectAsWireFrame: 	renderObjectAsWireFrame,
 		movePlayerCamera:			movePlayerCamera,
 		rotatePlayerCamera:			rotatePlayerCamera,
 		degToRad: 					degToRad 
