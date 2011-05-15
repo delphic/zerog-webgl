@@ -26,7 +26,28 @@ function _Gremlin() {
         _gl.enable(_gl.DEPTH_TEST);
 	}
 	
-
+	// Lighting 
+	var lighting = false;
+	// Environmental Light
+	var ambientLight = [];
+	var directionalLight = [];
+	
+	function setLightEnvironment(ambientR, ambientG, ambientB, directionalR, directionalG, directionalB, directionalX, directionalY, directionalZ) {
+		ambientLight.r = ambientR;
+		ambientLight.g = ambientG;
+		ambientLight.b = ambientB;
+		directionalLight.r = directionalR;
+		directionalLight.g = directionalG;
+		directionalLight.b = directionalB;
+		directionalLight.x = directionalX;
+		directionalLight.y = directionalY;
+		directionalLight.z = directionalZ;
+	}
+	
+	function setLighting(val) {
+		lighting = val;
+	}	
+	
 	// Prepare Scene - Clears View, and sets perspective and camera 
 	// TODO: Should separate this into several functions
     function prepareScene() {
@@ -66,14 +87,50 @@ function _Gremlin() {
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, object.buffers.vertexIndex);
 		}
 		
-		// TODO: Add Textures & Normals
 		if (object.useTextures) {
+			// Textures
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.textureCoords);
 			_gl.vertexAttribPointer(_shaderProgram.textureCoordAttribute, object.buffers.textureCoords.itemSize, _gl.FLOAT, false, 0, 0);
 
 			_gl.activeTexture(_gl.TEXTURE0);
 			_gl.bindTexture(_gl.TEXTURE_2D, object.texture);
 			_gl.uniform1i(_shaderProgram.samplerUniform, 0);
+			
+			// TODO: Separate useTexture and add useLighting
+			
+			// Normals
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexNormals); 
+			_gl.vertexAttribPointer(_shaderProgram.vertexNormalAttribute, object.buffers.vertexNormals.itemSize, _gl.FLOAT, false, 0, 0);
+			
+			
+			// Setting Lights 
+			// TODO: This needs it's own section
+			// TODO: Unnest from use textures
+			if(lighting) {
+				_gl.uniform1i(_shaderProgram.useLightingUniform, true);
+				// Ambient Colour
+				_gl.uniform3f(_shaderProgram.ambientColorUniform, ambientLight.r, ambientLight.g, ambientLight.b);
+				// Light Direction
+				// TODO: Move Calculation
+				// TODO: Stop it rotating with camera
+				var lightingDirection = [ directionalLight.x, directionalLight.y, directionalLight.z];
+				var adjustedLD = vec3.create();
+				vec3.normalize(lightingDirection, adjustedLD);
+				vec3.scale(adjustedLD, -1);
+				// Unrotate Vec for camera
+				// HACK - We really shouldn't have to adjust for camera
+				// This is a consequence of rotating out of the scene into camera coords before rendering
+				// Consider moving adding uniform to shader to undo camera rotation
+				var cameraRotation = mat4.create();
+				mat4.identity(cameraRotation);
+				mat4.rotate(cameraRotation, -degToRad(_playerCamera.yaw), [0, 1, 0]);
+				mat4.rotate(cameraRotation, -degToRad(_playerCamera.pitch), [1, 0, 0]);
+				mat4.multiplyVec3(cameraRotation, adjustedLD, adjustedLD);
+				
+				_gl.uniform3fv(_shaderProgram.lightingDirectionUniform, adjustedLD);
+				// Directional Light Colour
+				_gl.uniform3f(_shaderProgram.directionalColorUniform,directionalLight.r,directionalLight.g,directionalLight.b);
+			}
 		}
 		
         _setMatrixUniforms();
@@ -88,7 +145,7 @@ function _Gremlin() {
 		}
 		else {
 			if(object.useIndices) {
-			_gl.drawElements(_gl.LINES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+				_gl.drawElements(_gl.LINES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
 			}
 			else {
 				_gl.drawArrays(_gl.LINES, 0, object.buffers.vertexPosition.numItems);
@@ -302,7 +359,55 @@ function _Gremlin() {
 			
 				object.assignBuffer("vertexColor", cubeVertexColorBuffer);
 			}
-					
+
+			// Normal Buffer
+			// WARNING: This is dependant on shader program should make this more robust
+			var cubeVertexNormalBuffer;
+			cubeVertexNormalBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexNormalBuffer);
+			var vertexNormals = [
+			  // Front face
+			   0.0,  0.0,  1.0,
+			   0.0,  0.0,  1.0,
+			   0.0,  0.0,  1.0,
+			   0.0,  0.0,  1.0,
+
+			  // Back face
+			   0.0,  0.0, -1.0,
+			   0.0,  0.0, -1.0,
+			   0.0,  0.0, -1.0,
+			   0.0,  0.0, -1.0,
+
+			  // Top face
+			   0.0,  1.0,  0.0,
+			   0.0,  1.0,  0.0,
+			   0.0,  1.0,  0.0,
+			   0.0,  1.0,  0.0,
+
+			  // Bottom face
+			   0.0, -1.0,  0.0,
+			   0.0, -1.0,  0.0,
+			   0.0, -1.0,  0.0,
+			   0.0, -1.0,  0.0,
+
+			  // Right face
+			   1.0,  0.0,  0.0,
+			   1.0,  0.0,  0.0,
+			   1.0,  0.0,  0.0,
+			   1.0,  0.0,  0.0,
+
+			  // Left face
+			  -1.0,  0.0,  0.0,
+			  -1.0,  0.0,  0.0,
+			  -1.0,  0.0,  0.0,
+			  -1.0,  0.0,  0.0,
+			];
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
+			cubeVertexNormalBuffer.itemSize = 3;
+			cubeVertexNormalBuffer.numItems = 24;
+			
+			object.assignBuffer("vertexNormals", cubeVertexNormalBuffer);
+			
 			// Index Buffer
 			var cubeVertexIndexBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
@@ -382,12 +487,14 @@ function _Gremlin() {
 			
 			object.assignBuffer("vertexPosition", sphereVertexPositionBuffer);
 			
-			// TODO: Include normals
-			/*var sphereVertexNormalBuffer = _gl.createBuffer();
+			// Normals, WARNING: dependant on shaderProgram
+			var sphereVertexNormalBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexNormalBuffer);
 			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(normalData), _gl.STATIC_DRAW);
 			sphereVertexNormalBuffer.itemSize = 3;
-			sphereVertexNormalBuffer.numItems = normalData.length / 3;*/
+			sphereVertexNormalBuffer.numItems = normalData.length / 3;
+			
+			object.assignBuffer("vertexNormals", sphereVertexNormalBuffer);
 			
 			if (textured) {
 				var sphereVertexTextureCoordBuffer = _gl.createBuffer();
@@ -471,12 +578,25 @@ function _Gremlin() {
 		texture.image.src = fileName;
 		return texture;
 	}
-	function handleLoadedTexture(texture) {
+	function handleLoadedTexture(texture, quality) {
+		// Quality
+		// 1 = Nearest Filtering, 2 = Linear Fitlering, 3 = Mipmaps
 		_gl.bindTexture(_gl.TEXTURE_2D, texture);
 		_gl.pixelStorei(_gl.UNPACK_FLIP_Y_WEBGL, true);
 		_gl.texImage2D(_gl.TEXTURE_2D, 0, _gl.RGBA, _gl.RGBA, _gl.UNSIGNED_BYTE, texture.image);
-		_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.NEAREST);
-		_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.NEAREST);
+		if(quality === 3) {
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.LINEAR);
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.LINEAR_MIPMAP_NEAREST);
+			_gl.generateMipmap(_gl.TEXTURE_2D);
+		}
+		else if (quality === 2) {
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.LINEAR);
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.LINEAR);
+		}
+		else {
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.NEAREST);
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.NEAREST);
+		}
 		_gl.bindTexture(_gl.TEXTURE_2D, null);
 	}
 	
@@ -509,7 +629,7 @@ function _Gremlin() {
     var _mvMatrixStack = [];
     // Perspective Matrix
 	var _pMatrix = mat4.create();
-
+	
 	// Basic Camera Obj
 	// TODO: Add Roll
 	// TODO: Convert to Matrix - remove Pitch Clamping
@@ -574,6 +694,12 @@ function _Gremlin() {
     function _setMatrixUniforms() {
         _gl.uniformMatrix4fv(_shaderProgram.pMatrixUniform, false, _pMatrix);
         _gl.uniformMatrix4fv(_shaderProgram.mvMatrixUniform, false, _mvMatrix);
+		
+		// TODO: Lighting Shader Only
+		var normalMatrix = mat3.create();
+		mat4.toInverseMat3(_mvMatrix, normalMatrix);
+		mat3.transpose(normalMatrix);
+		_gl.uniformMatrix3fv(_shaderProgram.nMatrixUniform, false, normalMatrix);
     }
 	
 	// Shader Code
@@ -640,10 +766,23 @@ function _Gremlin() {
 		else if (type == "Textured") {
 			program.textureCoordAttribute = _gl.getAttribLocation(program, "aTextureCoord");
 			_gl.enableVertexAttribArray(program.textureCoordAttribute);
+			
+			// Normals
+			program.vertexNormalAttribute = _gl.getAttribLocation(program, "aVertexNormal");
+			_gl.enableVertexAttribArray(program.vertexNormalAttribute);
 		}
 
         program.pMatrixUniform = _gl.getUniformLocation(program, "uPMatrix");
         program.mvMatrixUniform = _gl.getUniformLocation(program, "uMVMatrix");
+		
+		// Lighting Uniforms
+		// TODO: Generalise
+		program.nMatrixUniform = _gl.getUniformLocation(program, "uNMatrix");
+        program.samplerUniform = _gl.getUniformLocation(program, "uSampler");
+        program.useLightingUniform = _gl.getUniformLocation(program, "uUseLighting");
+        program.ambientColorUniform = _gl.getUniformLocation(program, "uAmbientColor");
+        program.lightingDirectionUniform = _gl.getUniformLocation(program, "uLightingDirection");
+        program.directionalColorUniform = _gl.getUniformLocation(program, "uDirectionalColor");
 		
 		return program
 	}
@@ -655,7 +794,7 @@ function _Gremlin() {
 	}
 	function _initShaders() {
 		_shaderPrograms["Colour"] = _createShader("colour-shader-vs", "colour-shader-fs", "Colour");
-		_shaderPrograms["Texture"] = _createShader("texture-shader-vs", "texture-shader-fs", "Textured");         
+		_shaderPrograms["Texture"] = _createShader("texture-shader-vs", "texture-shader-fs", "Textured");
     }	
 	
 	//	 _                     _ _           
@@ -669,6 +808,8 @@ function _Gremlin() {
 		createPrimitive:			createPrimitive,
 		createTexture:				createTexture,
 		handleLoadedTexture:		handleLoadedTexture,
+		setLightEnvironment:		setLightEnvironment,
+		setLighting:				setLighting,
 		prepareScene: 				prepareScene, 
 		renderObject:				renderObject,
 		movePlayerCamera:			movePlayerCamera,

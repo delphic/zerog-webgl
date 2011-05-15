@@ -40,25 +40,45 @@
 			#endif
 
 			varying vec2 vTextureCoord;
+			varying vec3 vLightWeighting;
 
 			uniform sampler2D uSampler;
 
-			void main(void) {			
-				gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+			void main(void) {
+				vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+				gl_FragColor = vec4(textureColor.rgb * vLightWeighting, textureColor.a);
 			}
 		</script>
 		<script id="texture-shader-vs" type="x-shader/x-vertex">
 			attribute vec3 aVertexPosition;
+			attribute vec3 aVertexNormal;
 			attribute vec2 aTextureCoord;
 
 			uniform mat4 uMVMatrix;
 			uniform mat4 uPMatrix;
+			uniform mat3 uNMatrix;
+			
+			uniform vec3 uAmbientColor;
+
+			uniform vec3 uLightingDirection;
+			uniform vec3 uDirectionalColor;
+
+			uniform bool uUseLighting;
 
 			varying vec2 vTextureCoord;
+			varying vec3 vLightWeighting;
 
 			void main(void) {
 				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
 				vTextureCoord = aTextureCoord;
+				
+				if(!uUseLighting) {
+					vLightWeighting = vec3(1.0, 1.0, 1.0);
+				}else {
+					vec3 transformedNormal = uNMatrix * aVertexNormal;
+					float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
+					vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
+				}
 			}
 		</script>
 		<!-- Gremlin Engine -->
@@ -192,32 +212,29 @@
 	
 	// Game Init
 	function gameInit() {
-		var pyramid = new gameObject(-1.5,0,-8.0);
+		// Lighting
+		Gremlin.setLightEnvironment(0.1,0.1,0.1,0.8,0.8,1.0,-1.0,0.0,0.0);
+		Gremlin.setLighting(true);
+		
+		// Game Objects
 		var cube = new gameObject(1.5,0,-8.0);
-		var sphere = new gameObject(0, 3, -8.0);
-		var ray = new gameObject(0,-3, -8.0);
+		var sphere = new gameObject(-1.5, 0, -8.0);
 		
-		Gremlin.createPrimitive(pyramid, "pyramid", false, false, 1, 0, 0);
-		Gremlin.createPrimitive(cube, "cube", false, true, 1, 0, 0);
-		Gremlin.createPrimitive(sphere, "sphere", true, true, 1.5, 30, 30);
-		Gremlin.createPrimitive(ray, "ray", true, false, 5, 0, 0);
+		Gremlin.createPrimitive(cube, "cube", false, true, 0.7, 0, 0);
+		Gremlin.createPrimitive(sphere, "sphere", false, true, 1.5, 30, 30);
 		
-		gameObjects["pyramid"] = pyramid;
 		gameObjects["cube"] = cube;
 		gameObjects["sphere"] = sphere;
-		gameObjects["ray"] = ray;
 		
 		// TODO: Move to texture and handle event to Texture List in Engine, store index in gameobject
-		gameObjects.cube.texture = Gremlin.createTexture("textures/delph.png");
-		gameObjects.cube.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.cube.texture); } 
+		gameObjects.cube.texture = Gremlin.createTexture("textures/crate.gif");
+		gameObjects.cube.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.cube.texture, 3); } 
 		
-		gameObjects.sphere.texture = Gremlin.createTexture("textures/delph.png");
-		gameObjects.sphere.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.sphere.texture); }
+		gameObjects.sphere.texture = Gremlin.createTexture("textures/earth.jpg");
+		gameObjects.sphere.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.sphere.texture, 3); }
 		
-		gameObjects.pyramid.animate = function(elapsed) { this.rotate( ( (180 * elapsed) / 1000.0), 0, 1, 0); };
 		gameObjects.cube.animate = function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); };
-		gameObjects.sphere.animate = function(elapsed) { this.rotate( ( (-50 * elapsed) / 1000.0), 1, 1, 1); };
-		gameObjects.ray.animate = function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); };
+		gameObjects.sphere.animate = function(elapsed) { this.rotate( ( (-50 * elapsed) / 1000.0), 0, 1, 0); };
 	}
 	
 	// WebGL Start

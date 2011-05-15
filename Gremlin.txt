@@ -94,6 +94,9 @@ v0.3
 * Texture Filters (Global Setting)
 * Per Vertex Lighting Shaders
 	* Add Normals to Primitives
+	* Add uniforms for ambient and single directional light
+	* Add useLighting to objects / fullBright
+	* Think about how to do multiple lights (passing an array of uniforms to the shader perhaps?)
 * External Shader Scripts (maybe)
 
 v0.4 
@@ -103,6 +106,11 @@ v0.4
 
 v0.5
 * Loading Objects from Files
+* Loading 'levels' from Files
+
+v0.6
 * Render to Texture
 * Alpha Blending
 * Specular Maps
+
+THEN onto GUI & HUD (using HTML), sound and input controls (separate files perhaps)
