@@ -78,7 +78,7 @@ function _Gremlin() {
 		
         _setMatrixUniforms();
 		
-		if (!object.wireFrame) {
+		if (!object.wireframe) {
 			if(object.useIndices) {
 				_gl.drawElements(_gl.TRIANGLES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
 			}
@@ -97,39 +97,50 @@ function _Gremlin() {
         _mvPopMatrix();
 	}
 		
-	// TODO: Should have an init buffer for object method - manager for objects in game code
-	// Debug shapes vertex info stored in engine
-	// Debug shapes to have a single colour
-    function createDebugBuffers(object, objectType) {
+    function createPrimitive(object, objectType, wireframe, textured, size, latBands, longBands) {
 		// TODO: Add Cylinders, Generalise to Cuboids & Elipsoids and add 2D shapes Rays, Elipses, Rectangles 
 		// TODO: add parameters for creation (i.e. size, number of sides for spheres / cylinders etc)
+		// TODO: Convert colour buffers to single colour
+		if (wireframe) {
+			object.wireframe = true;
+		}
 		if (objectType === "pyramid") {
+			// TODO: Convert to use index buffer
 			var pyramidVertexPositionBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
 			var vertices = [
 				// Front face
-				 0.0,  1.0,  0.0,
-				-1.0, -1.0,  1.0,
-				 1.0, -1.0,  1.0,
+				 0.0,  size,  0.0,
+				-size, -size,  size,
+				 size, -size,  size,
 
 				// Right face
-				 0.0,  1.0,  0.0,
-				 1.0, -1.0,  1.0,
-				 1.0, -1.0, -1.0,
+				 0.0,  size,  0.0,
+				 size, -size,  size,
+				 size, -size, -size,
 
 				// Back face
-				 0.0,  1.0,  0.0,
-				 1.0, -1.0, -1.0,
-				-1.0, -1.0, -1.0,
+				 0.0,  size,  0.0,
+				 size, -size, -size,
+				-size, -size, -size,
 
 				// Left face
-				 0.0,  1.0,  0.0,
-				-1.0, -1.0, -1.0,
-				-1.0, -1.0,  1.0
+				 0.0,  size,  0.0,
+				-size, -size, -size,
+				-size, -size,  size,
+				
+				// Bottom face
+				-size, -size, -size,
+				-size, -size, size,
+				size, -size, size,
+				-size, -size, -size,
+				size, -size, size,
+				size, -size, -size
+				
 			];
 			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 			pyramidVertexPositionBuffer.itemSize = 3;
-			pyramidVertexPositionBuffer.numItems = 12;
+			pyramidVertexPositionBuffer.numItems = 18;
 			
 			object.assignBuffer("vertexPosition", pyramidVertexPositionBuffer);
 
@@ -154,11 +165,19 @@ function _Gremlin() {
 				// Left face
 				1.0, 0.0, 0.0, 1.0,
 				0.0, 0.0, 1.0, 1.0,
+				0.0, 1.0, 0.0, 1.0,
+				
+				// Bottom face
+				0.0, 0.0, 1.0, 1.0,
+				0.0, 1.0, 0.0, 1.0,
+				0.0, 0.0, 1.0, 1.0,
+				0.0, 0.0, 1.0, 1.0,
+				0.0, 0.0, 1.0, 1.0,
 				0.0, 1.0, 0.0, 1.0
 			];
 			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(colors), _gl.STATIC_DRAW);
 			pyramidVertexColorBuffer.itemSize = 4;
-			pyramidVertexColorBuffer.numItems = 12;
+			pyramidVertexColorBuffer.numItems = 18;
 
 			object.assignBuffer("vertexColor", pyramidVertexColorBuffer);
 		}
@@ -168,40 +187,40 @@ function _Gremlin() {
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
 			vertices = [
 				// Front face
-				-1.0, -1.0,  1.0,
-				 1.0, -1.0,  1.0,
-				 1.0,  1.0,  1.0,
-				-1.0,  1.0,  1.0,
+				-size, -size,  size,
+				 size, -size,  size,
+				 size,  size,  size,
+				-size,  size,  size,
 
 				// Back face
-				-1.0, -1.0, -1.0,
-				-1.0,  1.0, -1.0,
-				 1.0,  1.0, -1.0,
-				 1.0, -1.0, -1.0,
+				-size, -size, -size,
+				-size,  size, -size,
+				 size,  size, -size,
+				 size, -size, -size,
 
 				// Top face
-				-1.0,  1.0, -1.0,
-				-1.0,  1.0,  1.0,
-				 1.0,  1.0,  1.0,
-				 1.0,  1.0, -1.0,
+				-size,  size, -size,
+				-size,  size,  size,
+				 size,  size,  size,
+				 size,  size, -size,
 
 				// Bottom face
-				-1.0, -1.0, -1.0,
-				 1.0, -1.0, -1.0,
-				 1.0, -1.0,  1.0,
-				-1.0, -1.0,  1.0,
+				-size, -size, -size,
+				 size, -size, -size,
+				 size, -size,  size,
+				-size, -size,  size,
 
 				// Right face
-				 1.0, -1.0, -1.0,
-				 1.0,  1.0, -1.0,
-				 1.0,  1.0,  1.0,
-				 1.0, -1.0,  1.0,
+				 size, -size, -size,
+				 size,  size, -size,
+				 size,  size,  size,
+				 size, -size,  size,
 
 				// Left face
-				-1.0, -1.0, -1.0,
-				-1.0, -1.0,  1.0,
-				-1.0,  1.0,  1.0,
-				-1.0,  1.0, -1.0
+				-size, -size, -size,
+				-size, -size,  size,
+				-size,  size,  size,
+				-size,  size, -size
 			];
 			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 			cubeVertexPositionBuffer.itemSize = 3;
@@ -209,79 +228,81 @@ function _Gremlin() {
 			
 			object.assignBuffer("vertexPosition", cubeVertexPositionBuffer);
 		
-			// Color Buffer
-			var cubeVertexColorBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexColorBuffer);
-			colors = [
-				[1.0, 0.0, 0.0, 1.0], // Front face
-				[1.0, 1.0, 0.0, 1.0], // Back face
-				[0.0, 1.0, 0.0, 1.0], // Top face
-				[1.0, 0.5, 0.5, 1.0], // Bottom face
-				[1.0, 0.0, 1.0, 1.0], // Right face
-				[0.0, 0.0, 1.0, 1.0]  // Left face
-			];
-			var unpackedColors = [];
-			for (var i in colors) {
-				var color = colors[i];
-				for (var j=0; j < 4; j++) {
-					unpackedColors = unpackedColors.concat(color);
-				}
-			}
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(unpackedColors), _gl.STATIC_DRAW);
-			cubeVertexColorBuffer.itemSize = 4;
-			cubeVertexColorBuffer.numItems = 24;
-		
-			object.assignBuffer("vertexColor", cubeVertexColorBuffer);
-		
 			// Texture Buffer
-			// TODO: Remove from Debug Buffer
-			var cubeVertexTextureCoordBuffer;
-			cubeVertexTextureCoordBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-			var textureCoords = [
-			  // Front face
-			  0.0, 0.0,
-			  1.0, 0.0,
-			  1.0, 1.0,
-			  0.0, 1.0,
+			if(textured) {
+				var cubeVertexTextureCoordBuffer;
+				cubeVertexTextureCoordBuffer = _gl.createBuffer();
+				_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
+				var textureCoords = [
+				  // Front face
+				  0.0, 0.0,
+				  1.0, 0.0,
+				  1.0, 1.0,
+				  0.0, 1.0,
 
-			  // Back face
-			  1.0, 0.0,
-			  1.0, 1.0,
-			  0.0, 1.0,
-			  0.0, 0.0,
+				  // Back face
+				  1.0, 0.0,
+				  1.0, 1.0,
+				  0.0, 1.0,
+				  0.0, 0.0,
 
-			  // Top face
-			  0.0, 1.0,
-			  0.0, 0.0,
-			  1.0, 0.0,
-			  1.0, 1.0,
+				  // Top face
+				  0.0, 1.0,
+				  0.0, 0.0,
+				  1.0, 0.0,
+				  1.0, 1.0,
 
-			  // Bottom face
-			  1.0, 1.0,
-			  0.0, 1.0,
-			  0.0, 0.0,
-			  1.0, 0.0,
+				  // Bottom face
+				  1.0, 1.0,
+				  0.0, 1.0,
+				  0.0, 0.0,
+				  1.0, 0.0,
 
-			  // Right face
-			  1.0, 0.0,
-			  1.0, 1.0,
-			  0.0, 1.0,
-			  0.0, 0.0,
+				  // Right face
+				  1.0, 0.0,
+				  1.0, 1.0,
+				  0.0, 1.0,
+				  0.0, 0.0,
 
-			  // Left face
-			  0.0, 0.0,
-			  1.0, 0.0,
-			  1.0, 1.0,
-			  0.0, 1.0,
-			];
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
-			cubeVertexTextureCoordBuffer.itemSize = 2;
-			cubeVertexTextureCoordBuffer.numItems = 24;
+				  // Left face
+				  0.0, 0.0,
+				  1.0, 0.0,
+				  1.0, 1.0,
+				  0.0, 1.0,
+				];
+				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
+				cubeVertexTextureCoordBuffer.itemSize = 2;
+				cubeVertexTextureCoordBuffer.numItems = 24;
+				
+				object.assignBuffer("textureCoords", cubeVertexTextureCoordBuffer);
+				object.useTextures = true;
+			}
+			else {
+				// Color Buffer
+				var cubeVertexColorBuffer = _gl.createBuffer();
+				_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexColorBuffer);
+				colors = [
+					[1.0, 0.0, 0.0, 1.0], // Front face
+					[1.0, 1.0, 0.0, 1.0], // Back face
+					[0.0, 1.0, 0.0, 1.0], // Top face
+					[1.0, 0.5, 0.5, 1.0], // Bottom face
+					[1.0, 0.0, 1.0, 1.0], // Right face
+					[0.0, 0.0, 1.0, 1.0]  // Left face
+				];
+				var unpackedColors = [];
+				for (var i in colors) {
+					var color = colors[i];
+					for (var j=0; j < 4; j++) {
+						unpackedColors = unpackedColors.concat(color);
+					}
+				}
+				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(unpackedColors), _gl.STATIC_DRAW);
+				cubeVertexColorBuffer.itemSize = 4;
+				cubeVertexColorBuffer.numItems = 24;
 			
-			object.assignBuffer("textureCoords", cubeVertexTextureCoordBuffer);
-			object.useTextures = true;
-		
+				object.assignBuffer("vertexColor", cubeVertexColorBuffer);
+			}
+					
 			// Index Buffer
 			var cubeVertexIndexBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
@@ -301,12 +322,10 @@ function _Gremlin() {
 			object.useIndices = true; 
 		}
 		else if (objectType==="sphere") {
-			// TODO: Ability to set latitude and longitude in function
-			// - will require a number of createDebugBuffer functions
 			// Method taken from Lesson 11 of learningWebGL.com
-			var latitudeBands = 30;
-			var longitudeBands = 30;
-			var radius = 1;
+			var latitudeBands = latBands;
+			var longitudeBands = longBands;
+			var radius = size;
 
 			var vertexPositionData = [];
 			var normalData = [];
@@ -316,6 +335,7 @@ function _Gremlin() {
 				var sinTheta = Math.sin(theta);
 				var cosTheta = Math.cos(theta);
 
+				// Generate Values
 				for (var longNumber=0; longNumber <= longitudeBands; longNumber++) {
 					var phi = longNumber * 2 * Math.PI / longitudeBands;
 					var sinPhi = Math.sin(phi);
@@ -353,20 +373,7 @@ function _Gremlin() {
 				}
 			}
 
-			// TODO: Include textures (although not for debug shapes or at least not yet) and normals (yes for debug shapes too)!
-			/*var sphereVertexNormalBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexNormalBuffer);
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(normalData), _gl.STATIC_DRAW);
-			sphereVertexNormalBuffer.itemSize = 3;
-			sphereVertexNormalBuffer.numItems = normalData.length / 3;
-
-			var sphereVertexTextureCoordBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexTextureCoordBuffer);
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordData), _gl.STATIC_DRAW);
-			sphereVertexTextureCoordBuffer.itemSize = 2;
-			sphereVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
-			*/
-			
+			// Vertex Buffer
 			var sphereVertexPositionBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexPositionBuffer);
 			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexPositionData), _gl.STATIC_DRAW);
@@ -375,27 +382,49 @@ function _Gremlin() {
 			
 			object.assignBuffer("vertexPosition", sphereVertexPositionBuffer);
 			
-			var sphereVertexColorBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexColorBuffer);
-			colors = []
-			// Weyhey! Random Stripey Sphere!
-			for (var i=0; i < sphereVertexPositionBuffer.numItems; i++) {
-				if(i%3 === 0) {
-					colors = colors.concat([1.0, 0.0, 0.0, 1.0]);
-				}
-				else if (i%3 === 1){
-					colors = colors.concat([0.0, 0.0, 1.0, 1.0]);
-				}
-				else {
-					colors = colors.concat([0.0, 1.0, 0.0, 1.0]);
-				}
-			}
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(colors), _gl.STATIC_DRAW);
-			sphereVertexColorBuffer.itemSize = 4;
-			sphereVertexColorBuffer.numItems = sphereVertexPositionBuffer.numItems;
+			// TODO: Include normals
+			/*var sphereVertexNormalBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexNormalBuffer);
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(normalData), _gl.STATIC_DRAW);
+			sphereVertexNormalBuffer.itemSize = 3;
+			sphereVertexNormalBuffer.numItems = normalData.length / 3;*/
 			
-			object.assignBuffer("vertexColor", sphereVertexColorBuffer);
+			if (textured) {
+				var sphereVertexTextureCoordBuffer = _gl.createBuffer();
+				
+				_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexTextureCoordBuffer);
+				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordData), _gl.STATIC_DRAW);
+				sphereVertexTextureCoordBuffer.itemSize = 2;
+				sphereVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
+				
+				object.assignBuffer("textureCoords", sphereVertexTextureCoordBuffer);
+				object.useTextures = true;
+			} 
+			else {
+				var sphereVertexColorBuffer = _gl.createBuffer();
+				_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexColorBuffer);
+				colors = []
+				// Weyhey! Random Stripey Sphere!
+				for (var i=0; i < sphereVertexPositionBuffer.numItems; i++) {
+					if(i%3 === 0) {
+						colors = colors.concat([1.0, 0.0, 0.0, 1.0]);
+					}
+					else if (i%3 === 1){
+						colors = colors.concat([0.0, 0.0, 1.0, 1.0]);
+					}
+					else {
+						colors = colors.concat([0.0, 1.0, 0.0, 1.0]);
+					}
+				}
+			
+				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(colors), _gl.STATIC_DRAW);
+				sphereVertexColorBuffer.itemSize = 4;
+				sphereVertexColorBuffer.numItems = sphereVertexPositionBuffer.numItems;
+				
+				object.assignBuffer("vertexColor", sphereVertexColorBuffer);
+			}
 
+			// Index Buffer
 			var sphereVertexIndexBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer);
 			_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), _gl.STATIC_DRAW);
@@ -404,6 +433,33 @@ function _Gremlin() {
 			
 			object.assignBuffer("vertexIndex", sphereVertexIndexBuffer);
 			object.useIndices = true; 
+		}
+		else if (objectType==="ray") {
+			object.wireframe = true;
+			
+			var rayVertexPositionBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, rayVertexPositionBuffer);
+			var vertices = [
+				 0.0,  0.0,  0,
+				 0.0, 0.0,  size,				
+			];
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+			rayVertexPositionBuffer.itemSize = 3;
+			rayVertexPositionBuffer.numItems = 2;
+			
+			object.assignBuffer("vertexPosition", rayVertexPositionBuffer);
+			
+			var rayVertexColorBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, rayVertexColorBuffer);
+			var colors = [
+				1.0, 0.0, 0.0, 1.0,
+				1.0, 0.0, 0.0, 1.0,
+			];
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(colors), _gl.STATIC_DRAW);
+			rayVertexColorBuffer.itemSize = 4;
+			rayVertexColorBuffer.numItems = 2;
+
+			object.assignBuffer("vertexColor", rayVertexColorBuffer);
 		}
 	}
 	
@@ -610,7 +666,7 @@ function _Gremlin() {
 
 	return { 
 		init: 						init, 
-		createDebugBuffers:			createDebugBuffers,
+		createPrimitive:			createPrimitive,
 		createTexture:				createTexture,
 		handleLoadedTexture:		handleLoadedTexture,
 		prepareScene: 				prepareScene, 

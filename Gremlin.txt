@@ -85,10 +85,24 @@ v0.2
 * Fix input not working for not fullscreen - (need to set width)
 * Fix Cursor Issues - override default action (also invisible cursor)
 * MultiShader Programs and Multiple Shader Scripts
-* Convert from Debug Shapes to primitives
 * Basic Textures
-* Basic Loading Objects from Files
 * Game Object Manager
+* Convert from Debug Shapes to primitives
+[* Add Menu Overlay - Meh this can wait until I have something for it to do]
 
-v0.25 
-* External Shader Scripts
+v0.3
+* Texture Filters (Global Setting)
+* Per Vertex Lighting Shaders
+	* Add Normals to Primitives
+* External Shader Scripts (maybe)
+
+v0.4 
+* Per Pixel Lighting Shaders
+* Specular Lighting
+* Light Manager
+
+v0.5
+* Loading Objects from Files
+* Render to Texture
+* Alpha Blending
+* Specular Maps

@@ -3,6 +3,7 @@
 	<head>
 		<meta charset="utf-8"/>
 		<title>Gremlin Test Index</title>
+		<!--<script type="text/javascript" src="libs/jquery-1.6.1.min.js"></script>-->
 		<script type="text/javascript" src="libs/glMatrix-0.9.5.min.js"></script>
 		<script type="text/javascript" src="libs/webgl-utils.js"></script>
 		<!-- Shaders -->
@@ -153,13 +154,13 @@
 		this.setPosition = setPosition;
 		this.rotate = rotate;
 		this.setRotation = setRotation;
-		this.animate;
+		this.animate = defaultAnimation;
 		this.assignBuffer = assignBuffer;
 
 		// Render Flags
 		// Consider: Moving to Renderer
 		this.visible = true;
-		this.wireFrame = false;
+		this.wireframe = false;
 		this.useIndices = false;
 		this.useTextures = false;
 		
@@ -183,6 +184,7 @@
 			mat4.rotate(this.rotation, Gremlin.degToRad(pitch), [1,0,0]);
 			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,0]);
 		}
+		function defaultAnimation() { /* Blank */ }
 		function assignBuffer(name, buffer) {
 			this.buffers[name] = buffer;
 		}
@@ -192,25 +194,36 @@
 	function gameInit() {
 		var pyramid = new gameObject(-1.5,0,-8.0);
 		var cube = new gameObject(1.5,0,-8.0);
+		var sphere = new gameObject(0, 3, -8.0);
+		var ray = new gameObject(0,-3, -8.0);
 		
-		Gremlin.createDebugBuffers(pyramid, "pyramid");
-		Gremlin.createDebugBuffers(cube, "cube");
+		Gremlin.createPrimitive(pyramid, "pyramid", false, false, 1, 0, 0);
+		Gremlin.createPrimitive(cube, "cube", false, true, 1, 0, 0);
+		Gremlin.createPrimitive(sphere, "sphere", true, true, 1.5, 30, 30);
+		Gremlin.createPrimitive(ray, "ray", true, false, 5, 0, 0);
 		
 		gameObjects["pyramid"] = pyramid;
 		gameObjects["cube"] = cube;
+		gameObjects["sphere"] = sphere;
+		gameObjects["ray"] = ray;
 		
 		// TODO: Move to texture and handle event to Texture List in Engine, store index in gameobject
 		gameObjects.cube.texture = Gremlin.createTexture("textures/delph.png");
 		gameObjects.cube.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.cube.texture); } 
 		
+		gameObjects.sphere.texture = Gremlin.createTexture("textures/delph.png");
+		gameObjects.sphere.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.sphere.texture); }
+		
 		gameObjects.pyramid.animate = function(elapsed) { this.rotate( ( (180 * elapsed) / 1000.0), 0, 1, 0); };
 		gameObjects.cube.animate = function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); };
-		
+		gameObjects.sphere.animate = function(elapsed) { this.rotate( ( (-50 * elapsed) / 1000.0), 1, 1, 1); };
+		gameObjects.ray.animate = function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); };
 	}
 	
 	// WebGL Start
 	
     function webGLStart() {
+		// Add detection of browser capabilities
 		// Set Canvas Size
 		fullScreen();
 		//setSize(800,800);
