@@ -100,13 +100,15 @@ v0.3
 * External Shader Scripts (maybe)
 
 v0.4 
-* Per Pixel Lighting Shaders
-* Specular Lighting
+* Point Lights - unskew from camera - need coordinate transform functions for rotation (directional light) and position (point lights & presumably spot lights).
 * Light Manager
-
-v0.5
 * Loading Objects from Files
 * Loading 'levels' from Files
+
+
+v0.5
+* Per Pixel Lighting Shaders
+* Specular Lighting
 
 v0.6
 * Render to Texture

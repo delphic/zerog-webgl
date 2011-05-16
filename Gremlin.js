@@ -108,9 +108,10 @@ function _Gremlin() {
 			// TODO: Unnest from use textures
 			if(lighting) {
 				_gl.uniform1i(_shaderProgram.useLightingUniform, true);
-				// Ambient Colour
+				// Ambient Light
 				_gl.uniform3f(_shaderProgram.ambientColorUniform, ambientLight.r, ambientLight.g, ambientLight.b);
-				// Light Direction
+				
+				// Directional Light
 				// TODO: Move Calculation
 				// TODO: Stop it rotating with camera
 				var lightingDirection = [ directionalLight.x, directionalLight.y, directionalLight.z];
@@ -130,6 +131,11 @@ function _Gremlin() {
 				_gl.uniform3fv(_shaderProgram.lightingDirectionUniform, adjustedLD);
 				// Directional Light Colour
 				_gl.uniform3f(_shaderProgram.directionalColorUniform,directionalLight.r,directionalLight.g,directionalLight.b);
+				
+				// Point Lights
+				// BUG: Moves with camera, either implement hack (translate and rotate back) or implement different camera system
+				_gl.uniform3f(_shaderProgram.pointLightingLocationUniform, 0,0,-8.0);
+				_gl.uniform3f(_shaderProgram.pointLightingColorUniform,0,1.0,0);
 			}
 		}
 		
@@ -783,6 +789,8 @@ function _Gremlin() {
         program.ambientColorUniform = _gl.getUniformLocation(program, "uAmbientColor");
         program.lightingDirectionUniform = _gl.getUniformLocation(program, "uLightingDirection");
         program.directionalColorUniform = _gl.getUniformLocation(program, "uDirectionalColor");
+		program.pointLightingLocationUniform = _gl.getUniformLocation(program, "uPointLightingLocation");
+        program.pointLightingColorUniform = _gl.getUniformLocation(program, "uPointLightingColor");
 		
 		return program
 	}
