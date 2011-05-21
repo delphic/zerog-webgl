@@ -101,6 +101,7 @@ v0.3
 
 v0.4 
 * Point Lights - unskew from camera - need coordinate transform functions for rotation (directional light) and position (point lights & presumably spot lights).
+	After unskew add read out of position and check the position calculation of the spot light
 * Light Manager
 * Loading Objects from Files
 * Loading 'levels' from Files

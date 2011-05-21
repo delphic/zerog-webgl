@@ -57,6 +57,9 @@ function _Gremlin() {
         mat4.perspective(45, _gl.viewportWidth / _gl.viewportHeight, 0.1, 100.0, _pMatrix);
 
 		// Set Camera View
+		// This transforms the model view matrix to use the camera coordinate system
+		// Anything specified in global coords rather than in relation to the newly 
+		// calculated mvMatrix, will also need to be transformed
 		mat4.identity(_mvMatrix);
 		// TODO: Add Roll
         mat4.rotate(_mvMatrix, -degToRad(_playerCamera.pitch), [1, 0, 0]);
@@ -118,14 +121,12 @@ function _Gremlin() {
 				var adjustedLD = vec3.create();
 				vec3.normalize(lightingDirection, adjustedLD);
 				vec3.scale(adjustedLD, -1);
-				// Unrotate Vec for camera
-				// HACK - We really shouldn't have to adjust for camera
-				// This is a consequence of rotating out of the scene into camera coords before rendering
-				// Consider moving adding uniform to shader to undo camera rotation
+				// Transform to Camera Coordinates
+				// TODO: Functions for this.
 				var cameraRotation = mat4.create();
 				mat4.identity(cameraRotation);
-				mat4.rotate(cameraRotation, -degToRad(_playerCamera.yaw), [0, 1, 0]);
 				mat4.rotate(cameraRotation, -degToRad(_playerCamera.pitch), [1, 0, 0]);
+				mat4.rotate(cameraRotation, -degToRad(_playerCamera.yaw), [0, 1, 0]);
 				mat4.multiplyVec3(cameraRotation, adjustedLD, adjustedLD);
 				
 				_gl.uniform3fv(_shaderProgram.lightingDirectionUniform, adjustedLD);
@@ -133,12 +134,22 @@ function _Gremlin() {
 				_gl.uniform3f(_shaderProgram.directionalColorUniform,directionalLight.r,directionalLight.g,directionalLight.b);
 				
 				// Point Lights
-				// BUG: Moves with camera, either implement hack (translate and rotate back) or implement different camera system
-				_gl.uniform3f(_shaderProgram.pointLightingLocationUniform, 0,0,-8.0);
-				_gl.uniform3f(_shaderProgram.pointLightingColorUniform,0,1.0,0);
+				// Again need to transform to camera coordinate system
+				// TODO: Functions for this.
+				// TODO: Generalise for multiple lights
+				var cameraTransform = cameraRotation;
+				mat4.translate(cameraTransform, [-_playerCamera.x, -_playerCamera.y, -_playerCamera.z]);
+				var pointLightingLocation = [0,0,-7.0];
+				mat4.multiplyVec3(cameraTransform, pointLightingLocation, pointLightingLocation);
+				_gl.uniform3fv(_shaderProgram.pointLightingLocationUniform[0], pointLightingLocation);
+				_gl.uniform3f(_shaderProgram.pointLightingColorUniform[0],0.0,2.0,0);
+				pointLightingLocation = [0,0,-5.5];
+				mat4.multiplyVec3(cameraTransform, pointLightingLocation, pointLightingLocation);
+				_gl.uniform3fv(_shaderProgram.pointLightingLocationUniform[1], pointLightingLocation);
+				_gl.uniform3f(_shaderProgram.pointLightingColorUniform[1],6.0,2.0,0);				
 			}
 		}
-		
+	
         _setMatrixUniforms();
 		
 		if (!object.wireframe) {
@@ -789,8 +800,12 @@ function _Gremlin() {
         program.ambientColorUniform = _gl.getUniformLocation(program, "uAmbientColor");
         program.lightingDirectionUniform = _gl.getUniformLocation(program, "uLightingDirection");
         program.directionalColorUniform = _gl.getUniformLocation(program, "uDirectionalColor");
-		program.pointLightingLocationUniform = _gl.getUniformLocation(program, "uPointLightingLocation");
-        program.pointLightingColorUniform = _gl.getUniformLocation(program, "uPointLightingColor");
+		program.pointLightingLocationUniform = new Array();
+		program.pointLightingColorUniform = new Array();
+		for(var i=0; i<8; i++) {
+			program.pointLightingLocationUniform[i] = _gl.getUniformLocation(program, "uPointLightingLocation["+i+"]");
+			program.pointLightingColorUniform[i] = _gl.getUniformLocation(program, "uPointLightingColor["+i+"]");
+		}
 		
 		return program
 	}

@@ -64,8 +64,8 @@
 			uniform vec3 uDirectionalColor;
 			
 			// TODO: multiple point lights
-			uniform vec3 uPointLightingLocation;
-			uniform vec3 uPointLightingColor;
+			uniform vec3 uPointLightingLocation[8];
+			uniform vec3 uPointLightingColor[8];
 
 			uniform bool uUseLighting;
 
@@ -80,13 +80,21 @@
 				if(!uUseLighting) {
 					vLightWeighting = vec3(1.0, 1.0, 1.0);
 				}else {
-					// Also skewed by Camera Position & Direction
-					vec3 pointLightDirection = normalize(uPointLightingLocation - mvPosition.xyz);
 					vec3 transformedNormal = uNMatrix * aVertexNormal;
 					
+					// Point Lights
+					vec3 pointLightComponent;
+					for(int i = 0; i < 8; i++) {
+						float pointLightDistance = length(uPointLightingLocation[i] - mvPosition.xyz);
+						vec3 pointLightDirection = normalize(uPointLightingLocation[i] - mvPosition.xyz);
+						float pointLightWeighting = max(dot(transformedNormal, pointLightDirection), 0.0) / (pointLightDistance*pointLightDistance);
+						
+						pointLightComponent += uPointLightingColor[i] * pointLightWeighting;
+					}
+					// Directional Light
 					float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
-					float pointLightWeighting = max(dot(transformedNormal, pointLightDirection), 0.0); // BUG does not obey inverse square law
-					vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting + uPointLightingColor * pointLightWeighting;
+					
+					vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting + pointLightComponent;
 				}
 			}
 		</script>
@@ -347,6 +355,8 @@
 	var controller = _controller();
 	
 	function fullScreen() {
+		// TODO: Separate Resolution, from size
+		// Width and height = resolution, then you can use CSS to stretch that to 100% if you wish.
 		canvas = document.getElementById("gremlinCanvas");
 		canvas.width = document.width;
 		canvas.height = document.height;
