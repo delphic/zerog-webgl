@@ -165,6 +165,7 @@ function _Gremlin() {
 	// Render Game Object
 	function renderObject(object) {
 		
+		if (!object.visible) return;
 		_mvPushMatrix();
 		mat4.translate(_mvMatrix, [object.x, object.y, object.z]);
         
@@ -575,6 +576,18 @@ function _Gremlin() {
 		}
 	}
 	
+	function loadModel(object, fileName, scale){
+		object.visible = false;
+		object.scale = scale;
+		var request = new XMLHttpRequest();
+        request.open("GET", fileName);
+        request.onreadystatechange = function () {
+            if (request.readyState == 4) {
+                _handleLoadedModel(object, JSON.parse(request.responseText));
+            }
+        }
+        request.send();
+	}
 	// TODO: Add engine texture manager
 	function createTexture(fileName) {
 		var texture;
@@ -726,6 +739,45 @@ function _Gremlin() {
         }
     }
 	
+	// Model Functions
+	function _handleLoadedModel(object, modelData) {
+		var modelVertexNormalBuffer = _gl.createBuffer();
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexNormalBuffer);
+        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexNormals), _gl.STATIC_DRAW);
+        modelVertexNormalBuffer.itemSize = 3;
+        modelVertexNormalBuffer.numItems = modelData.vertexNormals.length / 3;
+		
+		object.assignBuffer("vertexNormals", modelVertexNormalBuffer);
+
+        var modelVertexTextureCoordBuffer = _gl.createBuffer();
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexTextureCoordBuffer);
+        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexTextureCoords), _gl.STATIC_DRAW);
+        modelVertexTextureCoordBuffer.itemSize = 2;
+        modelVertexTextureCoordBuffer.numItems = modelData.vertexTextureCoords.length / 2;
+		
+		object.assignBuffer("textureCoords", modelVertexTextureCoordBuffer);
+		object.useTextures = true; // TODO: check that there were some tex-coords
+
+        var modelVertexPositionBuffer = _gl.createBuffer();
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexPositionBuffer);
+        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexPositions), _gl.STATIC_DRAW);
+        modelVertexPositionBuffer.itemSize = 3;
+        modelVertexPositionBuffer.numItems = modelData.vertexPositions.length / 3;
+		
+		object.assignBuffer("vertexPosition", modelVertexPositionBuffer);
+
+        var modelVertexIndexBuffer = _gl.createBuffer();
+        _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer);
+        _gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(modelData.indices), _gl.STATIC_DRAW);
+        modelVertexIndexBuffer.itemSize = 1;
+        modelVertexIndexBuffer.numItems = modelData.indices.length;
+
+		object.assignBuffer("vertexIndex", modelVertexIndexBuffer);
+		object.useIndices = true; 
+		
+		object.visible = true;
+	}
+	
 	// Matrix Functions - Stack functions and Set Shader Uniforms
 	function _mvPushMatrix() {
         var copy = mat4.create();
@@ -868,7 +920,7 @@ function _Gremlin() {
 	function _initShaders() {
 		_shaderPrograms["Vertex"] = _createShader("vertex-shader-vs", "vertex-shader-fs");
 		_shaderPrograms["Pixel"] = _createShader("pixel-shader-vs", "pixel-shader-fs");
-		_shaderProgram = _shaderPrograms.Pixel;
+		_shaderProgram = _shaderPrograms.Vertex;
 		_gl.useProgram(_shaderProgram);
     }	
 	
@@ -881,6 +933,7 @@ function _Gremlin() {
 	return { 
 		init: 						init, 
 		createPrimitive:			createPrimitive,
+		loadModel:					loadModel,
 		createTexture:				createTexture,
 		handleLoadedTexture:		handleLoadedTexture,
 		setLightEnvironment:		setLightEnvironment,

@@ -108,6 +108,8 @@ v0.4
 * Loading Objects from Files
 
 v0.5
+* Implement Scaling
+* Add uniforms for number of lights, so that we can exit the loops and save calculations on the GPU
 * Specular Lighting
 * Loading 'levels' from Files
 
