@@ -173,10 +173,6 @@ function _Gremlin() {
         _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexPosition);
         _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, object.buffers.vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
 
-		if(object.buffers.vertexColor) {
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexColor);
-			_gl.vertexAttribPointer(_shaderProgram.vertexColorAttribute, object.buffers.vertexColor.itemSize, _gl.FLOAT, false, 0, 0);
-		}
 		if (object.useIndices) {
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, object.buffers.vertexIndex);
 		}
@@ -306,43 +302,6 @@ function _Gremlin() {
 			pyramidVertexPositionBuffer.numItems = 18;
 			
 			object.assignBuffer("vertexPosition", pyramidVertexPositionBuffer);
-
-			var pyramidVertexColorBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexColorBuffer);
-			var colors = [
-				// Front face
-				1.0, 0.0, 0.0, 1.0,
-				0.0, 1.0, 0.0, 1.0,
-				0.0, 0.0, 1.0, 1.0,
-
-				// Right face
-				1.0, 0.0, 0.0, 1.0,
-				0.0, 0.0, 1.0, 1.0,
-				0.0, 1.0, 0.0, 1.0,
-
-				// Back face
-				1.0, 0.0, 0.0, 1.0,
-				0.0, 1.0, 0.0, 1.0,
-				0.0, 0.0, 1.0, 1.0,
-
-				// Left face
-				1.0, 0.0, 0.0, 1.0,
-				0.0, 0.0, 1.0, 1.0,
-				0.0, 1.0, 0.0, 1.0,
-				
-				// Bottom face
-				0.0, 0.0, 1.0, 1.0,
-				0.0, 1.0, 0.0, 1.0,
-				0.0, 0.0, 1.0, 1.0,
-				0.0, 0.0, 1.0, 1.0,
-				0.0, 0.0, 1.0, 1.0,
-				0.0, 1.0, 0.0, 1.0
-			];
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(colors), _gl.STATIC_DRAW);
-			pyramidVertexColorBuffer.itemSize = 4;
-			pyramidVertexColorBuffer.numItems = 18;
-
-			object.assignBuffer("vertexColor", pyramidVertexColorBuffer);
 		}
 		else if (objectType === "cube"){
 			// Vertex Buffer
@@ -588,30 +547,7 @@ function _Gremlin() {
 				object.assignBuffer("textureCoords", sphereVertexTextureCoordBuffer);
 				object.useTextures = true;
 			} 
-			else {
-				var sphereVertexColorBuffer = _gl.createBuffer();
-				_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexColorBuffer);
-				colors = []
-				// Weyhey! Random Stripey Sphere!
-				for (var i=0; i < sphereVertexPositionBuffer.numItems; i++) {
-					if(i%3 === 0) {
-						colors = colors.concat([1.0, 0.0, 0.0, 1.0]);
-					}
-					else if (i%3 === 1){
-						colors = colors.concat([0.0, 0.0, 1.0, 1.0]);
-					}
-					else {
-						colors = colors.concat([0.0, 1.0, 0.0, 1.0]);
-					}
-				}
 			
-				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(colors), _gl.STATIC_DRAW);
-				sphereVertexColorBuffer.itemSize = 4;
-				sphereVertexColorBuffer.numItems = sphereVertexPositionBuffer.numItems;
-				
-				object.assignBuffer("vertexColor", sphereVertexColorBuffer);
-			}
-
 			// Index Buffer
 			var sphereVertexIndexBuffer = _gl.createBuffer();
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer);
@@ -636,18 +572,6 @@ function _Gremlin() {
 			rayVertexPositionBuffer.numItems = 2;
 			
 			object.assignBuffer("vertexPosition", rayVertexPositionBuffer);
-			
-			var rayVertexColorBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, rayVertexColorBuffer);
-			var colors = [
-				1.0, 0.0, 0.0, 1.0,
-				1.0, 0.0, 0.0, 1.0,
-			];
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(colors), _gl.STATIC_DRAW);
-			rayVertexColorBuffer.itemSize = 4;
-			rayVertexColorBuffer.numItems = 2;
-
-			object.assignBuffer("vertexColor", rayVertexColorBuffer);
 		}
 	}
 	
@@ -932,15 +856,16 @@ function _Gremlin() {
 		return program;
 	}
 	
-	function _setShaderByObject() {
-		// TODO: Make into switch between per pixel and per vertex
-		//if (object.useTextures) { 
-		//_shaderProgram = _shaderPrograms.Texture; }
-		//else { _shaderProgram = _shaderPrograms.Colour; }
-		//_gl.useProgram(_shaderProgram);
+	function _setShaderByObject(type) {
+		if (type==="Pixel") {
+			_shaderProgram = _shaderPrograms.Pixel; 
+		} 
+		else if (type==="Vertex") {
+			_shaderProgram = _shaderPrograms.Vertex; 
+		}
+		_gl.useProgram(_shaderProgram);
 	}
 	function _initShaders() {
-		//_shaderPrograms["Colour"] = _createShader("colour-shader-vs", "colour-shader-fs", "Colour");
 		_shaderPrograms["Vertex"] = _createShader("vertex-shader-vs", "vertex-shader-fs");
 		_shaderPrograms["Pixel"] = _createShader("pixel-shader-vs", "pixel-shader-fs");
 		_shaderProgram = _shaderPrograms.Pixel;

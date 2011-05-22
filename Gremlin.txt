@@ -104,13 +104,12 @@ v0.4
 * Spot Lights
 * Light Manager
 	* Remove Color Shaders and add functionality to current shader
+* Per Pixel Lighting Shaders
 * Loading Objects from Files
-* Loading 'levels' from Files
-
 
 v0.5
-* Per Pixel Lighting Shaders
 * Specular Lighting
+* Loading 'levels' from Files
 
 v0.6
 * Render to Texture
