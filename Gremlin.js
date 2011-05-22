@@ -165,10 +165,6 @@ function _Gremlin() {
 	// Render Game Object
 	function renderObject(object) {
 		
-		// Set Shader
-		// Question: Should we really be switching shader by object? If we have to surely we should do all of each type to cut down the changes.
-		_setShaderByObject(object);
-		
 		_mvPushMatrix();
 		mat4.translate(_mvMatrix, [object.x, object.y, object.z]);
         
@@ -185,7 +181,10 @@ function _Gremlin() {
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, object.buffers.vertexIndex);
 		}
 		
+		_gl.uniform4fv(_shaderProgram.colorUniform, object.color);
+		
 		if (object.useTextures) {
+			_gl.enableVertexAttribArray(_shaderProgram.textureCoordAttribute);
 			// Textures
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.textureCoords);
 			_gl.vertexAttribPointer(_shaderProgram.textureCoordAttribute, object.buffers.textureCoords.itemSize, _gl.FLOAT, false, 0, 0);
@@ -193,46 +192,52 @@ function _Gremlin() {
 			_gl.activeTexture(_gl.TEXTURE0);
 			_gl.bindTexture(_gl.TEXTURE_2D, object.texture);
 			_gl.uniform1i(_shaderProgram.samplerUniform, 0);
-			
-			// TODO: Separate useTexture and add useLighting
-			
+		}
+		else {
+			// BUG: This does not result in full colour, but a reduced colour
+			_gl.disableVertexAttribArray(_shaderProgram.textureCoordAttribute);
+		}
+		
+				
+		// Setting Lights 
+		if(lighting) {
+			_gl.uniform1i(_shaderProgram.useLightingUniform, true);
+
 			// Normals
+			_gl.enableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexNormals); 
 			_gl.vertexAttribPointer(_shaderProgram.vertexNormalAttribute, object.buffers.vertexNormals.itemSize, _gl.FLOAT, false, 0, 0);
 			
+			// Ambient Light
+			_gl.uniform3f(_shaderProgram.ambientColorUniform, ambientLight.r, ambientLight.g, ambientLight.b);
 			
-			// Setting Lights 
-			// TODO: This needs it's own section
-			// TODO: Unnest from use textures
-			if(lighting) {
-				_gl.uniform1i(_shaderProgram.useLightingUniform, true);
-				// Ambient Light
-				_gl.uniform3f(_shaderProgram.ambientColorUniform, ambientLight.r, ambientLight.g, ambientLight.b);
-				
-				// Directional Light
-				var lightingDirection = [ directionalLight.x, directionalLight.y, directionalLight.z];
-				var adjustedLD = vec3.create();
-				vec3.normalize(lightingDirection, adjustedLD);
-				vec3.scale(adjustedLD, -1);
-				_playerCamera.rotation(adjustedLD);
-				_gl.uniform3fv(_shaderProgram.lightingDirectionUniform, adjustedLD);
-				// Directional Light Colour
-				_gl.uniform3f(_shaderProgram.directionalColorUniform,directionalLight.r,directionalLight.g,directionalLight.b);
-				
-				// Point Lights
-				for(var i=0; i<pointLights.length; i++){
-					if (i > 8) break; // 8 is max number of points lights
-					_setPointLight(i, _playerCamera);
-				}
-				
-				// Spot Lights
-				for(var i=0; i<spotLights.length; i++){
-					if (i > 8) break; // 8 is max number of points lights
-					_setSpotLight(i, _playerCamera);
-				}
+			// Directional Light
+			var lightingDirection = [ directionalLight.x, directionalLight.y, directionalLight.z];
+			var adjustedLD = vec3.create();
+			vec3.normalize(lightingDirection, adjustedLD);
+			vec3.scale(adjustedLD, -1);
+			_playerCamera.rotation(adjustedLD);
+			_gl.uniform3fv(_shaderProgram.lightingDirectionUniform, adjustedLD);
+			// Directional Light Colour
+			_gl.uniform3f(_shaderProgram.directionalColorUniform,directionalLight.r,directionalLight.g,directionalLight.b);
+			
+			// Point Lights
+			for(var i=0; i<pointLights.length; i++){
+				if (i > 8) break; // 8 is max number of points lights
+				_setPointLight(i, _playerCamera);
+			}
+			
+			// Spot Lights
+			for(var i=0; i<spotLights.length; i++){
+				if (i > 8) break; // 8 is max number of points lights
+				_setSpotLight(i, _playerCamera);
 			}
 		}
-	
+		else {
+			_gl.uniform1i(_shaderProgram.useLightingUniform, false);
+			_gl.disableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
+		}
+		
         _setMatrixUniforms();
 		
 		if (!object.wireframe) {
@@ -434,32 +439,7 @@ function _Gremlin() {
 				object.assignBuffer("textureCoords", cubeVertexTextureCoordBuffer);
 				object.useTextures = true;
 			}
-			else {
-				// Color Buffer
-				var cubeVertexColorBuffer = _gl.createBuffer();
-				_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexColorBuffer);
-				colors = [
-					[1.0, 0.0, 0.0, 1.0], // Front face
-					[1.0, 1.0, 0.0, 1.0], // Back face
-					[0.0, 1.0, 0.0, 1.0], // Top face
-					[1.0, 0.5, 0.5, 1.0], // Bottom face
-					[1.0, 0.0, 1.0, 1.0], // Right face
-					[0.0, 0.0, 1.0, 1.0]  // Left face
-				];
-				var unpackedColors = [];
-				for (var i in colors) {
-					var color = colors[i];
-					for (var j=0; j < 4; j++) {
-						unpackedColors = unpackedColors.concat(color);
-					}
-				}
-				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(unpackedColors), _gl.STATIC_DRAW);
-				cubeVertexColorBuffer.itemSize = 4;
-				cubeVertexColorBuffer.numItems = 24;
 			
-				object.assignBuffer("vertexColor", cubeVertexColorBuffer);
-			}
-
 			// Normal Buffer
 			// WARNING: This is dependant on shader program should make this more robust
 			var cubeVertexNormalBuffer;
@@ -904,19 +884,15 @@ function _Gremlin() {
         program.vertexPositionAttribute = _gl.getAttribLocation(program, "aVertexPosition");
         _gl.enableVertexAttribArray(program.vertexPositionAttribute);
 		
-		if(type == "Colour") {
-			program.vertexColorAttribute = _gl.getAttribLocation(program, "aVertexColor");
-			_gl.enableVertexAttribArray(program.vertexColorAttribute);
-		}
-		else if (type == "Textured") {
-			program.textureCoordAttribute = _gl.getAttribLocation(program, "aTextureCoord");
-			_gl.enableVertexAttribArray(program.textureCoordAttribute);
+		// Textures
+		program.colorUniform = _gl.getUniformLocation(program, "uColor");
+		program.textureCoordAttribute = _gl.getAttribLocation(program, "aTextureCoord");
+		_gl.enableVertexAttribArray(program.textureCoordAttribute);
 			
-			// Normals
-			program.vertexNormalAttribute = _gl.getAttribLocation(program, "aVertexNormal");
-			_gl.enableVertexAttribArray(program.vertexNormalAttribute);
-		}
-
+		// Normals
+		program.vertexNormalAttribute = _gl.getAttribLocation(program, "aVertexNormal");
+		_gl.enableVertexAttribArray(program.vertexNormalAttribute);
+		
         program.pMatrixUniform = _gl.getUniformLocation(program, "uPMatrix");
         program.mvMatrixUniform = _gl.getUniformLocation(program, "uMVMatrix");
 		
@@ -955,14 +931,19 @@ function _Gremlin() {
 		return program;
 	}
 	
-	function _setShaderByObject(object) {
-		if (object.useTextures) { _shaderProgram = _shaderPrograms.Texture; }
-		else { _shaderProgram = _shaderPrograms.Colour; }
-		_gl.useProgram(_shaderProgram);
+	function _setShaderByObject() {
+		// TODO: Make into switch between per pixel and per vertex
+		//if (object.useTextures) { 
+		//_shaderProgram = _shaderPrograms.Texture; }
+		//else { _shaderProgram = _shaderPrograms.Colour; }
+		//_gl.useProgram(_shaderProgram);
 	}
 	function _initShaders() {
-		_shaderPrograms["Colour"] = _createShader("colour-shader-vs", "colour-shader-fs", "Colour");
+		//_shaderPrograms["Colour"] = _createShader("colour-shader-vs", "colour-shader-fs", "Colour");
+		// TODO: Convert this to be called per vertex
 		_shaderPrograms["Texture"] = _createShader("texture-shader-vs", "texture-shader-fs", "Textured");
+		_shaderProgram = _shaderPrograms.Texture
+		_gl.useProgram(_shaderProgram);
     }	
 	
 	//	 _                     _ _           
