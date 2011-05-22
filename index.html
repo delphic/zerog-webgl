@@ -68,12 +68,13 @@
 			uniform vec3 uPointLightingColor[8];
 			
 			// Spot Lights
-			uniform vec3 uSpotLightLocation;
-			uniform vec3 uSpotLightDirection;
-			uniform vec3 uSpotLightColor;
-			uniform float uSpotLightTheta;
-			uniform float uSpotLightThi;
-			uniform float uSpotLightFalloff;
+			// TODO: Multiple Spot Lights
+			uniform vec3 uSpotLightLocation[8];
+			uniform vec3 uSpotLightDirection[8];
+			uniform vec3 uSpotLightColor[8];
+			uniform float uSpotLightTheta[8];
+			uniform float uSpotLightThi[8];
+			uniform float uSpotLightFalloff[8];
 
 			uniform bool uUseLighting;
 
@@ -103,18 +104,19 @@
 					
 					// Spot Lights
 					vec3 spotLightComponent;
-					float spotLightWeighting;
-					// Check if position in the cone
-					float angleToMv = acos(dot((mvPosition.xyz - uSpotLightLocation), uSpotLightDirection)/(length(uSpotLightDirection)*length(uSpotLightLocation - mvPosition.xyz)));
-					if (angleToMv > 0.5*uSpotLightThi) { spotLightWeighting = 0.0; }
-					else if (angleToMv > 0.5*uSpotLightTheta && angleToMv < 0.5*uSpotLightThi) {
-						spotLightWeighting = max(dot(transformedNormal, normalize(uSpotLightLocation - mvPosition.xyz)), 0.0) / (uSpotLightFalloff * length(uSpotLightLocation - mvPosition.xyz) * uSpotLightThi);
+					for(int i = 0; i < 8; i++) {
+						float spotLightWeighting;
+						// Check if position in the cone
+						float angleToMv = acos(dot((mvPosition.xyz - uSpotLightLocation[i]), uSpotLightDirection[i])/(length(uSpotLightDirection[i])*length(uSpotLightLocation[i] - mvPosition.xyz)));
+						if (angleToMv > 0.5*uSpotLightThi[i]) { spotLightWeighting = 0.0; }
+						else if (angleToMv > 0.5*uSpotLightTheta[i] && angleToMv < 0.5*uSpotLightThi[i]) {
+							spotLightWeighting = max(dot(transformedNormal, normalize(uSpotLightLocation[i] - mvPosition.xyz)), 0.0) / (uSpotLightFalloff[i] * length(uSpotLightLocation[i] - mvPosition.xyz) * uSpotLightThi[i]);
+						}
+						else {
+							spotLightWeighting = max(dot(transformedNormal, normalize(uSpotLightLocation[i] - mvPosition.xyz)), 0.0) / (length(uSpotLightLocation[i] - mvPosition.xyz) * uSpotLightTheta[i]);
+						}
+						spotLightComponent += uSpotLightColor[i] * spotLightWeighting;
 					}
-					else {
-						spotLightWeighting = max(dot(transformedNormal, normalize(uSpotLightLocation - mvPosition.xyz)), 0.0) / (length(uSpotLightLocation - mvPosition.xyz) * uSpotLightTheta);
-					}
-					spotLightComponent = uSpotLightColor * spotLightWeighting;
-					
 					// Directional Light - Does uLightDirecetion need to be normalised
 					float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
 					
@@ -128,13 +130,13 @@
 		<script type="text/javascript">
 	var canvas;
     var lastTime = 0;
-
+	
     function animate() {
         var timeNow = new Date().getTime();
         if (lastTime != 0) {
             var elapsed = timeNow - lastTime;
 			
-			// Animate Objects - TODO: Use manager
+			// Animate Objects
 			for(object in gameObjects)
 			{
 				gameObjects[object].animate(elapsed);
@@ -197,6 +199,9 @@
 
 	// Game Objects Array
 	var gameObjects = [];
+	// Lights should possibly be a game objects, else we need to add an animate function
+	var gamePointLights = [];
+	var gameSpotLights = [];
 	
 	// Game Object Obj
 	function gameObject(x,y,z) {
@@ -256,6 +261,12 @@
 		// Lighting
 		Gremlin.setLightEnvironment(0.2,0.2,0.2,0,0,0,-1.0,0.0,0.0);
 		Gremlin.setLighting(true);
+		
+		//gamePointLights[0] = Gremlin.addPointLight(0,0,-6.0,0.0,2.0,0);
+		//gamePointLights[1] = Gremlin.addPointLight(0,0,-5.5,6.0,2.0,0);
+
+		gameSpotLights[0] = Gremlin.addSpotLight(0,0,-1,0,0,-1,5,1,5,5,10,2.0);
+		//gameSpotLights[1] = Gremlin.addSpotLight(0,0,-1,0,0,-1,5,1,1,20,45,2.0);
 		
 		// Game Objects
 		//var cube = new gameObject(0,0,-8.0);

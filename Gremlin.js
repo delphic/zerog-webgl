@@ -27,10 +27,105 @@ function _Gremlin() {
 	}
 	
 	// Lighting 
+	// Possibly should have it's own namespace
 	var lighting = false;
 	// Environmental Light
 	var ambientLight = [];
 	var directionalLight = [];
+	var pointLights = [];
+	var spotLights = [];
+
+	function addPointLight(x,y,z,r,g,b) {
+		var pointLight = [];
+		pointLight.x = x;
+		pointLight.y = y;
+		pointLight.z = z;
+		pointLight.r = r;
+		pointLight.g = g;
+		pointLight.b = b;
+		pointLight.on = true;
+		// TODO: TO add check that we've not reached the max number of lights
+		pointLights.push(pointLight);
+		
+		return (pointLights.length-1);
+	}
+	
+	function setPointLight(i,x,y,z,r,g,b) {
+		var pointLight = [];
+		pointLight.x = x;
+		pointLight.y = y;
+		pointLight.z = z;
+		pointLight.r = r;
+		pointLight.g = g;
+		pointLight.b = b;
+		pointLights[i] = pointLight;
+	}
+	
+	function updatePointLight(i,dx,dy,dz,dr,dg,db) {
+		pointLights[i].x += dx;
+		pointLights[i].y += dy;
+		pointLights[i].z += dz;
+		pointLights[i].r += dr;
+		pointLights[i].g += dg;
+		pointLights[i].b += db;
+	}
+	
+	function addSpotLight(x,y,z,dirX,dirY,dirZ,r,g,b,theta,thi,falloff) {
+		var spotLight = [];
+		spotLight.x = x;
+		spotLight.y = y;
+		spotLight.z = z;
+		spotLight.dirX = dirX;
+		spotLight.dirY = dirY;
+		spotLight.dirZ = dirZ;
+		spotLight.r = r;
+		spotLight.g = g;
+		spotLight.b = b;
+		spotLight.theta = degToRad(theta);
+		spotLight.thi = degToRad(thi);
+		spotLight.falloff = falloff;
+		spotLight.on = true;
+		spotLights.push(spotLight);
+		
+		return (spotLights.length-1);
+	}
+	
+	function setSpotLight(i,x,y,z,dirX,dirY,dirZ,r,g,b,theta,thi,falloff) {
+		var spotLight = [];
+		spotLight.x = x;
+		spotLight.y = y;
+		spotLight.z = z;
+		spotLight.dirX = dirX;
+		spotLight.dirY = dirY;
+		spotLight.dirZ = dirZ;
+		spotLight.r = r;
+		spotLight.g = g;
+		spotLight.b = b;
+		spotLight.theta = degToRad(theta);
+		spotLight.thi = degToRad(thi);
+		spotLight.falloff = falloff;
+		spotLights[i] = spotLight;
+	}
+	
+	function updateSpotLight(i,dx,dy,dz,ddirX,ddirY,ddirZ,dr,dg,db,dtheta,dthi,dfalloff) {
+		spotLights[i].x += dx;
+		spotLights[i].y += dy;
+		spotLights[i].z += dz;
+		spotLights[i].dirX += ddirX;
+		spotLights[i].dirY += ddirY;
+		spotLights[i].dirZ += ddirZ;
+		spotLights[i].r += dr;
+		spotLights[i].g += dg;
+		spotLights[i].b += db;
+		spotLights[i].theta += degToRad(dtheta);
+		spotLights[i].thi += degToRad(dthi);
+		spotLights[i].falloff += dfalloff;
+	}
+	
+	function setLight(val, type) {
+		if(type==="Spot") { spotLights[i].on = val; }
+		else if (type==="Point") { pointLights[i].on = val; }
+	}
 	
 	function setLightEnvironment(ambientR, ambientG, ambientB, directionalR, directionalG, directionalB, directionalX, directionalY, directionalZ) {
 		ambientLight.r = ambientR;
@@ -125,35 +220,16 @@ function _Gremlin() {
 				_gl.uniform3f(_shaderProgram.directionalColorUniform,directionalLight.r,directionalLight.g,directionalLight.b);
 				
 				// Point Lights
-				// TODO: Functions for this.
-				// TODO: Generalise for multiple lights
+				for(var i=0; i<pointLights.length; i++){
+					if (i > 8) break; // 8 is max number of points lights
+					_setPointLight(i, _playerCamera);
+				}
 				
-				var pointLightingLocation = [0,0,-6.0];
-				_playerCamera.transform(pointLightingLocation);
-				
-				_gl.uniform3fv(_shaderProgram.pointLightingLocationUniform[0], pointLightingLocation);
-				_gl.uniform3f(_shaderProgram.pointLightingColorUniform[0],0.0,2.0,0);
-				
-				pointLightingLocation = [0,0,-5.5];
-				_playerCamera.transform(pointLightingLocation);
-				
-				_gl.uniform3fv(_shaderProgram.pointLightingLocationUniform[1], pointLightingLocation);
-				_gl.uniform3f(_shaderProgram.pointLightingColorUniform[1],6.0,2.0,0);	
-				
-				
-				var spotLightLocation = [0,0,-1];
-				var spotLightDirection = [-0.15,0,-1];
-				var spotLightColor = [5,1,5];
-				
-				_playerCamera.rotation(spotLightDirection);
-				_playerCamera.transform(spotLightLocation);
-				
-				_gl.uniform3fv(_shaderProgram.spotLightingLocationUniform, spotLightLocation);
-				_gl.uniform3fv(_shaderProgram.spotLightingDirectionUniform, spotLightDirection);
-				_gl.uniform3fv(_shaderProgram.spotLightingColorUniform, spotLightColor);
-				_gl.uniform1f(_shaderProgram.spotLightingThetaUniform, degToRad(5));
-				_gl.uniform1f(_shaderProgram.spotLightingThiUniform, degToRad(10));
-				_gl.uniform1f(_shaderProgram.spotLightingFalloffUniform, 2.0);
+				// Spot Lights
+				for(var i=0; i<spotLights.length; i++){
+					if (i > 8) break; // 8 is max number of points lights
+					_setSpotLight(i, _playerCamera);
+				}
 			}
 		}
 	
@@ -704,6 +780,34 @@ function _Gremlin() {
 	
 	var _playerCamera = new camera(0,0,5, 0, 0);
 	
+	// Lighting Functions
+	function _setPointLight(i, camera){
+		if(pointLights[i].on) {
+			// TODO: Add check that i is not greater than max # of lights
+			var pointLightingLocation = [pointLights[i].x, pointLights[i].y, pointLights[i].z];
+			camera.transform(pointLightingLocation);				
+			_gl.uniform3fv(_shaderProgram.pointLightingLocationUniform[i], pointLightingLocation);
+			_gl.uniform3f(_shaderProgram.pointLightingColorUniform[i], pointLights[i].r, pointLights[i].g, pointLights[i].b);
+		}
+	}
+	
+	function _setSpotLight(i, camera){
+		if(spotLights[i].on) {
+			var spotLightLocation = [spotLights[i].x,spotLights[i].y,spotLights[i].z];
+			var spotLightDirection = [spotLights[i].dirX,spotLights[i].dirY,spotLights[i].dirZ];
+			var spotLightColor = [spotLights[i].r,spotLights[i].g,spotLights[i].b];
+				
+			camera.rotation(spotLightDirection);
+			camera.transform(spotLightLocation);
+					
+			_gl.uniform3fv(_shaderProgram.spotLightingLocationUniform[i], spotLightLocation);
+			_gl.uniform3fv(_shaderProgram.spotLightingDirectionUniform[i], spotLightDirection);
+			_gl.uniform3fv(_shaderProgram.spotLightingColorUniform[i], spotLightColor);
+			_gl.uniform1f(_shaderProgram.spotLightingThetaUniform[i], spotLights[i].theta);
+			_gl.uniform1f(_shaderProgram.spotLightingThiUniform[i], spotLights[i].thi);
+			_gl.uniform1f(_shaderProgram.spotLightingFalloffUniform[i], spotLights[i].falloff);
+		}
+	}
 	// Init functions
     function _initGL(canvas) {
         try {
@@ -829,18 +933,25 @@ function _Gremlin() {
 		// Point Lights
 		program.pointLightingLocationUniform = new Array();
 		program.pointLightingColorUniform = new Array();
-		for(var i=0; i<8; i++) {
+		for(var i=0; i<8; i++) { // Max 8 Point Lights
 			program.pointLightingLocationUniform[i] = _gl.getUniformLocation(program, "uPointLightingLocation["+i+"]");
 			program.pointLightingColorUniform[i] = _gl.getUniformLocation(program, "uPointLightingColor["+i+"]");
 		}
 		// Spot Lights
-		program.spotLightingLocationUniform = _gl.getUniformLocation(program, "uSpotLightLocation");
-		program.spotLightingDirectionUniform = _gl.getUniformLocation(program, "uSpotLightDirection");
-		program.spotLightingColorUniform = _gl.getUniformLocation(program, "uSpotLightColor");
-		program.spotLightingThetaUniform = _gl.getUniformLocation(program, "uSpotLightTheta");
-		program.spotLightingThiUniform = _gl.getUniformLocation(program, "uSpotLightThi");
-		program.spotLightingFalloffUniform = _gl.getUniformLocation(program, "uSpotLightFalloff");
-		
+		program.spotLightingLocationUniform = new Array();
+		program.spotLightingDirectionUniform = new Array();
+		program.spotLightingColorUniform = new Array();
+		program.spotLightingThetaUniform = new Array();
+		program.spotLightingThiUniform = new Array();
+		program.spotLightingFalloffUniform = new Array();
+		for(var i=0; i<8; i++) { // Max 8 Spot Lights
+			program.spotLightingLocationUniform[i] = _gl.getUniformLocation(program, "uSpotLightLocation["+i+"]");
+			program.spotLightingDirectionUniform[i] = _gl.getUniformLocation(program, "uSpotLightDirection["+i+"]");
+			program.spotLightingColorUniform[i] = _gl.getUniformLocation(program, "uSpotLightColor["+i+"]");
+			program.spotLightingThetaUniform[i] = _gl.getUniformLocation(program, "uSpotLightTheta["+i+"]");
+			program.spotLightingThiUniform[i] = _gl.getUniformLocation(program, "uSpotLightThi["+i+"]");
+			program.spotLightingFalloffUniform[i] = _gl.getUniformLocation(program, "uSpotLightFalloff["+i+"]");
+		}
 		return program;
 	}
 	
@@ -867,6 +978,13 @@ function _Gremlin() {
 		handleLoadedTexture:		handleLoadedTexture,
 		setLightEnvironment:		setLightEnvironment,
 		setLighting:				setLighting,
+		addPointLight:				addPointLight,
+		setPointLight:				setPointLight,
+		updatePointLight:			updatePointLight,
+		addSpotLight: 				addSpotLight,
+		setSpotLight:				setSpotLight,
+		updateSpotLight:			updateSpotLight,
+		setLight: 					setLight,
 		prepareScene: 				prepareScene, 
 		renderObject:				renderObject,
 		movePlayerCamera:			movePlayerCamera,
