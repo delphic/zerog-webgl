@@ -7,23 +7,23 @@
 		<script type="text/javascript" src="libs/glMatrix-0.9.5.min.js"></script>
 		<script type="text/javascript" src="libs/webgl-utils.js"></script>
 		<!-- Shaders -->
-		<script id="texture-shader-fs" type="x-shader/x-fragment">
+		<script id="vertex-shader-fs" type="x-shader/x-fragment">
 			#ifdef GL_ES
 			precision highp float;
 			#endif
 
 			varying vec2 vTextureCoord;
 			varying vec3 vLightWeighting;
-			varying vec4 vColor;
-
+			
+			uniform vec4 uColor;
 			uniform sampler2D uSampler;
 
 			void main(void) {
 				vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-				gl_FragColor = vec4(textureColor.rgb * vColor.rgb * vLightWeighting, textureColor.a); // TODO: think about how to use, vColor alpha and if we should
+				gl_FragColor = vec4(textureColor.rgb * uColor.rgb * vLightWeighting, textureColor.a); // TODO: think about how to use, uColor alpha and if we should
 			}
 		</script>
-		<script id="texture-shader-vs" type="x-shader/x-vertex">
+		<script id="vertex-shader-vs" type="x-shader/x-vertex">
 			attribute vec3 aVertexPosition;
 			attribute vec3 aVertexNormal;
 			attribute vec2 aTextureCoord;
@@ -53,18 +53,13 @@
 
 			uniform bool uUseLighting;
 			
-			// Colour
-			uniform vec4 uColor;
-
 			varying vec2 vTextureCoord;
 			varying vec3 vLightWeighting;
-			varying vec4 vColor;
 			
 			void main(void) {
 				vec4 mvPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
 				gl_Position = uPMatrix * mvPosition;
 				vTextureCoord = aTextureCoord;
-				vColor = uColor;
 				
 				if(!uUseLighting) {
 					vLightWeighting = vec3(1.0, 1.0, 1.0);
@@ -102,6 +97,101 @@
 					
 					vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting + pointLightComponent + spotLightComponent;
 				}
+			}
+		</script>
+		<script id="pixel-shader-fs" type="x-shader/x-fragment">
+			#ifdef GL_ES
+			precision highp float;
+			#endif
+
+			varying vec2 vTextureCoord;
+			varying vec3 vTransformedNormal;
+			varying vec4 vPosition;
+
+			uniform vec4 uColor;
+			
+			// Lighting
+			uniform vec3 uAmbientColor;
+
+			uniform vec3 uLightingDirection;
+			uniform vec3 uDirectionalColor;
+			
+			// Max Point Lights: 8
+			uniform vec3 uPointLightingLocation[8];
+			uniform vec3 uPointLightingColor[8];
+			
+			// Spot Lights
+			// TODO: Multiple Spot Lights
+			uniform vec3 uSpotLightLocation[8];
+			uniform vec3 uSpotLightDirection[8];
+			uniform vec3 uSpotLightColor[8];
+			uniform float uSpotLightTheta[8];
+			uniform float uSpotLightThi[8];
+			uniform float uSpotLightFalloff[8];
+
+			uniform bool uUseLighting;
+
+			uniform sampler2D uSampler;
+
+
+			void main(void) {
+				vec3 lightWeighting;
+				if (!uUseLighting) {
+					lightWeighting = vec3(1.0, 1.0, 1.0);
+				} else {
+					// Point Lights
+					vec3 pointLightComponent;
+					for(int i = 0; i < 8; i++) {
+						float pointLightDistance = length(uPointLightingLocation[i] - vPosition.xyz);
+						vec3 pointLightDirection = normalize(uPointLightingLocation[i] - vPosition.xyz);
+						float pointLightWeighting = max(dot(vTransformedNormal, pointLightDirection), 0.0) / (pointLightDistance*pointLightDistance);
+						
+						pointLightComponent += uPointLightingColor[i] * pointLightWeighting;
+					}
+					
+					// Spot Lights
+					vec3 spotLightComponent;
+					for(int i = 0; i < 8; i++) {
+						float spotLightWeighting;
+						// Check if position in the cone
+						float angleToMv = acos(dot((vPosition.xyz - uSpotLightLocation[i]), uSpotLightDirection[i])/(length(uSpotLightDirection[i])*length(uSpotLightLocation[i] - vPosition.xyz)));
+						if (angleToMv > 0.5*uSpotLightThi[i]) { spotLightWeighting = 0.0; }
+						else if (angleToMv > 0.5*uSpotLightTheta[i] && angleToMv < 0.5*uSpotLightThi[i]) {
+							spotLightWeighting = max(dot(vTransformedNormal, normalize(uSpotLightLocation[i] - vPosition.xyz)), 0.0) / (uSpotLightFalloff[i] * length(uSpotLightLocation[i] - vPosition.xyz) * uSpotLightThi[i]);
+						}
+						else {
+							spotLightWeighting = max(dot(vTransformedNormal, normalize(uSpotLightLocation[i] - vPosition.xyz)), 0.0) / (length(uSpotLightLocation[i] - vPosition.xyz) * uSpotLightTheta[i]);
+						}
+						spotLightComponent += uSpotLightColor[i] * spotLightWeighting;
+					}
+					// Directional Light - Does uLightDirecetion need to be normalised
+					float directionalLightWeighting = max(dot(vTransformedNormal, uLightingDirection), 0.0);
+					
+					lightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting + pointLightComponent + spotLightComponent;
+				} 
+				
+				vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+				gl_FragColor = vec4(textureColor.rgb  * uColor.rgb * lightWeighting, textureColor.a);
+			}
+		</script>
+		<script id="pixel-shader-vs" type="x-shader/x-vertex">
+			attribute vec3 aVertexPosition;
+			attribute vec3 aVertexNormal;
+			attribute vec2 aTextureCoord;
+
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+			uniform mat3 uNMatrix;
+
+			varying vec2 vTextureCoord;
+			varying vec3 vTransformedNormal;
+			varying vec4 vPosition;
+
+			void main(void) {
+				vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+				gl_Position = uPMatrix * vPosition;
+				vTextureCoord = aTextureCoord;
+				vTransformedNormal = uNMatrix * aVertexNormal;
 			}
 		</script>
 		<!-- Gremlin Engine -->
@@ -242,13 +332,13 @@
 	// Game Init
 	function gameInit() {
 		// Lighting
-		Gremlin.setLightEnvironment(0.8,0.8,0.8,0,0,0,-1.0,0.0,0.0);
+		Gremlin.setLightEnvironment(0.4,0.4,0.4,0.9,0.9,0.9,-1.0,0.0,0.0);
 		Gremlin.setLighting(true);
 		
 		//gamePointLights[0] = Gremlin.addPointLight(0,0,-6.0,0.0,2.0,0);
 		//gamePointLights[1] = Gremlin.addPointLight(0,0,-5.5,6.0,2.0,0);
 
-		//gameSpotLights[0] = Gremlin.addSpotLight(0,0,-1,0,0,-1,5,1,5,5,10,2.0);
+		gameSpotLights[0] = Gremlin.addSpotLight(0,0,0,0,0,-1,1,0,1,18,20,2.0);
 		//gameSpotLights[1] = Gremlin.addSpotLight(0,0,-1,0,0,-1,5,1,1,20,45,2.0);
 		
 		// Game Objects

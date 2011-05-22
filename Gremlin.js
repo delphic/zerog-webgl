@@ -195,6 +195,7 @@ function _Gremlin() {
 		}
 		else {
 			// BUG: This does not result in full colour, but a reduced colour
+			// This can be combatted by increasing the colour
 			_gl.disableVertexAttribArray(_shaderProgram.textureCoordAttribute);
 		}
 		
@@ -868,7 +869,7 @@ function _Gremlin() {
         return shader;
     }
 
-	function _createShader(vertexShaderID, fragmentShaderID, type) {
+	function _createShader(vertexShaderID, fragmentShaderID) {
 		var fragmentShader = _getShader(_gl, vertexShaderID);
         var vertexShader = _getShader(_gl, fragmentShaderID);
 
@@ -940,9 +941,9 @@ function _Gremlin() {
 	}
 	function _initShaders() {
 		//_shaderPrograms["Colour"] = _createShader("colour-shader-vs", "colour-shader-fs", "Colour");
-		// TODO: Convert this to be called per vertex
-		_shaderPrograms["Texture"] = _createShader("texture-shader-vs", "texture-shader-fs", "Textured");
-		_shaderProgram = _shaderPrograms.Texture
+		_shaderPrograms["Vertex"] = _createShader("vertex-shader-vs", "vertex-shader-fs");
+		_shaderPrograms["Pixel"] = _createShader("pixel-shader-vs", "pixel-shader-fs");
+		_shaderProgram = _shaderPrograms.Pixel;
 		_gl.useProgram(_shaderProgram);
     }	
 	

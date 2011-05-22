@@ -103,7 +103,7 @@ v0.4
 * Point Lights - unskew from camera - need coordinate transform functions for rotation (directional light) and position (point lights & presumably spot lights).
 * Spot Lights
 * Light Manager
-* Remove Color Shaders and add functionality to current shader
+	* Remove Color Shaders and add functionality to current shader
 * Loading Objects from Files
 * Loading 'levels' from Files
 
