@@ -115,38 +115,45 @@ function _Gremlin() {
 				_gl.uniform3f(_shaderProgram.ambientColorUniform, ambientLight.r, ambientLight.g, ambientLight.b);
 				
 				// Directional Light
-				// TODO: Move Calculation
-				// TODO: Stop it rotating with camera
 				var lightingDirection = [ directionalLight.x, directionalLight.y, directionalLight.z];
 				var adjustedLD = vec3.create();
 				vec3.normalize(lightingDirection, adjustedLD);
 				vec3.scale(adjustedLD, -1);
-				// Transform to Camera Coordinates
-				// TODO: Functions for this.
-				var cameraRotation = mat4.create();
-				mat4.identity(cameraRotation);
-				mat4.rotate(cameraRotation, -degToRad(_playerCamera.pitch), [1, 0, 0]);
-				mat4.rotate(cameraRotation, -degToRad(_playerCamera.yaw), [0, 1, 0]);
-				mat4.multiplyVec3(cameraRotation, adjustedLD, adjustedLD);
-				
+				_playerCamera.rotation(adjustedLD);
 				_gl.uniform3fv(_shaderProgram.lightingDirectionUniform, adjustedLD);
 				// Directional Light Colour
 				_gl.uniform3f(_shaderProgram.directionalColorUniform,directionalLight.r,directionalLight.g,directionalLight.b);
 				
 				// Point Lights
-				// Again need to transform to camera coordinate system
 				// TODO: Functions for this.
 				// TODO: Generalise for multiple lights
-				var cameraTransform = cameraRotation;
-				mat4.translate(cameraTransform, [-_playerCamera.x, -_playerCamera.y, -_playerCamera.z]);
-				var pointLightingLocation = [0,0,-7.0];
-				mat4.multiplyVec3(cameraTransform, pointLightingLocation, pointLightingLocation);
+				
+				var pointLightingLocation = [0,0,-6.0];
+				_playerCamera.transform(pointLightingLocation);
+				
 				_gl.uniform3fv(_shaderProgram.pointLightingLocationUniform[0], pointLightingLocation);
 				_gl.uniform3f(_shaderProgram.pointLightingColorUniform[0],0.0,2.0,0);
+				
 				pointLightingLocation = [0,0,-5.5];
-				mat4.multiplyVec3(cameraTransform, pointLightingLocation, pointLightingLocation);
+				_playerCamera.transform(pointLightingLocation);
+				
 				_gl.uniform3fv(_shaderProgram.pointLightingLocationUniform[1], pointLightingLocation);
-				_gl.uniform3f(_shaderProgram.pointLightingColorUniform[1],6.0,2.0,0);				
+				_gl.uniform3f(_shaderProgram.pointLightingColorUniform[1],6.0,2.0,0);	
+				
+				
+				var spotLightLocation = [0,0,-1];
+				var spotLightDirection = [-0.15,0,-1];
+				var spotLightColor = [5,1,5];
+				
+				_playerCamera.rotation(spotLightDirection);
+				_playerCamera.transform(spotLightLocation);
+				
+				_gl.uniform3fv(_shaderProgram.spotLightingLocationUniform, spotLightLocation);
+				_gl.uniform3fv(_shaderProgram.spotLightingDirectionUniform, spotLightDirection);
+				_gl.uniform3fv(_shaderProgram.spotLightingColorUniform, spotLightColor);
+				_gl.uniform1f(_shaderProgram.spotLightingThetaUniform, degToRad(5));
+				_gl.uniform1f(_shaderProgram.spotLightingThiUniform, degToRad(10));
+				_gl.uniform1f(_shaderProgram.spotLightingFalloffUniform, 2.0);
 			}
 		}
 	
@@ -659,6 +666,8 @@ function _Gremlin() {
 		
 		this.rotateCamera = rotateCamera;
 		this.moveCamera = moveCamera;
+		this.rotation = rotation;
+		this.transform = transform;
 		
 		// TODO: Add rotate around axis function
 		function rotateCamera(dyaw, dpitch) {
@@ -675,6 +684,21 @@ function _Gremlin() {
 			this.x += dz*syaw+dx*cyaw;
 			this.z += -dx*syaw+dz*cyaw;
 			this.y += dy; // TODO: Implement Unfixed Up Axis
+		}
+		function rotation(vector) {
+			var cameraRotation = mat4.create();
+			mat4.identity(cameraRotation);
+			mat4.rotate(cameraRotation, -degToRad(this.pitch), [1, 0, 0]);
+			mat4.rotate(cameraRotation, -degToRad(this.yaw), [0, 1, 0]);
+			mat4.multiplyVec3(cameraRotation, vector, vector);
+		}
+		function transform(vector) {
+			var cameraTransform = mat4.create();
+			mat4.identity(cameraTransform);
+			mat4.rotate(cameraTransform, -degToRad(this.pitch), [1, 0, 0]);
+			mat4.rotate(cameraTransform, -degToRad(this.yaw), [0, 1, 0]);
+			mat4.translate(cameraTransform, [-this.x, -this.y, -this.z]);
+			mat4.multiplyVec3(cameraTransform, vector, vector);
 		}
 	}
 	
@@ -796,18 +820,28 @@ function _Gremlin() {
 		// TODO: Generalise
 		program.nMatrixUniform = _gl.getUniformLocation(program, "uNMatrix");
         program.samplerUniform = _gl.getUniformLocation(program, "uSampler");
+		// Lighting Flag
         program.useLightingUniform = _gl.getUniformLocation(program, "uUseLighting");
+		// Environmental Light (Ambient + Directional)
         program.ambientColorUniform = _gl.getUniformLocation(program, "uAmbientColor");
         program.lightingDirectionUniform = _gl.getUniformLocation(program, "uLightingDirection");
         program.directionalColorUniform = _gl.getUniformLocation(program, "uDirectionalColor");
+		// Point Lights
 		program.pointLightingLocationUniform = new Array();
 		program.pointLightingColorUniform = new Array();
 		for(var i=0; i<8; i++) {
 			program.pointLightingLocationUniform[i] = _gl.getUniformLocation(program, "uPointLightingLocation["+i+"]");
 			program.pointLightingColorUniform[i] = _gl.getUniformLocation(program, "uPointLightingColor["+i+"]");
 		}
+		// Spot Lights
+		program.spotLightingLocationUniform = _gl.getUniformLocation(program, "uSpotLightLocation");
+		program.spotLightingDirectionUniform = _gl.getUniformLocation(program, "uSpotLightDirection");
+		program.spotLightingColorUniform = _gl.getUniformLocation(program, "uSpotLightColor");
+		program.spotLightingThetaUniform = _gl.getUniformLocation(program, "uSpotLightTheta");
+		program.spotLightingThiUniform = _gl.getUniformLocation(program, "uSpotLightThi");
+		program.spotLightingFalloffUniform = _gl.getUniformLocation(program, "uSpotLightFalloff");
 		
-		return program
+		return program;
 	}
 	
 	function _setShaderByObject(object) {

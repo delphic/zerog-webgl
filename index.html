@@ -63,9 +63,17 @@
 			uniform vec3 uLightingDirection;
 			uniform vec3 uDirectionalColor;
 			
-			// TODO: multiple point lights
+			// Max Point Lights: 8
 			uniform vec3 uPointLightingLocation[8];
 			uniform vec3 uPointLightingColor[8];
+			
+			// Spot Lights
+			uniform vec3 uSpotLightLocation;
+			uniform vec3 uSpotLightDirection;
+			uniform vec3 uSpotLightColor;
+			uniform float uSpotLightTheta;
+			uniform float uSpotLightThi;
+			uniform float uSpotLightFalloff;
 
 			uniform bool uUseLighting;
 
@@ -83,6 +91,7 @@
 					vec3 transformedNormal = uNMatrix * aVertexNormal;
 					
 					// Point Lights
+					// TODO: Investigate using just vertexposition instead of mvPosition and not transforming the normals
 					vec3 pointLightComponent;
 					for(int i = 0; i < 8; i++) {
 						float pointLightDistance = length(uPointLightingLocation[i] - mvPosition.xyz);
@@ -91,10 +100,25 @@
 						
 						pointLightComponent += uPointLightingColor[i] * pointLightWeighting;
 					}
-					// Directional Light
+					
+					// Spot Lights
+					vec3 spotLightComponent;
+					float spotLightWeighting;
+					// Check if position in the cone
+					float angleToMv = acos(dot((mvPosition.xyz - uSpotLightLocation), uSpotLightDirection)/(length(uSpotLightDirection)*length(uSpotLightLocation - mvPosition.xyz)));
+					if (angleToMv > 0.5*uSpotLightThi) { spotLightWeighting = 0.0; }
+					else if (angleToMv > 0.5*uSpotLightTheta && angleToMv < 0.5*uSpotLightThi) {
+						spotLightWeighting = max(dot(transformedNormal, normalize(uSpotLightLocation - mvPosition.xyz)), 0.0) / (uSpotLightFalloff * length(uSpotLightLocation - mvPosition.xyz) * uSpotLightThi);
+					}
+					else {
+						spotLightWeighting = max(dot(transformedNormal, normalize(uSpotLightLocation - mvPosition.xyz)), 0.0) / (length(uSpotLightLocation - mvPosition.xyz) * uSpotLightTheta);
+					}
+					spotLightComponent = uSpotLightColor * spotLightWeighting;
+					
+					// Directional Light - Does uLightDirecetion need to be normalised
 					float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
 					
-					vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting + pointLightComponent;
+					vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting + pointLightComponent + spotLightComponent;
 				}
 			}
 		</script>
@@ -230,28 +254,28 @@
 	// Game Init
 	function gameInit() {
 		// Lighting
-		Gremlin.setLightEnvironment(0.01,0.01,0.01,0.9,0.85,0.8,-1.0,0.0,0.0);
+		Gremlin.setLightEnvironment(0.2,0.2,0.2,0,0,0,-1.0,0.0,0.0);
 		Gremlin.setLighting(true);
 		
 		// Game Objects
-		var cube = new gameObject(1.5,0,-8.0);
-		var sphere = new gameObject(-1.5, 0, -8.0);
+		//var cube = new gameObject(0,0,-8.0);
+		var sphere = new gameObject(0, 0, -8.0);
 		
-		Gremlin.createPrimitive(cube, "cube", false, true, 0.7, 0, 0);
+		//Gremlin.createPrimitive(cube, "cube", false, true, 2.0, 0, 0);
 		Gremlin.createPrimitive(sphere, "sphere", false, true, 1.5, 30, 30);
 		
-		gameObjects["cube"] = cube;
+		//gameObjects["cube"] = cube;
 		gameObjects["sphere"] = sphere;
 		
 		// TODO: Move to texture and handle event to Texture List in Engine, store index in gameobject
-		gameObjects.cube.texture = Gremlin.createTexture("textures/crate.gif");
-		gameObjects.cube.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.cube.texture, 3); } 
+		//gameObjects.cube.texture = Gremlin.createTexture("textures/crate.gif");
+		//gameObjects.cube.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.cube.texture, 3); } 
 		
 		gameObjects.sphere.texture = Gremlin.createTexture("textures/earth.jpg");
 		gameObjects.sphere.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.sphere.texture, 3); }
 		
-		gameObjects.cube.animate = function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); };
-		gameObjects.sphere.animate = function(elapsed) { this.rotate( ( (-50 * elapsed) / 1000.0), 0, 1, 0); };
+		//gameObjects.cube.animate = function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); };
+		//gameObjects.sphere.animate = function(elapsed) { this.rotate( ( (-50 * elapsed) / 1000.0), 0, 1, 0); };
 	}
 	
 	// WebGL Start
