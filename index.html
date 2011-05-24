@@ -64,7 +64,7 @@
 				if(!uUseLighting) {
 					vLightWeighting = vec3(1.0, 1.0, 1.0);
 				}else {
-					vec3 transformedNormal = uNMatrix * aVertexNormal;
+					vec3 transformedNormal = normalize(uNMatrix * aVertexNormal);
 					
 					// Point Lights
 					// TODO: Investigate using just vertexposition instead of mvPosition and not transforming the normals
@@ -191,7 +191,7 @@
 				vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
 				gl_Position = uPMatrix * vPosition;
 				vTextureCoord = aTextureCoord;
-				vTransformedNormal = uNMatrix * aVertexNormal;
+				vTransformedNormal = normalize(uNMatrix * aVertexNormal);
 			}
 		</script>
 		<!-- Gremlin Engine -->
@@ -218,6 +218,7 @@
 			// TODO: Should not trigger on overlays.
 			// BUG: Keys get 'stuck down'
 			var dyaw, dpitch, dx, dz;
+			// BUG: Does not adjust for position of canvas in page
 			dyaw = 0.05 * elapsed * ((canvas.width*0.5)-xPos)/(0.5*canvas.width);
 			dpitch = 0.05 * elapsed * ((canvas.height*0.5)-yPos)/(0.5*canvas.height);
 			if (mouseDown) Gremlin.rotatePlayerCamera(dyaw, dpitch);
@@ -333,7 +334,7 @@
 	// Game Init
 	function gameInit() {
 		// Lighting
-		Gremlin.setLightEnvironment(0.4,0.4,0.4,0.9,0.9,0.9,-1.0,0.0,0.0);
+		Gremlin.setLightEnvironment(0.4,0.4,0.4,0.4,0.4,0.4,-1.0,0.0,0.0);
 		Gremlin.setLighting(true);
 		
 		gamePointLights[0] = Gremlin.addPointLight(0,0,-6.0,0.0,2.0,0);
@@ -345,11 +346,11 @@
 		// Game Objects
 		var cube = new gameObject(-1.5,0,-8.0);
 		var sphere = new gameObject(1.5, 0, -8.0);
-		var teapot = new gameObject(0,0,-8);
+		var teapot = new gameObject(0,0,-5);
 		
 		Gremlin.createPrimitive(cube, "cube", false, true, 1.0, 0, 0);
 		Gremlin.createPrimitive(sphere, "sphere", false, true, 1.5, 30, 30);
-		Gremlin.loadModel(teapot, "Teapot.json", 0.2);
+		Gremlin.loadModel(teapot, "Teapot.json", 0.1);
 		
 		gameObjects["cube"] = cube;
 		gameObjects["sphere"] = sphere;
@@ -368,6 +369,7 @@
 		
 		//gameObjects.cube.animate = function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); };
 		//gameObjects.sphere.animate = function(elapsed) { this.rotate( ( (-50 * elapsed) / 1000.0), 0, 1, 0); };
+		gameObjects.teapot.animate = function(elapsed) { this.rotate( ( (30 * elapsed) / 1000.0), 0,1,0); };
 	}
 	
 	// WebGL Start
@@ -375,8 +377,8 @@
     function webGLStart() {
 		// Add detection of browser capabilities
 		// Set Canvas Size
-		fullScreen();
-		//setSize(800,800);
+		//fullScreen();
+		setSize(800,600);
 		
 		// Initialise
 		Gremlin.init();
@@ -473,6 +475,7 @@
 	function fullScreen() {
 		// TODO: Separate Resolution, from size
 		// Width and height = resolution, then you can use CSS to stretch that to 100% if you wish.
+		// Make sure that the input is relying on actual size rather than resolution
 		canvas = document.getElementById("gremlinCanvas");
 		canvas.width = document.width;
 		canvas.height = document.height;
@@ -492,7 +495,7 @@
 	
 		</script>
 		<style>
-			#container { margin: 0 auto; }
+			/*#container { margin: 0 auto; }*/
 			html, body { margin: 0; padding: 0; overflow: hidden; font-family: monospace; }
 			input { margin-top: 10px; font-size: 16px; margin: 5px 10px; padding: 3px; background: #000; color: #EEE; border: 1px solid #222; }
 			canvas { /*cursor: url('data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto; */ cursor: crosshair; }
@@ -506,6 +509,7 @@
 				<input id="btnWireFrames" type="button" onclick="controller.toggleWireFrames();" value="Toggle Wireframes" />
 			</div>-->
 			<!-- TODO: add inital screen telling you controls -->
+			<!-- TODO: Remove Inline Styles -->
 			<canvas id="gremlinCanvas"></canvas>
 		</div>
 	</body>

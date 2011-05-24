@@ -170,6 +170,8 @@ function _Gremlin() {
 		mat4.translate(_mvMatrix, [object.x, object.y, object.z]);
         
 		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
+		
+		if(object.scale != 1) mat4.scale(_mvMatrix, [object.scale,object.scale,object.scale] , _mvMatrix);
 
         _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexPosition);
         _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, object.buffers.vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
@@ -920,7 +922,7 @@ function _Gremlin() {
 	function _initShaders() {
 		_shaderPrograms["Vertex"] = _createShader("vertex-shader-vs", "vertex-shader-fs");
 		_shaderPrograms["Pixel"] = _createShader("pixel-shader-vs", "pixel-shader-fs");
-		_shaderProgram = _shaderPrograms.Vertex;
+		_shaderProgram = _shaderPrograms.Pixel;
 		_gl.useProgram(_shaderProgram);
     }	
 	

@@ -113,7 +113,11 @@ v0.5
 * Specular Lighting
 * Loading 'levels' from Files
 
-v0.6
+v0.6 
+* Separte CSS Width and resolution of canvas
+* Game Layer - Menu system, loading system, options (texture filtering, lighting, pixel / vertex, resolution).
+
+v0.7
 * Render to Texture
 * Alpha Blending
 * Specular Maps
