@@ -199,6 +199,9 @@
 		<!-- Game Script -->
 		<script type="text/javascript">
 	var canvas;
+	var fullScreen;
+	var	resolutionX;
+	var resolutionY;
     var lastTime = 0;
 	
     function animate() {
@@ -215,12 +218,12 @@
 			// Handle Input
 			// TODO: Separate into function
 			// TODO: game state variable... switch on this to control handling of input e.g. Menus
-			// TODO: Should not trigger on overlays.
 			// BUG: Keys get 'stuck down'
+			var width = parseInt(canvas.style.width, 10);
+			var height = parseInt(canvas.style.height, 10);
 			var dyaw, dpitch, dx, dz;
-			// BUG: Does not adjust for position of canvas in page
-			dyaw = 0.05 * elapsed * ((canvas.width*0.5)-xPos)/(0.5*canvas.width);
-			dpitch = 0.05 * elapsed * ((canvas.height*0.5)-yPos)/(0.5*canvas.height);
+			dyaw = 0.05 * elapsed * ((width*0.5)-xPos)/(0.5*width);
+			dpitch = 0.05 * elapsed * ((height*0.5)-yPos)/(0.5*height);
 			if (mouseDown) Gremlin.rotatePlayerCamera(dyaw, dpitch);
 			
 			if (currentlyPressedKeys[37] || currentlyPressedKeys[65]) {
@@ -374,11 +377,12 @@
 	
 	// WebGL Start
 	
-    function webGLStart() {
-		// Add detection of browser capabilities
-		// Set Canvas Size
-		//fullScreen();
-		setSize(800,600);
+    function webGLStart(fullScreen, resX, resY) {
+		canvas = document.getElementById("gremlinCanvas");
+		isFullScreen = fullScreen;
+		resolutionX = resX;
+		resolutionY = resY;
+		setCanvasSize();
 		
 		// Initialise
 		Gremlin.init();
@@ -408,8 +412,8 @@
 	}
 	function handleMouseMove(event) {
 		// TODO: Investigate the difference between clientX and pageX
-		xPos = event.pageX;
-		yPos = event.pageY;
+		xPos = event.pageX - this.offsetLeft;
+		yPos = event.pageY - this.offsetTop;
 	}
 	function handleMouseDown(event) {
 		// TODO: Add vars for middle and right
@@ -472,37 +476,39 @@
 	}
 	var controller = _controller();
 	
-	function fullScreen() {
-		// TODO: Separate Resolution, from size
-		// Width and height = resolution, then you can use CSS to stretch that to 100% if you wish.
-		// Make sure that the input is relying on actual size rather than resolution
+	function setCanvasSize() {
 		canvas = document.getElementById("gremlinCanvas");
-		canvas.width = document.width;
-		canvas.height = document.height;
-	}
-	// TODO: Change to Set Canvas Size.
-	function setSize(x,y) {
-		canvas = document.getElementById("gremlinCanvas");
-		canvas.width = x;
-		canvas.height = y;
-		document.getElementById("container").style.width = x+"px";
+		if (resolutionX) {
+			canvas.width = resolutionX;
+			canvas.height = resolutionY;
+		}
+		else {
+			canvas.width = document.width;
+			canvas.height = window.innerHeight;
+		}
+		if (isFullScreen) {
+			canvas.style.width = document.width+"px";
+		canvas.style.height = window.innerHeight+"px";
+		}
+		else {
+			canvas.style.width = resolutionX+"px";
+			canvas.style.height = resolutionY+"px";
+		}
 	}
 	
-	// TODO: move window focus handling to Engine
 	window.onblur = function() { controller.handleWindowBlur(); }
 	window.onfocus = function() { controller.handleWindowFocus(); }
-	// window.onresize = function() { fullScreen(); }
+	window.onresize = function() { setCanvasSize(); Gremlin.resize(); }
 	
 		</script>
 		<style>
-			/*#container { margin: 0 auto; }*/
 			html, body { margin: 0; padding: 0; overflow: hidden; font-family: monospace; }
 			input { margin-top: 10px; font-size: 16px; margin: 5px 10px; padding: 3px; background: #000; color: #EEE; border: 1px solid #222; }
-			canvas { /*cursor: url('data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto; */ cursor: crosshair; }
+			canvas { display: block; margin: 0 auto; /*cursor: url('data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto; */ cursor: crosshair; }
 			#controls { width: 100%; background-color: #666; cursor: default; height: 40px; }
 		</style>
 	</head>
-	<body onload="webGLStart();">
+	<body onload="webGLStart(true);">
 		<div id="container">
 			<!--<div id="controls">
 				<input id="btnPause" type="button" onclick="controller.handlePause();" value="Stop" />

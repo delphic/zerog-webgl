@@ -26,6 +26,11 @@ function _Gremlin() {
         _gl.enable(_gl.DEPTH_TEST);
 	}
 	
+	function resize() {
+		var canvas = document.getElementById("gremlinCanvas");
+		_gl.viewportWidth = canvas.width;
+        _gl.viewportHeight = canvas.height;
+	}
 	// Lighting 
 	// Possibly should have it's own namespace
 	var lighting = false;
@@ -934,6 +939,7 @@ function _Gremlin() {
 
 	return { 
 		init: 						init, 
+		resize: 					resize,
 		createPrimitive:			createPrimitive,
 		loadModel:					loadModel,
 		createTexture:				createTexture,
