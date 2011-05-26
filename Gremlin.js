@@ -206,7 +206,9 @@ function _Gremlin() {
 				
 		// Setting Lights 
 		if(lighting) {
+			// TODO: Add Variables Switch functions
 			_gl.uniform1i(_shaderProgram.useLightingUniform, true);
+			_gl.uniform1i(_shaderProgram.useSpecularUniform, false);
 
 			// Normals
 			_gl.enableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
@@ -237,6 +239,9 @@ function _Gremlin() {
 				if (i > 8) break; // 8 is max number of points lights
 				_setSpotLight(i, _playerCamera);
 			}
+			
+			// Material / Specular
+			_gl.uniform1f(_shaderProgram.materialShininessUniform, object.shininess);
 		}
 		else {
 			_gl.uniform1i(_shaderProgram.useLightingUniform, false);
@@ -912,6 +917,12 @@ function _Gremlin() {
 			program.spotLightingThiUniform[i] = _gl.getUniformLocation(program, "uSpotLightThi["+i+"]");
 			program.spotLightingFalloffUniform[i] = _gl.getUniformLocation(program, "uSpotLightFalloff["+i+"]");
 		}
+		
+		// Specular Lighting
+		// TODO: if we want separate specular colours will have to add an array of uniforms for colour
+		program.useSpecularUniform = _gl.getUniformLocation(program, "uUseSpecular");
+		program.materialShininessUniform = _gl.getUniformLocation(program, "uMaterialShininess");
+		
 		return program;
 	}
 	

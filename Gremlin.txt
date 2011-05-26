@@ -109,7 +109,7 @@ v0.4
 
 v0.5
 * Implement Scaling
-* Specular Lighting
+* Specular Lighting (Still todo separate colours)
 * Loading 'levels' from Files
 
 v0.6 
@@ -117,6 +117,7 @@ v0.6
 * Game Layer - Menu system, loading system, options (texture filtering, lighting, pixel / vertex, resolution).
 
 v0.7
+* Material System?
 * Render to Texture
 * Alpha Blending
 * Specular Maps

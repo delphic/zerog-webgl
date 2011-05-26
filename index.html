@@ -43,7 +43,6 @@
 			uniform vec3 uPointLightingColor[8];
 			
 			// Spot Lights
-			// TODO: Multiple Spot Lights
 			uniform vec3 uSpotLightLocation[8];
 			uniform vec3 uSpotLightDirection[8];
 			uniform vec3 uSpotLightColor[8];
@@ -121,7 +120,6 @@
 			uniform vec3 uPointLightingColor[8];
 			
 			// Spot Lights
-			// TODO: Multiple Spot Lights
 			uniform vec3 uSpotLightLocation[8];
 			uniform vec3 uSpotLightDirection[8];
 			uniform vec3 uSpotLightColor[8];
@@ -129,7 +127,10 @@
 			uniform float uSpotLightThi[8];
 			uniform float uSpotLightFalloff[8];
 
+			uniform float uMaterialShininess;
+			
 			uniform bool uUseLighting;
+			uniform bool uUseSpecular;
 
 			uniform sampler2D uSampler;
 
@@ -139,30 +140,49 @@
 				if (!uUseLighting) {
 					lightWeighting = vec3(1.0, 1.0, 1.0);
 				} else {
+					// For Specular Lighting
+					vec3 eyeDirection = normalize(-vPosition.xyz);
+				
 					// Point Lights
 					vec3 pointLightComponent;
 					for(int i = 0; i < 8; i++) {
 						float pointLightDistance = length(uPointLightingLocation[i] - vPosition.xyz);
 						vec3 pointLightDirection = normalize(uPointLightingLocation[i] - vPosition.xyz);
 						float pointLightWeighting = max(dot(vTransformedNormal, pointLightDirection), 0.0) / (pointLightDistance*pointLightDistance);
-						
-						pointLightComponent += uPointLightingColor[i] * pointLightWeighting;
+						// Specular
+						float specularLightWeighting = 0.0;
+						if (uUseSpecular) {
+							vec3 reflectionDirection = reflect(-pointLightDirection, vTransformedNormal);
+							specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+						}
+						pointLightComponent += uPointLightingColor[i] * pointLightWeighting + uPointLightingColor[i] * specularLightWeighting;
 					}
 					
 					// Spot Lights
 					vec3 spotLightComponent;
 					for(int i = 0; i < 8; i++) {
 						float spotLightWeighting;
+						float specularLightWeighting = 0.0;
 						// Check if position in the cone
 						float angleToMv = acos(dot((vPosition.xyz - uSpotLightLocation[i]), uSpotLightDirection[i])/(length(uSpotLightDirection[i])*length(uSpotLightLocation[i] - vPosition.xyz)));
 						if (angleToMv > 0.5*uSpotLightThi[i]) { spotLightWeighting = 0.0; }
 						else if (angleToMv > 0.5*uSpotLightTheta[i] && angleToMv < 0.5*uSpotLightThi[i]) {
 							spotLightWeighting = max(dot(vTransformedNormal, normalize(uSpotLightLocation[i] - vPosition.xyz)), 0.0) / (uSpotLightFalloff[i] * length(uSpotLightLocation[i] - vPosition.xyz) * uSpotLightThi[i]);
+							// Specular
+							if (uUseSpecular) {
+								vec3 reflectionDirection = reflect(-normalize(uSpotLightLocation[i] - vPosition.xyz), vTransformedNormal);
+								specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+							}
 						}
 						else {
 							spotLightWeighting = max(dot(vTransformedNormal, normalize(uSpotLightLocation[i] - vPosition.xyz)), 0.0) / (length(uSpotLightLocation[i] - vPosition.xyz) * uSpotLightTheta[i]);
+							// Specular
+							if (uUseSpecular) {
+								vec3 reflectionDirection = reflect(-normalize(uSpotLightLocation[i] - vPosition.xyz), vTransformedNormal);
+								specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+							}
 						}
-						spotLightComponent += uSpotLightColor[i] * spotLightWeighting;
+						spotLightComponent += uSpotLightColor[i] * spotLightWeighting + uSpotLightColor[i] * specularLightWeighting;
 					}
 					// Directional Light - Does uLightDirecetion need to be normalised
 					float directionalLightWeighting = max(dot(vTransformedNormal, uLightingDirection), 0.0);
@@ -287,11 +307,14 @@
 		mat4.identity(this.rotation);
 		
 		this.buffers = [];
-		this.scale = 1; // TODO: Implement this
+		this.scale = 1;
+		// TODO: Proper Material System?
 		// TODO: Make into array for multiple texture IDs
 		this.texture;
 		this.color = [1.0,1.0,1.0,1.0];
 		this.setColor = setColor;
+		this.shininess = 10;
+		this.setShininess = setShininess;
 		
 		this.move = move;
 		this.setPosition = setPosition;
@@ -328,6 +351,7 @@
 			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,0]);
 		}
 		function setColor(r,g,b,a) { this.color = [r,g,b,a]; }
+		function setShininess(val) { this.shiniess = val; }
 		function defaultAnimation() { /* Blank */ }
 		function assignBuffer(name, buffer) {
 			this.buffers[name] = buffer;
@@ -373,6 +397,8 @@
 		//gameObjects.cube.animate = function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); };
 		//gameObjects.sphere.animate = function(elapsed) { this.rotate( ( (-50 * elapsed) / 1000.0), 0, 1, 0); };
 		gameObjects.teapot.animate = function(elapsed) { this.rotate( ( (30 * elapsed) / 1000.0), 0,1,0); };
+		
+		gameObjects.teapot.setShininess(100);
 	}
 	
 	// WebGL Start
