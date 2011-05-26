@@ -229,12 +229,14 @@ function _Gremlin() {
 			_gl.uniform3f(_shaderProgram.directionalColorUniform,directionalLight.r,directionalLight.g,directionalLight.b);
 			
 			// Point Lights
+			_gl.uniform1i(_shaderProgram.pointLightingNumberUniform, pointLights.length);
 			for(var i=0; i<pointLights.length; i++){
 				if (i > 8) break; // 8 is max number of points lights
 				_setPointLight(i, _playerCamera);
 			}
 			
 			// Spot Lights
+			_gl.uniform1i(_shaderProgram.spotLightingNumberUniform, spotLights.length); 
 			for(var i=0; i<spotLights.length; i++){
 				if (i > 8) break; // 8 is max number of points lights
 				_setSpotLight(i, _playerCamera);
@@ -898,6 +900,7 @@ function _Gremlin() {
 		// Point Lights
 		program.pointLightingLocationUniform = new Array();
 		program.pointLightingColorUniform = new Array();
+		program.pointLightingNumberUniform = _gl.getUniformLocation(program, "uPointLightNumber");
 		for(var i=0; i<8; i++) { // Max 8 Point Lights
 			program.pointLightingLocationUniform[i] = _gl.getUniformLocation(program, "uPointLightingLocation["+i+"]");
 			program.pointLightingColorUniform[i] = _gl.getUniformLocation(program, "uPointLightingColor["+i+"]");
@@ -909,6 +912,7 @@ function _Gremlin() {
 		program.spotLightingThetaUniform = new Array();
 		program.spotLightingThiUniform = new Array();
 		program.spotLightingFalloffUniform = new Array();
+		program.spotLightingNumberUniform = _gl.getUniformLocation(program, "uSpotLightNumber");
 		for(var i=0; i<8; i++) { // Max 8 Spot Lights
 			program.spotLightingLocationUniform[i] = _gl.getUniformLocation(program, "uSpotLightLocation["+i+"]");
 			program.spotLightingDirectionUniform[i] = _gl.getUniformLocation(program, "uSpotLightDirection["+i+"]");

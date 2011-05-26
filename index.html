@@ -39,10 +39,12 @@
 			uniform vec3 uDirectionalColor;
 			
 			// Max Point Lights: 8
+			uniform int uPointLightNumber;
 			uniform vec3 uPointLightingLocation[8];
 			uniform vec3 uPointLightingColor[8];
 			
 			// Spot Lights
+			uniform int uSpotLightNumber;
 			uniform vec3 uSpotLightLocation[8];
 			uniform vec3 uSpotLightDirection[8];
 			uniform vec3 uSpotLightColor[8];
@@ -69,6 +71,7 @@
 					// TODO: Investigate using just vertexposition instead of mvPosition and not transforming the normals
 					vec3 pointLightComponent;
 					for(int i = 0; i < 8; i++) {
+						if (i >= uPointLightNumber) { break; }
 						float pointLightDistance = length(uPointLightingLocation[i] - mvPosition.xyz);
 						vec3 pointLightDirection = normalize(uPointLightingLocation[i] - mvPosition.xyz);
 						float pointLightWeighting = max(dot(transformedNormal, pointLightDirection), 0.0) / (pointLightDistance*pointLightDistance);
@@ -79,6 +82,7 @@
 					// Spot Lights
 					vec3 spotLightComponent;
 					for(int i = 0; i < 8; i++) {
+						if (i >= uSpotLightNumber) { break; }
 						float spotLightWeighting;
 						// Check if position in the cone
 						float angleToMv = acos(dot((mvPosition.xyz - uSpotLightLocation[i]), uSpotLightDirection[i])/(length(uSpotLightDirection[i])*length(uSpotLightLocation[i] - mvPosition.xyz)));
@@ -116,10 +120,12 @@
 			uniform vec3 uDirectionalColor;
 			
 			// Max Point Lights: 8
+			uniform int uPointLightNumber;
 			uniform vec3 uPointLightingLocation[8];
 			uniform vec3 uPointLightingColor[8];
 			
 			// Spot Lights
+			uniform int uSpotLightNumber;
 			uniform vec3 uSpotLightLocation[8];
 			uniform vec3 uSpotLightDirection[8];
 			uniform vec3 uSpotLightColor[8];
@@ -146,6 +152,7 @@
 					// Point Lights
 					vec3 pointLightComponent;
 					for(int i = 0; i < 8; i++) {
+						if (i >= uPointLightNumber) { break; }
 						float pointLightDistance = length(uPointLightingLocation[i] - vPosition.xyz);
 						vec3 pointLightDirection = normalize(uPointLightingLocation[i] - vPosition.xyz);
 						float pointLightWeighting = max(dot(vTransformedNormal, pointLightDirection), 0.0) / (pointLightDistance*pointLightDistance);
@@ -161,6 +168,7 @@
 					// Spot Lights
 					vec3 spotLightComponent;
 					for(int i = 0; i < 8; i++) {
+						if (i >= uSpotLightNumber) { break; }
 						float spotLightWeighting;
 						float specularLightWeighting = 0.0;
 						// Check if position in the cone
@@ -364,11 +372,11 @@
 		Gremlin.setLightEnvironment(0.4,0.4,0.4,0.4,0.4,0.4,-1.0,0.0,0.0);
 		Gremlin.setLighting(true);
 		
-		gamePointLights[0] = Gremlin.addPointLight(0,0,-6.0,0.0,2.0,0);
-		gamePointLights[1] = Gremlin.addPointLight(0,0,-5.5,6.0,2.0,0);
+		Gremlin.addPointLight(0,0,-6.0,0.0,2.0,0);
+		Gremlin.addPointLight(0,0,-5.5,6.0,2.0,0);
 
-		gameSpotLights[0] = Gremlin.addSpotLight(0,0,0,-0.15,0,-1,1,0,1,5,8,2.0);
-		gameSpotLights[1] = Gremlin.addSpotLight(0,0,-1,0,0,-1,5,1,1,20,45,2.0);
+		Gremlin.addSpotLight(0,0,0,-0.15,0,-1,1,0,1,5,8,2.0);
+		Gremlin.addSpotLight(0,0,-1,0,0,-1,5,1,1,20,45,2.0);
 		
 		// Game Objects
 		var cube = new gameObject(-1.5,0,-8.0);
