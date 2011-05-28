@@ -116,11 +116,13 @@ v0.6
 * Separte CSS Width and resolution of canvas
 * Game Layer - Menu system, loading system, options (texture filtering, lighting, pixel / vertex, resolution).
 
-v0.7
+v0.7+
+* Consider adding +datetime to loaded files to stop Chrome caching them
 * Convert from Yaw Pitch Roll Camera, to Look At, Position, Up Camera (need conversion from at,up,pos to rotation matrix)
 * Material System?
 * Render to Texture
 * Alpha Blending
 * Specular Maps
+
 
 THEN onto GUI & HUD (using HTML), sound and input controls (separate files perhaps)

@@ -230,6 +230,7 @@
 	var fullScreen;
 	var	resolutionX;
 	var resolutionY;
+	var sizeFactor = 1;
     var lastTime = 0;
 	
     function animate() {
@@ -382,11 +383,12 @@
 	
 	// WebGL Start
 	
-    function webGLStart(fullScreen, resX, resY) {
+    function webGLStart(fullScreen, resX, resY, factor) {
 		canvas = document.getElementById("gremlinCanvas");
 		isFullScreen = fullScreen;
 		resolutionX = resX;
 		resolutionY = resY;
+		if (!isFullScreen && factor) { sizeFactor = factor; }
 		setCanvasSize();
 		
 		// Initialise
@@ -492,11 +494,11 @@
 		}
 		if (isFullScreen) {
 			canvas.style.width = document.width+"px";
-		canvas.style.height = window.innerHeight+"px";
+			canvas.style.height = window.innerHeight+"px";
 		}
 		else {
-			canvas.style.width = resolutionX+"px";
-			canvas.style.height = resolutionY+"px";
+			canvas.style.width = resolutionX*sizeFactor+"px";
+			canvas.style.height = resolutionY*sizeFactor+"px";
 		}
 	}
 	
