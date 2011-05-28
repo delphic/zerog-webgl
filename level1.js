@@ -35,7 +35,7 @@
 		gameObjects.teapot.texture = Gremlin.createTexture("textures/metal.jpg");
 		gameObjects.teapot.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.teapot.texture, 3); }
 		
-		gameObjects.skysphere.texture = Gremlin.createTexture("textures/stars_wide.jpg");
+		gameObjects.skysphere.texture = Gremlin.createTexture("textures/huge_stars.png");
 		gameObjects.skysphere.texture.image.onload = function() { Gremlin.handleLoadedTexture(gameObjects.skysphere.texture, 3); }
 		
 		gameObjects.skysphere.setIsSkyBox(true);
