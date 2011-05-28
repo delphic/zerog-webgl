@@ -673,6 +673,7 @@ function _Gremlin() {
 	// Basic Camera Obj
 	// TODO: Add Roll
 	// TODO: Convert to Matrix - remove Pitch Clamping
+	// TODO: May need an attach to camera function useable from the game code
 	function camera(x,y,z, yaw, pitch) {
 		this.x = x;
 		this.y = y; 
