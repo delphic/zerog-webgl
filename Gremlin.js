@@ -154,7 +154,7 @@ function _Gremlin() {
         _gl.viewport(0, 0, _gl.viewportWidth, _gl.viewportHeight);
         _gl.clear(_gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT);
 
-        mat4.perspective(45, _gl.viewportWidth / _gl.viewportHeight, 0.1, 100.0, _pMatrix);
+        mat4.perspective(45, _gl.viewportWidth / _gl.viewportHeight, 0.1, 10000.0, _pMatrix);
 
 		// Set Camera View
 		// This transforms the model view matrix to use the camera coordinate system
@@ -172,8 +172,13 @@ function _Gremlin() {
 		
 		if (!object.visible) return;
 		_mvPushMatrix();
-		mat4.translate(_mvMatrix, [object.x, object.y, object.z]);
-        
+		if (!object.isSkyBox) {
+			mat4.translate(_mvMatrix, [object.x, object.y, object.z]);        
+		}
+		else {
+			// TODO: This is depedant on current implementation of camera, try to decouple
+			mat4.translate(_mvMatrix, [_playerCamera.x, _playerCamera.y, _playerCamera.z]);
+		}
 		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
 		
 		if(object.scale != 1) mat4.scale(_mvMatrix, [object.scale,object.scale,object.scale] , _mvMatrix);
@@ -205,7 +210,9 @@ function _Gremlin() {
 		
 				
 		// Setting Lights 
-		if(lighting) {
+		if(lighting && object.useLighting) {
+			// TODO: Move the non-object dependant lights out of the object renderer?
+				// We might want to feed in different lights depedant on value...
 			// TODO: Add Variables Switch functions
 			_gl.uniform1i(_shaderProgram.useLightingUniform, true);
 			_gl.uniform1i(_shaderProgram.useSpecularUniform, false);
@@ -275,6 +282,7 @@ function _Gremlin() {
 		// TODO: Add Cylinders, Generalise to Cuboids & Elipsoids and add 2D shapes Rays, Elipses, Rectangles 
 		// TODO: add parameters for creation (i.e. size, number of sides for spheres / cylinders etc)
 		// TODO: Convert colour buffers to single colour
+		// BUG: TODO: Add failure (so that the program doesn't crash if an invalid object type is used
 		if (wireframe) {
 			object.wireframe = true;
 		}
@@ -676,6 +684,7 @@ function _Gremlin() {
 		this.moveCamera = moveCamera;
 		this.rotation = rotation;
 		this.transform = transform;
+		this.position = position;
 		
 		// TODO: Add rotate around axis function
 		function rotateCamera(dyaw, dpitch) {
@@ -707,6 +716,9 @@ function _Gremlin() {
 			mat4.rotate(cameraTransform, -degToRad(this.yaw), [0, 1, 0]);
 			mat4.translate(cameraTransform, [-this.x, -this.y, -this.z]);
 			mat4.multiplyVec3(cameraTransform, vector, vector);
+		}
+		function position() {
+			return [this.x, this.y, this.z];
 		}
 	}
 	

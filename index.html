@@ -321,8 +321,13 @@
 		this.texture;
 		this.color = [1.0,1.0,1.0,1.0];
 		this.setColor = setColor;
+		this.useLighting = true;
+		this.setUseLighting = setUseLighting;
 		this.shininess = 10;
 		this.setShininess = setShininess;
+		
+		this.isSkyBox = false;
+		this.setIsSkyBox = setIsSkyBox;
 		
 		this.move = move;
 		this.setPosition = setPosition;
@@ -359,7 +364,11 @@
 			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,0]);
 		}
 		function setColor(r,g,b,a) { this.color = [r,g,b,a]; }
+		function setUseLighting(val) { this.useLighting = val; }
 		function setShininess(val) { this.shiniess = val; }
+		
+		function setIsSkyBox(val) { this.isSkyBox = val; if(this.isSkyBox) this.useLighting = false; } 
+		
 		function defaultAnimation() { /* Blank */ }
 		function assignBuffer(name, buffer) {
 			this.buffers[name] = buffer;
