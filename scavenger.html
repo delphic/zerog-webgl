@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<title>Scavenger</title>
+		<script src="libs/jquery-1.6.1.min.js"></script>
+		<script src="libs/jquery.jkey-1.1"></script>
+		<!-- GUI Script -->
+		<script>
+			var gameState = "InMenu";
+			
+			function changeMenu(from,to) {
+				// TODO: switch to menu state variable
+				$(from).hide();
+				$(to).show();
+			}
+			function startGame(val) {
+				// TODO: Load Level val
+				// TODO: Add Loading Screen
+				changeMenu("#levelMenu", "#pauseMenu");
+				$("#menuContainer").hide();
+				$("#gameContainer").show();
+				gameState = "InGame";
+			}
+			function resumeGame() {
+				$("#menuContainer").hide();
+				$("#gameContainer").show();
+				gameState = "InGame";
+			}
+			function pauseGame() {
+				// TODO: Pause
+				$("#gameContainer").hide();
+				$("#menuContainer").show();
+				gameState = "InMenu";
+			}
+			$(document).ready( function() {
+				// Main Menu Events
+				$("#linkNewGame").click(function() {
+					changeMenu("#mainMenu", "#levelMenu");
+				});
+				$("#linkOptions").click(function() {
+					changeMenu("#mainMenu", "#optionsMenu");
+				});
+				$("#linkCredits").click(function() {
+					changeMenu("#mainMenu", "#creditsMenu");
+				});
+				// Options Menu Events
+				// TODO: add onchange to lighting to hide specular if off
+				$("#btnOptionsCancel").click(function() {
+					changeMenu("#optionsMenu", "#mainMenu");
+				});
+				$("#btnOptionsApply").click(function() {
+					// TODO: Apply Changes
+					changeMenu("#optionsMenu", "#mainMenu");
+				});
+				// Credits Menu Events
+				$("#btnCreditsBack").click(function() {
+					changeMenu("#creditsMenu", "#mainMenu");
+				});
+				// Level Menu Events
+				$("#btnLevelBack").click(function() {
+					changeMenu("#levelMenu", "#mainMenu");
+				});
+				$("#linkLevel1").click(function() {
+					startGame(1);
+				});
+				// Pause Menu Events
+				$("#btnPauseReturn").click(function() {
+					resumeGame();
+				});
+				$("#btnPauseExit").click(function() {
+					changeMenu("#pauseMenu", "#mainMenu");
+				});
+			});
+			$(window).jkey('esc', function() { if(gameState === "InGame") pauseGame(); });
+		</script>
+		<style>
+			body { margin: 0; padding: 0; font-family: 'Trebuchet MS'; background-color: #F0F0F0; background-image: url(../"centeredWhiteImage.png"); color: #111; }
+			ul.links { list-style: none; margin: 0; padding: 0; }
+			ul.links a { display: block; cursor: pointer; }
+		</style>
+	</head>
+	<body>
+		<div id="menuContainer">
+			<!-- Main Menu -->
+			<div id="mainMenu">
+				<h1>Scavenger</h1>
+				<ul class="links">
+					<li><a id="linkNewGame">New Game</a></li>
+					<li><a id="linkOptions">Options</a></li>
+					<li><a id="linkCredits">Credits</a></li>
+				</ul>
+			</div>
+			<!-- Options Menu -->
+			<div id="optionsMenu" style="display: none;">
+				<h2>Options</h2>
+				<form>
+					<div>
+						<label for="optionsResolution">Resolution</label>
+						<select id="optionsResolution">
+							<option value="360">360x225</option>
+							<option value="540">540x325</option>
+							<option value="720">720x450</option>
+							<option value="1600">1600x1024</option>
+							<option value="1680">1680x1050</option>
+							<option value="0" selected>Fit to Screen</option>
+						</select>
+					</div>
+					<div>
+						<label for="optionsSize">Display Size</label>
+						<select id="optionsSize">
+							<option value="1">1x</option>
+							<option value="2">2x</option>
+							<option value="0" selected>Full Screen</option>
+						</select>
+					</div>
+					<div>
+						<label for="optionsTextureFiltering">Texture Filtering</label>
+						<select id="optionsTextureFiltering">
+							<option value="1">Low - Nearest</option>
+							<option value="2">Medium - Linear</option>
+							<option value="3" selected>High - Mipmaps</option>
+						</select>
+					</div>
+					<div>
+						<label for="optionsLighting">Lighting</label>
+						<select id="optionsLighting">
+							<option value="false">No Lighting</option>
+							<option value="vertex">Per Vertex</option>
+							<option value="pixel" selected>Per Pixel</option>
+						</select>
+					</div>
+					<div>
+						<label for="optionsSpecularLighting">Specular Lighting</label>
+						<select id="optionsSpecularLighting">
+							<option value="false" selected>Off</option>
+							<option value="true">On</option>
+						</select>
+					</div>
+					<div>
+						<input id="btnOptionsCancel" type="button" value="Cancel" />
+						<input id="btnOptionsApply" type="button" value="Okay" />
+					</div>
+				</form>
+			</div>
+			<!-- Level Menu -->
+			<div id="levelMenu" style="display: none;">
+				<h2>Select Level</h2>
+				<ul class="links">
+					<li><a id="linkLevel1">Level 1</a></li>
+				</ul>
+				<input id="btnLevelBack" type="button" value="Back" />
+			</div>
+			<!-- Credits Menu -->
+			<div id="creditsMenu" style="display: none;">
+				<h2>Credits</h2>
+				<p>Game design and programming by Delph</p>
+				<p>Please leave any comments / praise / constructive criticism on <a href="http://delphic.me.uk/Scavenger">my site</a> or contact be via twitter <a href="http://twitter.com/_delph/">@_delph</a>.</p>
+				<p>Thanks to <a href="http://http://twitter.com/gpjt">Giles Thomas</a> at <a href="http://www.learningwebgl.com">LearningWebGL.com</a> for a great set of lessons.</p>
+				<p>Powered by Gremlins.</p>
+				<input id="btnCreditsBack" type="button" value="Back" />
+			</div>
+			<!-- Pause Menu -->
+			<div id="pauseMenu" style="display: none;">
+				<h2>Paused</h2>
+				<div>
+					<input id="btnPauseReturn" type="button" value="Return to Game"/>
+					<input id="btnPauseExit" type="button" value="Exit to Main Menu"/>
+				</div>
+			</div>
+		</div>
+		<!-- Game -->
+		<div id="gameContainer" style="display: none;">
+			<h1>Game to go here!</h1>
+		</div>
+	</body>
+</html>
