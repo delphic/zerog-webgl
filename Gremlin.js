@@ -955,7 +955,7 @@ function _Gremlin() {
 	function _initShaders() {
 		_shaderPrograms["Vertex"] = _createShader("vertex-shader-vs", "vertex-shader-fs");
 		_shaderPrograms["Pixel"] = _createShader("pixel-shader-vs", "pixel-shader-fs");
-		_shaderProgram = _shaderPrograms.Pixel;
+		_shaderProgram = _shaderPrograms.Vertex;
 		_gl.useProgram(_shaderProgram);
     }	
 	

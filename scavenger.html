@@ -7,22 +7,19 @@
 		<script src="libs/jquery.jkey-1.1"></script>
 		<!-- GUI Script -->
 		<script>
+			// TODO: Needs a namespace
+			// TODO: Move controller functions
 			var gameState = "InMenu";
+			var fullScreen, resolutionX, resolutionY, sizeFactor, lighting, lightingType, specularLighting, textureFiltering;
 			
-			function changeMenu(from,to) {
-				// TODO: switch to menu state variable
-				$(from).hide();
-				$(to).show();
-			}
 			function startGame(val) {
-				// TODO: Load Level val
-				// TODO: Add Loading Screen
-				changeMenu("#levelMenu", "#pauseMenu");
+				// TODO: Start Game with val
 				$("#menuContainer").hide();
 				$("#gameContainer").show();
 				gameState = "InGame";
 			}
 			function resumeGame() {
+				// TODO: Unpause
 				$("#menuContainer").hide();
 				$("#gameContainer").show();
 				gameState = "InGame";
@@ -33,66 +30,97 @@
 				$("#menuContainer").show();
 				gameState = "InMenu";
 			}
+			function applyOptions() {
+				resolutionX = document.getElementById(optionsResolution).value;
+				switch(resolutionX)
+				{
+				case 360:
+					resolutionY = 225;
+					break;
+				case 540:
+					resolutionY = 325;
+					break;
+				case 720:
+					resolutionY = 450;
+					break;
+				case 1600:
+					resolutionY = 1024;
+					break;
+				case 1680:
+					resolutionY = 1050;
+					break;
+				default:
+					// FullScreen
+					break;
+				}
+				sizeFactor = document.getElementById(optionsSize);
+				lighting = document.getElementById(optionsLighting);
+				if (lighting) { lightingType = lighting; lighting = true; } 
+				textureFiltering = document.getElementById(optionsTextureFiltering);
+				specularLighting = document.getElementById(optionsSpecularLighting);
+			}
+			
 			$(document).ready( function() {
-				// Main Menu Events
-				$("#linkNewGame").click(function() {
-					changeMenu("#mainMenu", "#levelMenu");
+				$('div[gui-role="menu"]').addClass("menu").hide();
+				$('div[gui-role]"menu"][gui-id="mainMenu"]').show();
+				$('[gui-role="links"]').addClass("links");
+				$('[gui-role="links"] a').each(function() {
+					$(this).click(function() { 
+						$(this).parents('[gui-role="menu"]').hide();
+						$('[gui-role="menu"][gui-id="'+$(this).attr("gui-target")+'"]').show();
+					});
 				});
-				$("#linkOptions").click(function() {
-					changeMenu("#mainMenu", "#optionsMenu");
+				
+				$('[gui-role*="navButton"]').each(function() {
+					$(this).click(function() {
+						$(this).parents('[gui-role="menu"]').hide();
+						$('[gui-role="menu"][gui-id="'+$(this).attr("gui-target")+'"]').show();
+					});
 				});
-				$("#linkCredits").click(function() {
-					changeMenu("#mainMenu", "#creditsMenu");
+				
+				$('[gui-role*="resumeGame"]').each(function() {
+					$(this).click(function() {
+						resumeGame();
+					});
 				});
-				// Options Menu Events
-				// TODO: add onchange to lighting to hide specular if off
-				$("#btnOptionsCancel").click(function() {
-					changeMenu("#optionsMenu", "#mainMenu");
+				$('[gui-role*="startGame"]').each(function() {
+					$(this).click(function() {
+						startGame($(this).attr("gui-level"));
+					});
 				});
-				$("#btnOptionsApply").click(function() {
-					// TODO: Apply Changes
-					changeMenu("#optionsMenu", "#mainMenu");
-				});
-				// Credits Menu Events
-				$("#btnCreditsBack").click(function() {
-					changeMenu("#creditsMenu", "#mainMenu");
-				});
-				// Level Menu Events
-				$("#btnLevelBack").click(function() {
-					changeMenu("#levelMenu", "#mainMenu");
-				});
-				$("#linkLevel1").click(function() {
-					startGame(1);
-				});
-				// Pause Menu Events
-				$("#btnPauseReturn").click(function() {
-					resumeGame();
-				});
-				$("#btnPauseExit").click(function() {
-					changeMenu("#pauseMenu", "#mainMenu");
+				$('[gui-role*="applyOptions"]').each(function() {
+					$(this).click(function() {
+						applyOptions();
+					});
 				});
 			});
 			$(window).jkey('esc', function() { if(gameState === "InGame") pauseGame(); });
 		</script>
 		<style>
-			body { margin: 0; padding: 0; font-family: 'Trebuchet MS'; background-color: #F0F0F0; background-image: url(../"centeredWhiteImage.png"); color: #111; }
-			ul.links { list-style: none; margin: 0; padding: 0; }
+			body { margin: 0; padding: 0; font-family: 'Trebuchet MS'; background-color: #F0F0F0; background-image: url(../"centeredWhiteImage.png"); color: #111; overflow: hidden; }
+			#menuContainer { width: 85%; margin: 0 auto; position: absolute; left: 5%; top: 5%; padding: 2.5%; background-color: transparent; border: 1px solid #CCC; }
+			h1, h2, h3 { text-align: center; }
+			h1 { font-size: 200%; }
+			h2 { font-size: 160%; }
+			h3 { font-size: 130%; }
+			p, ul, input, select { font-size: 100%; }
+			ul.links { list-style: none; margin: 0; padding: 0; text-align: center; }
 			ul.links a { display: block; cursor: pointer; }
 		</style>
 	</head>
 	<body>
 		<div id="menuContainer">
 			<!-- Main Menu -->
-			<div id="mainMenu">
+			<div gui-role="menu" gui-id="mainMenu">
 				<h1>Scavenger</h1>
-				<ul class="links">
-					<li><a id="linkNewGame">New Game</a></li>
-					<li><a id="linkOptions">Options</a></li>
-					<li><a id="linkCredits">Credits</a></li>
+				<ul gui-role="links">
+					<li><a gui-target="levelMenu">New Game</a></li>
+					<li><a gui-target="optionsMenu">Options</a></li>
+					<li><a gui-target="creditsMenu">Credits</a></li>
 				</ul>
 			</div>
 			<!-- Options Menu -->
-			<div id="optionsMenu" style="display: none;">
+			<div gui-role="menu" gui-id="optionsMenu">
 				<h2>Options</h2>
 				<form>
 					<div>
@@ -126,8 +154,8 @@
 						<label for="optionsLighting">Lighting</label>
 						<select id="optionsLighting">
 							<option value="false">No Lighting</option>
-							<option value="vertex">Per Vertex</option>
-							<option value="pixel" selected>Per Pixel</option>
+							<option value="Vertex">Per Vertex</option>
+							<option value="Pixel" selected>Per Pixel</option>
 						</select>
 					</div>
 					<div>
@@ -138,34 +166,35 @@
 						</select>
 					</div>
 					<div>
-						<input id="btnOptionsCancel" type="button" value="Cancel" />
-						<input id="btnOptionsApply" type="button" value="Okay" />
+						<input gui-role="navButton" gui-target="mainMenu" type="button" value="Cancel" />
+						<input gui-role="navButton applyOptions" gui-target="mainMenu" type="button" value="Okay" />
 					</div>
 				</form>
 			</div>
 			<!-- Level Menu -->
-			<div id="levelMenu" style="display: none;">
+			<div gui-role="menu" gui-id="levelMenu">
 				<h2>Select Level</h2>
 				<ul class="links">
-					<li><a id="linkLevel1">Level 1</a></li>
+					<!-- Add Game Start -->
+					<li><a gui-role="navButton startGame" gui-target="pauseMenu" gui-level="1">Level 1</a></li>
 				</ul>
-				<input id="btnLevelBack" type="button" value="Back" />
+				<input gui-role="navButton" gui-target="mainMenu" type="button" value="Back" />
 			</div>
 			<!-- Credits Menu -->
-			<div id="creditsMenu" style="display: none;">
+			<div gui-role="menu" gui-id="creditsMenu">
 				<h2>Credits</h2>
-				<p>Game design and programming by Delph</p>
+				<p>Game design and programming by Delph.</p>
 				<p>Please leave any comments / praise / constructive criticism on <a href="http://delphic.me.uk/Scavenger">my site</a> or contact be via twitter <a href="http://twitter.com/_delph/">@_delph</a>.</p>
 				<p>Thanks to <a href="http://http://twitter.com/gpjt">Giles Thomas</a> at <a href="http://www.learningwebgl.com">LearningWebGL.com</a> for a great set of lessons.</p>
 				<p>Powered by Gremlins.</p>
-				<input id="btnCreditsBack" type="button" value="Back" />
+				<input gui-role="navButton" gui-target="mainMenu" type="button" value="Back" />
 			</div>
 			<!-- Pause Menu -->
-			<div id="pauseMenu" style="display: none;">
+			<div gui-role="menu" gui-id="pauseMenu">
 				<h2>Paused</h2>
 				<div>
-					<input id="btnPauseReturn" type="button" value="Return to Game"/>
-					<input id="btnPauseExit" type="button" value="Exit to Main Menu"/>
+					<input gui-role="resumeGame" type="button" value="Return to Game"/>
+					<input gui-role="navButton" gui-target="mainMenu" id="btnPauseExit" type="button" value="Exit to Main Menu"/>
 				</div>
 			</div>
 		</div>
@@ -173,5 +202,13 @@
 		<div id="gameContainer" style="display: none;">
 			<h1>Game to go here!</h1>
 		</div>
+		<script>
+			function setStyleSize() { 
+				$("#menuContainer").css("height",window.innerHeight*0.8);
+				$("#menuContainer").css("font-size",window.innerHeight/20);
+			}
+			setStyleSize();
+			window.onresize = function() { setStyleSize(); }
+		</script>
 	</body>
 </html>
