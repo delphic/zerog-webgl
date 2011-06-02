@@ -693,7 +693,7 @@ function _Gremlin() {
 			this.pitch += dpitch;
 			// Pitch Clamp
 			if (this.pitch > 89.9) this.pitch = 89.8;
-			else if (this.pitch < -89.9) this.pitch = 89.8;
+			else if (this.pitch < -89.9) this.pitch = -89.8;
 		}
 		function moveCamera(dx,dy,dz) {
 			var syaw = Math.sin(degToRad(this.yaw));
