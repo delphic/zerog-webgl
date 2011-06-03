@@ -193,6 +193,7 @@ function _Gremlin() {
 		_gl.uniform4fv(_shaderProgram.colorUniform, object.color);
 		
 		if (object.useTextures) {
+			_gl.uniform1i(_shaderProgram.useTexturesUniform, true);
 			_gl.enableVertexAttribArray(_shaderProgram.textureCoordAttribute);
 			// Textures
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.textureCoords);
@@ -206,6 +207,7 @@ function _Gremlin() {
 			// BUG: This does not result in full colour, but a reduced colour
 			// This can be combatted by increasing the colour
 			_gl.disableVertexAttribArray(_shaderProgram.textureCoordAttribute);
+			_gl.uniform1i(_shaderProgram.useTexturesUniform, false);
 		}
 		
 				
@@ -259,7 +261,7 @@ function _Gremlin() {
 		
         _setMatrixUniforms();
 		
-		if (!object.wireframe) {
+		if (!object.wireframe && !object.points) {
 			if(object.useIndices) {
 				_gl.drawElements(_gl.TRIANGLES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
 			}
@@ -267,13 +269,16 @@ function _Gremlin() {
 				_gl.drawArrays(_gl.TRIANGLES, 0, object.buffers.vertexPosition.numItems);
 			}
 		}
-		else {
+		else if (object.wireframe){
 			if(object.useIndices) {
 				_gl.drawElements(_gl.LINES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
 			}
 			else {
 				_gl.drawArrays(_gl.LINES, 0, object.buffers.vertexPosition.numItems);
 			}
+		}
+		else {
+			_gl.drawArrays(_gl.POINTS, 0, object.buffers.vertexPosition.numItems);
 		}
         _mvPopMatrix();
 	}
@@ -596,6 +601,19 @@ function _Gremlin() {
 			
 			object.assignBuffer("vertexPosition", rayVertexPositionBuffer);
 		}
+		else if (objectType==="point") {
+			object.points = true;
+			
+			var pointVertexPositionBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, pointVertexPositionBuffer);
+			var vertices = [0.0, 0.0, 0.0];
+			
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+			pointVertexPositionBuffer.itemSize = 3;
+			pointVertexPositionBuffer.numItems = 1;
+			
+			object.assignBuffer("vertexPosition", pointVertexPositionBuffer);
+		}
 	}
 	
 	function loadModel(object, fileName, scale){
@@ -647,6 +665,11 @@ function _Gremlin() {
 	function rotatePlayerCamera(dyaw, dpitch) {
 		_playerCamera.rotateCamera(dyaw, dpitch);
 	}
+	function playerCameraPos(value) {
+		value[0] = _playerCamera.x;
+		value[1] = _playerCamera.y; 
+		value[2] = _playerCamera.z;
+	}
 	
 	// Maths Functions
     function degToRad(degrees) {
@@ -685,7 +708,6 @@ function _Gremlin() {
 		this.moveCamera = moveCamera;
 		this.rotation = rotation;
 		this.transform = transform;
-		this.position = position;
 		
 		// TODO: Add rotate around axis function
 		function rotateCamera(dyaw, dpitch) {
@@ -717,9 +739,6 @@ function _Gremlin() {
 			mat4.rotate(cameraTransform, -degToRad(this.yaw), [0, 1, 0]);
 			mat4.translate(cameraTransform, [-this.x, -this.y, -this.z]);
 			mat4.multiplyVec3(cameraTransform, vector, vector);
-		}
-		function position() {
-			return [this.x, this.y, this.z];
 		}
 	}
 	
@@ -892,6 +911,7 @@ function _Gremlin() {
 		program.colorUniform = _gl.getUniformLocation(program, "uColor");
 		program.textureCoordAttribute = _gl.getAttribLocation(program, "aTextureCoord");
 		_gl.enableVertexAttribArray(program.textureCoordAttribute);
+		program.useTexturesUniform = _gl.getUniformLocation(program, "uUseTextures");
 			
 		// Normals
 		program.vertexNormalAttribute = _gl.getAttribLocation(program, "aVertexNormal");
@@ -955,7 +975,7 @@ function _Gremlin() {
 	function _initShaders() {
 		_shaderPrograms["Vertex"] = _createShader("vertex-shader-vs", "vertex-shader-fs");
 		_shaderPrograms["Pixel"] = _createShader("pixel-shader-vs", "pixel-shader-fs");
-		_shaderProgram = _shaderPrograms.Vertex;
+		_shaderProgram = _shaderPrograms.Pixel;
 		_gl.useProgram(_shaderProgram);
     }	
 	
@@ -985,6 +1005,7 @@ function _Gremlin() {
 		renderObject:				renderObject,
 		movePlayerCamera:			movePlayerCamera,
 		rotatePlayerCamera:			rotatePlayerCamera,
+		playerCameraPos:			playerCameraPos,
 		degToRad: 					degToRad 
 	};
 }

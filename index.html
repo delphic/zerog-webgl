@@ -7,6 +7,7 @@
 		<script type="text/javascript" src="libs/glMatrix-0.9.5.min.js"></script>
 		<script type="text/javascript" src="libs/webgl-utils.js"></script>
 		<!-- Shaders -->
+		<!-- TODO: Add uUseTextures -->
 		<script id="vertex-shader-fs" type="x-shader/x-fragment">
 			#ifdef GL_ES
 			precision highp float;
@@ -16,11 +17,17 @@
 			varying vec3 vLightWeighting;
 			
 			uniform vec4 uColor;
+			uniform bool uUseTextures;
 			uniform sampler2D uSampler;
 
 			void main(void) {
-				vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-				gl_FragColor = vec4(textureColor.rgb * uColor.rgb * vLightWeighting, textureColor.a); // TODO: think about how to use, uColor alpha and if we should
+				if(uUseTextures) {
+					vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+					gl_FragColor = vec4(textureColor.rgb * uColor.rgb * vLightWeighting, textureColor.a); // TODO: think about how to use, uColor alpha and if we should
+				}
+				else {
+					gl_FragColor = vec4(uColor.rgb * vLightWeighting, uColor.a);
+				}
 			}
 		</script>
 		<script id="vertex-shader-vs" type="x-shader/x-vertex">
@@ -137,6 +144,8 @@
 			
 			uniform bool uUseLighting;
 			uniform bool uUseSpecular;
+			
+			uniform bool uUseTextures;
 
 			uniform sampler2D uSampler;
 
@@ -197,9 +206,13 @@
 					
 					lightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting + pointLightComponent + spotLightComponent;
 				} 
-				
-				vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-				gl_FragColor = vec4(textureColor.rgb  * uColor.rgb * lightWeighting, textureColor.a);
+				if(uUseTextures) {
+					vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+					gl_FragColor = vec4(textureColor.rgb  * uColor.rgb * lightWeighting, textureColor.a);
+				}
+				else {
+					gl_FragColor = vec4(uColor.rgb * lightWeighting, uColor.a);
+				}
 			}
 		</script>
 		<script id="pixel-shader-vs" type="x-shader/x-vertex">
@@ -279,6 +292,11 @@
 			else dz = 0;
 			// TODO: Fix diagonal movement speed
 			Gremlin.movePlayerCamera(dx,0,dz);
+			
+			// Update Motes
+			var playerPos = [];
+			Gremlin.playerCameraPos(playerPos);
+			updateMotes(playerPos, [dx,0,dz]);
         }
         lastTime = timeNow;
     }
@@ -294,6 +312,10 @@
 			if(gameObjects[object].visible) {
 				Gremlin.renderObject(gameObjects[object]);
 			}
+		}
+		for(var i = 0; i < maxMotes; i++)
+		{
+			Gremlin.renderObject(dustMotes[i]);
 		}
 		
 		// Animate Scene
@@ -341,6 +363,7 @@
 		// Consider: Moving to Renderer
 		this.visible = true;
 		this.wireframe = false;
+		this.points = false; // TODO: Combine this and wireframe into a render type (triangles / lines / points etc)
 		this.useIndices = false;
 		this.useTextures = false;
 		
@@ -379,6 +402,46 @@
 	// Game Init
 	function gameInit() {
 		loadLevel("level1.js");
+		createMotes();
+	}
+	
+	// Dust Motes
+	// TODO: namespace
+	var dustMotes = [];
+	var maxMotes, randomFactor, rootThree;
+	rootThree = 1.73205; // Approximately
+	randomFactor = 10; // To Be Adjusted
+	maxMotes = 100; // To Be Adjusted
+	
+	function createMotes() {
+		for(var i = 0; i < maxMotes; i++) {
+			var obj = new gameObject(2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5));
+			Gremlin.createPrimitive(obj, "point", false, false, 0, 0, 0);
+			obj.points = true;
+			obj.useLighting = false; // If we want the motes to be lit properly we'll have to figure out the normal to a point!
+			obj.setColor(1,0,0,1);
+			dustMotes.push(obj); 
+		}
+	}
+ 
+	function updateMotes(pos, vel) {
+		// TODO: this update method is flawed it ends up with more particles in the direction you've come from, rethink this
+		if (vec3.length(vel)) {
+			for(var i = 0; i < maxMotes; i++){
+				var boundingR;
+				var posDiff = vec3.create();
+				boundingR = vec3.length(vel) + rootThree*randomFactor;
+				vec3.subtract(pos,[dustMotes[i].x, dustMotes[i].y, dustMotes[i].z], posDiff); 
+				if (vec3.length(posDiff) >  boundingR) {
+					// Respawn
+					dustMotes[i].setPosition(
+						pos[0] + randomFactor*vel[0] + 2*randomFactor*(Math.random()-0.5),
+						pos[1] + randomFactor*vel[1] + 2*randomFactor*(Math.random()-0.5),
+						pos[2] + randomFactor*vel[2] + 2*randomFactor*(Math.random()-0.5)
+					);
+				}
+			}
+		}
 	}
 	
 	// WebGL Start
