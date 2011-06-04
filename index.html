@@ -419,13 +419,14 @@
 			Gremlin.createPrimitive(obj, "point", false, false, 0, 0, 0);
 			obj.points = true;
 			obj.useLighting = false; // If we want the motes to be lit properly we'll have to figure out the normal to a point!
-			obj.setColor(1,0,0,1);
+			obj.setColor(0.8,0.8,0.8,1);
 			dustMotes.push(obj); 
 		}
 	}
  
 	function updateMotes(pos, vel) {
 		// TODO: this update method is flawed it ends up with more particles in the direction you've come from, rethink this
+		// Also the whole sphere of motes is probably flawed, we probably need a cylinder in direction of travel
 		if (vec3.length(vel)) {
 			for(var i = 0; i < maxMotes; i++){
 				var boundingR;
@@ -433,11 +434,11 @@
 				boundingR = vec3.length(vel) + rootThree*randomFactor;
 				vec3.subtract(pos,[dustMotes[i].x, dustMotes[i].y, dustMotes[i].z], posDiff); 
 				if (vec3.length(posDiff) >  boundingR) {
-					// Respawn
+					// Respawn on opposite site of sphere 
 					dustMotes[i].setPosition(
-						pos[0] + randomFactor*vel[0] + 2*randomFactor*(Math.random()-0.5),
-						pos[1] + randomFactor*vel[1] + 2*randomFactor*(Math.random()-0.5),
-						pos[2] + randomFactor*vel[2] + 2*randomFactor*(Math.random()-0.5)
+						pos[0] + posDiff[0],
+						pos[1] + posDiff[1],
+						pos[2] + posDiff[2]
 					);
 				}
 			}
