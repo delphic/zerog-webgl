@@ -7,26 +7,25 @@
 
 function _GUI() {
 	// TODO: Move controller functions
-	var gameState = "InMenu";
 	var resolutionScale, lighting, lightingType, specularLighting, textureFiltering;
 	
 	function startGame(val) {
 		// TODO: Start Game with val
 		$("#menuContainer").hide();
-		$("#gameContainer").show();
 		gameState = "InGame";
+		controller.handlePause();
 	}
 	function resumeGame() {
 		// TODO: Unpause
 		$("#menuContainer").hide();
-		$("#gameContainer").show();
 		gameState = "InGame";
+		controller.handlePause();
 	}
 	function pauseGame() {
 		// TODO: Pause
-		$("#gameContainer").hide();
 		$("#menuContainer").show();
 		gameState = "InMenu";
+		controller.handlePause();
 	}
 	function applyOptions() {
 		resolutionScale = document.getElementById(optionsResolution).value;
@@ -46,7 +45,6 @@ function _GUI() {
 	$(document).ready( function() {
 		
 		setStyleSize();
-		window.onresize = function() { setStyleSize(); }
 	
 		$('div[gui-role="menu"]').addClass("menu").hide();
 		$('div[gui-role]"menu"][gui-id="mainMenu"]').show();
@@ -87,5 +85,7 @@ function _GUI() {
 			$('#optionsResolutionOutput').html(factor.toFixed(1)); });
 	});
 	$(window).jkey('esc', function() { if(gameState === "InGame") pauseGame(); });
+	
+	return { setStyleSize: setStyleSize }
 }
 var GUI = _GUI();
