@@ -2,84 +2,13 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8"/>
-		<title>Scavenger</title>
+		<title>WebGL ZeroG</title>
 		<script src="libs/jquery-1.6.1.min.js"></script>
 		<script src="libs/jquery.jkey-1.1"></script>
-		<!-- GUI Script -->
-		<script>
-			// TODO: Needs a namespace
-			// TODO: Move controller functions
-			var gameState = "InMenu";
-			var resolutionScale, lighting, lightingType, specularLighting, textureFiltering;
-			
-			function startGame(val) {
-				// TODO: Start Game with val
-				$("#menuContainer").hide();
-				$("#gameContainer").show();
-				gameState = "InGame";
-			}
-			function resumeGame() {
-				// TODO: Unpause
-				$("#menuContainer").hide();
-				$("#gameContainer").show();
-				gameState = "InGame";
-			}
-			function pauseGame() {
-				// TODO: Pause
-				$("#gameContainer").hide();
-				$("#menuContainer").show();
-				gameState = "InMenu";
-			}
-			function applyOptions() {
-				resolutionScale = document.getElementById(optionsResolution).value;
-				lighting = document.getElementById(optionsLighting);
-				if (lighting) { lightingType = lighting; lighting = true; } 
-				textureFiltering = document.getElementById(optionsTextureFiltering);
-				specularLighting = document.getElementById(optionsSpecularLighting);
-			}
-			
-			$(document).ready( function() {
-				$('div[gui-role="menu"]').addClass("menu").hide();
-				$('div[gui-role]"menu"][gui-id="mainMenu"]').show();
-				$('[gui-role="links"]').addClass("links");
-				$('[gui-role="links"] a').each(function() {
-					$(this).click(function() { 
-						$(this).parents('[gui-role="menu"]').hide();
-						$('[gui-role="menu"][gui-id="'+$(this).attr("gui-target")+'"]').show();
-					});
-				});
-				
-				$('[gui-role*="navButton"]').each(function() {
-					$(this).click(function() {
-						$(this).parents('[gui-role="menu"]').hide();
-						$('[gui-role="menu"][gui-id="'+$(this).attr("gui-target")+'"]').show();
-					});
-				});
-				
-				$('[gui-role*="resumeGame"]').each(function() {
-					$(this).click(function() {
-						resumeGame();
-					});
-				});
-				$('[gui-role*="startGame"]').each(function() {
-					$(this).click(function() {
-						startGame($(this).attr("gui-level"));
-					});
-				});
-				$('[gui-role*="applyOptions"]').each(function() {
-					$(this).click(function() {
-						applyOptions();
-					});
-				});
-				$('#optionsResolution').change(function() { 
-					var factor = parseFloat($(this).val(),10);
-					$('#optionsResolutionOutput').html(factor.toFixed(1)); });
-			});
-			$(window).jkey('esc', function() { if(gameState === "InGame") pauseGame(); });
-		</script>
+		<script src="GUI.js"></script>
 		<style>
 			body { margin: 0; padding: 0; font-family: 'Trebuchet MS'; background-color: #F0F0F0; background-image: url(../"centeredWhiteImage.png"); color: #111; overflow: hidden; }
-			#menuContainer { width: 85%; margin: 0 auto; position: absolute; left: 5%; top: 5%; padding: 2.5%; background-color: transparent; border: 1px solid #CCC; }
+			#menuContainer { width: 85%; margin: 0 auto; position: absolute; left: 5%; top: 5%; padding: 2.5%; background-color: transparent; border: 1px solid #CCC; overflow-y: scroll;}
 			h1, h2, h3 { text-align: center; }
 			h1 { font-size: 200%; }
 			h2 { font-size: 160%; }
@@ -93,7 +22,7 @@
 		<div id="menuContainer">
 			<!-- Main Menu -->
 			<div gui-role="menu" gui-id="mainMenu">
-				<h1>Scavenger</h1>
+				<h1>WebGL ZeroG</h1>
 				<ul gui-role="links">
 					<li><a gui-target="levelMenu">New Game</a></li>
 					<li><a gui-target="optionsMenu">Options</a></li>
@@ -152,7 +81,8 @@
 				<h2>Credits</h2>
 				<p>Game design and programming by Delph.</p>
 				<p>Please leave any comments / praise / constructive criticism on <a href="http://delphic.me.uk/Scavenger">my site</a> or contact be via twitter <a href="http://twitter.com/_delph/">@_delph</a>.</p>
-				<p>Thanks to <a href="http://http://twitter.com/gpjt">Giles Thomas</a> at <a href="http://www.learningwebgl.com">LearningWebGL.com</a> for a great set of lessons.</p>
+				<p>Thanks to <a href="http://http://twitter.com/gpjt">Giles Thomas</a> for a great set of lessons at <a href="http://www.learningwebgl.com">LearningWebGL.com</a>.</p>
+				<p>Thanks to <a href="http://twitter.com/Tojiro">Tojiro</a> author of glMatrix.</p>
 				<p>Powered by Gremlins.</p>
 				<input gui-role="navButton" gui-target="mainMenu" type="button" value="Back" />
 			</div>
@@ -169,13 +99,5 @@
 		<div id="gameContainer" style="display: none;">
 			<h1>Game to go here!</h1>
 		</div>
-		<script>
-			function setStyleSize() { 
-				$("#menuContainer").css("height",window.innerHeight*0.8);
-				$("#menuContainer").css("font-size",window.innerHeight/20);
-			}
-			setStyleSize();
-			window.onresize = function() { setStyleSize(); }
-		</script>
 	</body>
 </html>

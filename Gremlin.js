@@ -278,7 +278,12 @@ function _Gremlin() {
 			}
 		}
 		else {
-			_gl.drawArrays(_gl.POINTS, 0, object.buffers.vertexPosition.numItems);
+			if(object.useIndices) {
+				_gl.drawElements(_gl.POINTS, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+			}
+			else {
+				_gl.drawArrays(_gl.POINTS, 0, object.buffers.vertexPosition.numItems);
+			}
 		}
         _mvPopMatrix();
 	}
