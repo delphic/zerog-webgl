@@ -425,8 +425,6 @@
 	}
  
 	function updateMotes(pos, vel) {
-		// TODO: this update method is flawed it ends up with more particles in the direction you've come from, rethink this
-		// Also the whole sphere of motes is probably flawed, we probably need a cylinder in direction of travel
 		if (vec3.length(vel)) {
 			for(var i = 0; i < maxMotes; i++){
 				var boundingR;
