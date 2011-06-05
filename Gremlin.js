@@ -217,7 +217,7 @@ function _Gremlin() {
 				// We might want to feed in different lights depedant on value...
 			// TODO: Add Variables Switch functions
 			_gl.uniform1i(_shaderProgram.useLightingUniform, true);
-			_gl.uniform1i(_shaderProgram.useSpecularUniform, false);
+			_gl.uniform1i(_shaderProgram.useSpecularUniform, false); // TODO: Add variable switch including if object shininess = 0, false
 
 			// Normals
 			_gl.enableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
@@ -287,338 +287,331 @@ function _Gremlin() {
 		}
         _mvPopMatrix();
 	}
+
+	// Primitive Creation Functions
+	// TODO: Add Cylinders, Generalise to Cuboids & Elipsoids and add 2D shapes Rays, Elipses, Rectangles 
+	function createPyramid(object, textured, size) {
+		// TODO: Convert to use index buffer
+		var pyramidVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
+		var vertices = [
+			// Front face
+			 0.0,  size,  0.0,
+			-size, -size,  size,
+			 size, -size,  size,
+
+			// Right face
+			 0.0,  size,  0.0,
+			 size, -size,  size,
+			 size, -size, -size,
+
+			// Back face
+			 0.0,  size,  0.0,
+			 size, -size, -size,
+			-size, -size, -size,
+
+			// Left face
+			 0.0,  size,  0.0,
+			-size, -size, -size,
+			-size, -size,  size,
+			
+			// Bottom face
+			-size, -size, -size,
+			-size, -size, size,
+			size, -size, size,
+			-size, -size, -size,
+			size, -size, size,
+			size, -size, -size
+			
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+		pyramidVertexPositionBuffer.itemSize = 3;
+		pyramidVertexPositionBuffer.numItems = 18;
 		
-    function createPrimitive(object, objectType, wireframe, textured, size, latBands, longBands) {
-		// TODO: Add Cylinders, Generalise to Cuboids & Elipsoids and add 2D shapes Rays, Elipses, Rectangles 
-		// TODO: add parameters for creation (i.e. size, number of sides for spheres / cylinders etc)
-		// TODO: Convert colour buffers to single colour
-		// BUG: TODO: Add failure (so that the program doesn't crash if an invalid object type is used
-		if (wireframe) {
-			object.wireframe = true;
-		}
-		if (objectType === "pyramid") {
-			// TODO: Convert to use index buffer
-			var pyramidVertexPositionBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
-			var vertices = [
-				// Front face
-				 0.0,  size,  0.0,
-				-size, -size,  size,
-				 size, -size,  size,
+		object.assignBuffer("vertexPosition", pyramidVertexPositionBuffer);
+	}
+	function createCube(object, textured, size) {
+		// Vertex Buffer
+		var cubeVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+		vertices = [
+			// Front face
+			-size, -size,  size,
+			 size, -size,  size,
+			 size,  size,  size,
+			-size,  size,  size,
 
-				// Right face
-				 0.0,  size,  0.0,
-				 size, -size,  size,
-				 size, -size, -size,
+			// Back face
+			-size, -size, -size,
+			-size,  size, -size,
+			 size,  size, -size,
+			 size, -size, -size,
 
-				// Back face
-				 0.0,  size,  0.0,
-				 size, -size, -size,
-				-size, -size, -size,
+			// Top face
+			-size,  size, -size,
+			-size,  size,  size,
+			 size,  size,  size,
+			 size,  size, -size,
 
-				// Left face
-				 0.0,  size,  0.0,
-				-size, -size, -size,
-				-size, -size,  size,
-				
-				// Bottom face
-				-size, -size, -size,
-				-size, -size, size,
-				size, -size, size,
-				-size, -size, -size,
-				size, -size, size,
-				size, -size, -size
-				
-			];
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
-			pyramidVertexPositionBuffer.itemSize = 3;
-			pyramidVertexPositionBuffer.numItems = 18;
-			
-			object.assignBuffer("vertexPosition", pyramidVertexPositionBuffer);
-		}
-		else if (objectType === "cube"){
-			// Vertex Buffer
-			var cubeVertexPositionBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-			vertices = [
-				// Front face
-				-size, -size,  size,
-				 size, -size,  size,
-				 size,  size,  size,
-				-size,  size,  size,
+			// Bottom face
+			-size, -size, -size,
+			 size, -size, -size,
+			 size, -size,  size,
+			-size, -size,  size,
 
-				// Back face
-				-size, -size, -size,
-				-size,  size, -size,
-				 size,  size, -size,
-				 size, -size, -size,
+			// Right face
+			 size, -size, -size,
+			 size,  size, -size,
+			 size,  size,  size,
+			 size, -size,  size,
 
-				// Top face
-				-size,  size, -size,
-				-size,  size,  size,
-				 size,  size,  size,
-				 size,  size, -size,
-
-				// Bottom face
-				-size, -size, -size,
-				 size, -size, -size,
-				 size, -size,  size,
-				-size, -size,  size,
-
-				// Right face
-				 size, -size, -size,
-				 size,  size, -size,
-				 size,  size,  size,
-				 size, -size,  size,
-
-				// Left face
-				-size, -size, -size,
-				-size, -size,  size,
-				-size,  size,  size,
-				-size,  size, -size
-			];
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
-			cubeVertexPositionBuffer.itemSize = 3;
-			cubeVertexPositionBuffer.numItems = 24;
-			
-			object.assignBuffer("vertexPosition", cubeVertexPositionBuffer);
+			// Left face
+			-size, -size, -size,
+			-size, -size,  size,
+			-size,  size,  size,
+			-size,  size, -size
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+		cubeVertexPositionBuffer.itemSize = 3;
+		cubeVertexPositionBuffer.numItems = 24;
 		
-			// Texture Buffer
-			if(textured) {
-				var cubeVertexTextureCoordBuffer;
-				cubeVertexTextureCoordBuffer = _gl.createBuffer();
-				_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-				var textureCoords = [
-				  // Front face
-				  0.0, 0.0,
-				  1.0, 0.0,
-				  1.0, 1.0,
-				  0.0, 1.0,
-
-				  // Back face
-				  1.0, 0.0,
-				  1.0, 1.0,
-				  0.0, 1.0,
-				  0.0, 0.0,
-
-				  // Top face
-				  0.0, 1.0,
-				  0.0, 0.0,
-				  1.0, 0.0,
-				  1.0, 1.0,
-
-				  // Bottom face
-				  1.0, 1.0,
-				  0.0, 1.0,
-				  0.0, 0.0,
-				  1.0, 0.0,
-
-				  // Right face
-				  1.0, 0.0,
-				  1.0, 1.0,
-				  0.0, 1.0,
-				  0.0, 0.0,
-
-				  // Left face
-				  0.0, 0.0,
-				  1.0, 0.0,
-				  1.0, 1.0,
-				  0.0, 1.0,
-				];
-				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
-				cubeVertexTextureCoordBuffer.itemSize = 2;
-				cubeVertexTextureCoordBuffer.numItems = 24;
-				
-				object.assignBuffer("textureCoords", cubeVertexTextureCoordBuffer);
-				object.useTextures = true;
-			}
-			
-			// Normal Buffer
-			// WARNING: This is dependant on shader program should make this more robust
-			var cubeVertexNormalBuffer;
-			cubeVertexNormalBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexNormalBuffer);
-			var vertexNormals = [
+		object.assignBuffer("vertexPosition", cubeVertexPositionBuffer);
+	
+		// Texture Buffer
+		if(textured) {
+			var cubeVertexTextureCoordBuffer;
+			cubeVertexTextureCoordBuffer = _gl.createBuffer();
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
+			var textureCoords = [
 			  // Front face
-			   0.0,  0.0,  1.0,
-			   0.0,  0.0,  1.0,
-			   0.0,  0.0,  1.0,
-			   0.0,  0.0,  1.0,
+			  0.0, 0.0,
+			  1.0, 0.0,
+			  1.0, 1.0,
+			  0.0, 1.0,
 
 			  // Back face
-			   0.0,  0.0, -1.0,
-			   0.0,  0.0, -1.0,
-			   0.0,  0.0, -1.0,
-			   0.0,  0.0, -1.0,
+			  1.0, 0.0,
+			  1.0, 1.0,
+			  0.0, 1.0,
+			  0.0, 0.0,
 
 			  // Top face
-			   0.0,  1.0,  0.0,
-			   0.0,  1.0,  0.0,
-			   0.0,  1.0,  0.0,
-			   0.0,  1.0,  0.0,
+			  0.0, 1.0,
+			  0.0, 0.0,
+			  1.0, 0.0,
+			  1.0, 1.0,
 
 			  // Bottom face
-			   0.0, -1.0,  0.0,
-			   0.0, -1.0,  0.0,
-			   0.0, -1.0,  0.0,
-			   0.0, -1.0,  0.0,
+			  1.0, 1.0,
+			  0.0, 1.0,
+			  0.0, 0.0,
+			  1.0, 0.0,
 
 			  // Right face
-			   1.0,  0.0,  0.0,
-			   1.0,  0.0,  0.0,
-			   1.0,  0.0,  0.0,
-			   1.0,  0.0,  0.0,
+			  1.0, 0.0,
+			  1.0, 1.0,
+			  0.0, 1.0,
+			  0.0, 0.0,
 
 			  // Left face
-			  -1.0,  0.0,  0.0,
-			  -1.0,  0.0,  0.0,
-			  -1.0,  0.0,  0.0,
-			  -1.0,  0.0,  0.0,
+			  0.0, 0.0,
+			  1.0, 0.0,
+			  1.0, 1.0,
+			  0.0, 1.0,
 			];
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
-			cubeVertexNormalBuffer.itemSize = 3;
-			cubeVertexNormalBuffer.numItems = 24;
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
+			cubeVertexTextureCoordBuffer.itemSize = 2;
+			cubeVertexTextureCoordBuffer.numItems = 24;
 			
-			object.assignBuffer("vertexNormals", cubeVertexNormalBuffer);
-			
-			// Index Buffer
-			var cubeVertexIndexBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-			var cubeVertexIndices = [
-				0, 1, 2,      0, 2, 3,    // Front face
-				4, 5, 6,      4, 6, 7,    // Back face
-				8, 9, 10,     8, 10, 11,  // Top face
-				12, 13, 14,   12, 14, 15, // Bottom face
-				16, 17, 18,   16, 18, 19, // Right face
-				20, 21, 22,   20, 22, 23  // Left face
-			];
-			_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), _gl.STATIC_DRAW);
-			cubeVertexIndexBuffer.itemSize = 1;
-			cubeVertexIndexBuffer.numItems = 36;
-			
-			object.assignBuffer("vertexIndex", cubeVertexIndexBuffer);
-			object.useIndices = true; 
+			object.assignBuffer("textureCoords", cubeVertexTextureCoordBuffer);
+			object.useTextures = true;
 		}
-		else if (objectType==="sphere") {
-			// Method taken from Lesson 11 of learningWebGL.com
-			var latitudeBands = latBands;
-			var longitudeBands = longBands;
-			var radius = size;
+		
+		// Normal Buffer
+		// WARNING: This is dependant on shader program should make this more robust
+		var cubeVertexNormalBuffer;
+		cubeVertexNormalBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexNormalBuffer);
+		var vertexNormals = [
+		  // Front face
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
 
-			var vertexPositionData = [];
-			var normalData = [];
-			var textureCoordData = [];
-			for (var latNumber=0; latNumber <= latitudeBands; latNumber++) {
-				var theta = latNumber * Math.PI / latitudeBands;
-				var sinTheta = Math.sin(theta);
-				var cosTheta = Math.cos(theta);
+		  // Back face
+		   0.0,  0.0, -1.0,
+		   0.0,  0.0, -1.0,
+		   0.0,  0.0, -1.0,
+		   0.0,  0.0, -1.0,
 
-				// Generate Values
-				for (var longNumber=0; longNumber <= longitudeBands; longNumber++) {
-					var phi = longNumber * 2 * Math.PI / longitudeBands;
-					var sinPhi = Math.sin(phi);
-					var cosPhi = Math.cos(phi);
+		  // Top face
+		   0.0,  1.0,  0.0,
+		   0.0,  1.0,  0.0,
+		   0.0,  1.0,  0.0,
+		   0.0,  1.0,  0.0,
 
-					var x = cosPhi * sinTheta;
-					var y = cosTheta;
-					var z = sinPhi * sinTheta;
-					var u = 1 - (longNumber / longitudeBands);
-					var v = 1 - (latNumber / latitudeBands);
+		  // Bottom face
+		   0.0, -1.0,  0.0,
+		   0.0, -1.0,  0.0,
+		   0.0, -1.0,  0.0,
+		   0.0, -1.0,  0.0,
 
-					normalData.push(x);
-					normalData.push(y);
-					normalData.push(z);
-					textureCoordData.push(u);
-					textureCoordData.push(v);
-					vertexPositionData.push(radius * x);
-					vertexPositionData.push(radius * y);
-					vertexPositionData.push(radius * z);
-				}
+		  // Right face
+		   1.0,  0.0,  0.0,
+		   1.0,  0.0,  0.0,
+		   1.0,  0.0,  0.0,
+		   1.0,  0.0,  0.0,
+
+		  // Left face
+		  -1.0,  0.0,  0.0,
+		  -1.0,  0.0,  0.0,
+		  -1.0,  0.0,  0.0,
+		  -1.0,  0.0,  0.0,
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
+		cubeVertexNormalBuffer.itemSize = 3;
+		cubeVertexNormalBuffer.numItems = 24;
+		
+		object.assignBuffer("vertexNormals", cubeVertexNormalBuffer);
+		
+		// Index Buffer
+		var cubeVertexIndexBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
+		var cubeVertexIndices = [
+			0, 1, 2,      0, 2, 3,    // Front face
+			4, 5, 6,      4, 6, 7,    // Back face
+			8, 9, 10,     8, 10, 11,  // Top face
+			12, 13, 14,   12, 14, 15, // Bottom face
+			16, 17, 18,   16, 18, 19, // Right face
+			20, 21, 22,   20, 22, 23  // Left face
+		];
+		_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), _gl.STATIC_DRAW);
+		cubeVertexIndexBuffer.itemSize = 1;
+		cubeVertexIndexBuffer.numItems = 36;
+		
+		object.assignBuffer("vertexIndex", cubeVertexIndexBuffer);
+		object.useIndices = true; 
+	}
+	function createSphere(object, textured, size, latBands, longBands) {
+		// Method taken from Lesson 11 of learningWebGL.com
+		var latitudeBands = latBands;
+		var longitudeBands = longBands;
+		var radius = size;
+
+		var vertexPositionData = [];
+		var normalData = [];
+		var textureCoordData = [];
+		for (var latNumber=0; latNumber <= latitudeBands; latNumber++) {
+			var theta = latNumber * Math.PI / latitudeBands;
+			var sinTheta = Math.sin(theta);
+			var cosTheta = Math.cos(theta);
+
+			// Generate Values
+			for (var longNumber=0; longNumber <= longitudeBands; longNumber++) {
+				var phi = longNumber * 2 * Math.PI / longitudeBands;
+				var sinPhi = Math.sin(phi);
+				var cosPhi = Math.cos(phi);
+
+				var x = cosPhi * sinTheta;
+				var y = cosTheta;
+				var z = sinPhi * sinTheta;
+				var u = 1 - (longNumber / longitudeBands);
+				var v = 1 - (latNumber / latitudeBands);
+
+				normalData.push(x);
+				normalData.push(y);
+				normalData.push(z);
+				textureCoordData.push(u);
+				textureCoordData.push(v);
+				vertexPositionData.push(radius * x);
+				vertexPositionData.push(radius * y);
+				vertexPositionData.push(radius * z);
 			}
+		}
 
-			var indexData = [];
-			for (var latNumber=0; latNumber < latitudeBands; latNumber++) {
-				for (var longNumber=0; longNumber < longitudeBands; longNumber++) {
-					var first = (latNumber * (longitudeBands + 1)) + longNumber;
-					var second = first + longitudeBands + 1;
-					indexData.push(first);
-					indexData.push(second);
-					indexData.push(first + 1);
+		var indexData = [];
+		for (var latNumber=0; latNumber < latitudeBands; latNumber++) {
+			for (var longNumber=0; longNumber < longitudeBands; longNumber++) {
+				var first = (latNumber * (longitudeBands + 1)) + longNumber;
+				var second = first + longitudeBands + 1;
+				indexData.push(first);
+				indexData.push(second);
+				indexData.push(first + 1);
 
-					indexData.push(second);
-					indexData.push(second + 1);
-					indexData.push(first + 1);
-				}
+				indexData.push(second);
+				indexData.push(second + 1);
+				indexData.push(first + 1);
 			}
+		}
 
-			// Vertex Buffer
-			var sphereVertexPositionBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexPositionBuffer);
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexPositionData), _gl.STATIC_DRAW);
-			sphereVertexPositionBuffer.itemSize = 3;
-			sphereVertexPositionBuffer.numItems = vertexPositionData.length / 3;
+		// Vertex Buffer
+		var sphereVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexPositionBuffer);
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexPositionData), _gl.STATIC_DRAW);
+		sphereVertexPositionBuffer.itemSize = 3;
+		sphereVertexPositionBuffer.numItems = vertexPositionData.length / 3;
+		
+		object.assignBuffer("vertexPosition", sphereVertexPositionBuffer);
+		
+		// Normals, WARNING: dependant on shaderProgram
+		var sphereVertexNormalBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexNormalBuffer);
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(normalData), _gl.STATIC_DRAW);
+		sphereVertexNormalBuffer.itemSize = 3;
+		sphereVertexNormalBuffer.numItems = normalData.length / 3;
+		
+		object.assignBuffer("vertexNormals", sphereVertexNormalBuffer);
+		
+		if (textured) {
+			var sphereVertexTextureCoordBuffer = _gl.createBuffer();
 			
-			object.assignBuffer("vertexPosition", sphereVertexPositionBuffer);
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexTextureCoordBuffer);
+			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordData), _gl.STATIC_DRAW);
+			sphereVertexTextureCoordBuffer.itemSize = 2;
+			sphereVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
 			
-			// Normals, WARNING: dependant on shaderProgram
-			var sphereVertexNormalBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexNormalBuffer);
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(normalData), _gl.STATIC_DRAW);
-			sphereVertexNormalBuffer.itemSize = 3;
-			sphereVertexNormalBuffer.numItems = normalData.length / 3;
+			object.assignBuffer("textureCoords", sphereVertexTextureCoordBuffer);
+			object.useTextures = true;
+		} 
+		
+		// Index Buffer
+		var sphereVertexIndexBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer);
+		_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), _gl.STATIC_DRAW);
+		sphereVertexIndexBuffer.itemSize = 1;
+		sphereVertexIndexBuffer.numItems = indexData.length;
+		
+		object.assignBuffer("vertexIndex", sphereVertexIndexBuffer);
+		object.useIndices = true; 
+	}
+	function createRay(object, size) {
+		object.wireframe = true;
+		
+		var rayVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, rayVertexPositionBuffer);
+		var vertices = [
+			 0.0,  0.0,  0,
+			 0.0, 0.0,  size,				
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+		rayVertexPositionBuffer.itemSize = 3;
+		rayVertexPositionBuffer.numItems = 2;
+		
+		object.assignBuffer("vertexPosition", rayVertexPositionBuffer);
+	}
+    function createPoint(object) {
+		object.points = true;
 			
-			object.assignBuffer("vertexNormals", sphereVertexNormalBuffer);
-			
-			if (textured) {
-				var sphereVertexTextureCoordBuffer = _gl.createBuffer();
-				
-				_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexTextureCoordBuffer);
-				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordData), _gl.STATIC_DRAW);
-				sphereVertexTextureCoordBuffer.itemSize = 2;
-				sphereVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
-				
-				object.assignBuffer("textureCoords", sphereVertexTextureCoordBuffer);
-				object.useTextures = true;
-			} 
-			
-			// Index Buffer
-			var sphereVertexIndexBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer);
-			_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), _gl.STATIC_DRAW);
-			sphereVertexIndexBuffer.itemSize = 1;
-			sphereVertexIndexBuffer.numItems = indexData.length;
-			
-			object.assignBuffer("vertexIndex", sphereVertexIndexBuffer);
-			object.useIndices = true; 
-		}
-		else if (objectType==="ray") {
-			object.wireframe = true;
-			
-			var rayVertexPositionBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, rayVertexPositionBuffer);
-			var vertices = [
-				 0.0,  0.0,  0,
-				 0.0, 0.0,  size,				
-			];
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
-			rayVertexPositionBuffer.itemSize = 3;
-			rayVertexPositionBuffer.numItems = 2;
-			
-			object.assignBuffer("vertexPosition", rayVertexPositionBuffer);
-		}
-		else if (objectType==="point") {
-			object.points = true;
-			
-			var pointVertexPositionBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, pointVertexPositionBuffer);
-			var vertices = [0.0, 0.0, 0.0];
-			
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
-			pointVertexPositionBuffer.itemSize = 3;
-			pointVertexPositionBuffer.numItems = 1;
-			
-			object.assignBuffer("vertexPosition", pointVertexPositionBuffer);
-		}
+		var pointVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, pointVertexPositionBuffer);
+		var vertices = [0.0, 0.0, 0.0];
+		
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+		pointVertexPositionBuffer.itemSize = 3;
+		pointVertexPositionBuffer.numItems = 1;
+		
+		object.assignBuffer("vertexPosition", pointVertexPositionBuffer);
 	}
 	
 	function loadModel(object, fileName, scale){
@@ -993,7 +986,11 @@ function _Gremlin() {
 	return { 
 		init: 						init, 
 		resize: 					resize,
-		createPrimitive:			createPrimitive,
+		createPyramid:				createPyramid,
+		createCube:					createCube,
+		createSphere:				createSphere,
+		createRay:					createRay,
+		createPoint:				createPoint,
 		loadModel:					loadModel,
 		createTexture:				createTexture,
 		handleLoadedTexture:		handleLoadedTexture,
@@ -1016,3 +1013,224 @@ function _Gremlin() {
 }
 
 var Gremlin = _Gremlin();
+
+function _GremlinEventHandler() {
+	
+	//				 _     _ _      
+	//	 _ __  _   _| |__ | (_) ___ 
+	//	| '_ \| | | | '_ \| | |/ __|
+	//	| |_) | |_| | |_) | | | (__ 
+	//	| .__/ \__,_|_.__/|_|_|\___|
+	//	|_| 
+	
+	function bindEvent(eventName, func, override) {
+		switch(eventName){
+		case "onresize":
+			resize.push(func);
+			break;
+		case "onblur":
+			blur.push(func);
+			break;
+		case "onfocus":
+			focus.push(func);
+			break;
+		case "onmousemove":
+			mousemove.push(func);
+			break;
+		case "onmousedown":
+			mousedown.push(func);
+			break;
+		case "onmouseup":
+			mouseup.push(func);
+			break;
+		case "onkeyup":
+			keyup.push(func);
+			break;
+		case "onkeydown":
+			keydown.push(func);
+			break;
+		default:
+			return;
+		}
+		if(override) {
+			overrides[eventName] = true;
+		}
+	}
+	
+	// May need an option to return false, but after all events have been executed.
+	
+	//				_            _       
+	//	 _ __  _ __(_)_   ____ _| |_ ___ 
+	//	| '_ \| '__| \ \ / / _` | __/ _ \
+	//	| |_) | |  | |\ V / (_| | ||  __/
+	//	| .__/|_|  |_| \_/ \__,_|\__\___|
+	//	|_| 
+	
+	// Events
+	var blur = [];
+	var focus = []
+	var resize = [];
+	
+	var mousemove = [];
+	var mousedown = [];
+	var mouseup = [];
+	var keyup = [];
+	var keydown = [];
+	
+	var overrides = [];
+	
+	function onBlur() {
+		for(event in blur)
+		{
+			blur[event]();
+		}
+		if (overrides["onblur"]) { return false; }
+	}
+	function onFocus() {
+		for(event in focus)
+		{
+			focus[event]();
+		}
+		if (overrides["onfocus"]) { return false; }
+	}
+	function onResize() {
+		for(event in resize)
+		{
+			resize[event]();
+		}
+		if (overrides["onresize"]) { return false; }
+	}
+	
+	function onMouseMove(e) {
+		for(event in mousemove)
+		{
+			mousemove[event](e);
+		}
+		if (overrides["onmousemove"]) { return false; }
+	}
+	function onMouseDown(e) {
+		for(event in mousedown)
+		{
+			mousedown[event](e);
+		}
+		if (overrides["onmousedown"]) { return false; }
+	}
+	function onMouseUp(e) {
+		for(event in mouseup)
+		{
+			mouseup[event](e);
+		}
+		if (overrides["onmouseup"]) { return false; }
+	}
+	function onKeyUp(e) {
+		for(event in keyup)
+		{
+			keyup[event](e);
+		}
+		if (overrides["onkeyup"]) { return false; }
+	}
+	function onKeyDown(e) {
+		for(event in keydown)
+		{
+			keydown[event](e);
+		}
+		if (overrides["onkeydown"]) { return false; }
+	}
+
+	// Bind Arrays
+	document.onkeydown = function() { onKeyDown(event); }
+	document.onkeyup = function() { onKeyUp(event); }
+	
+	// May want to move this to canvas
+	document.onmousemove = function() { onMouseMove(event); }
+	document.onmousedown = function() { onMouseDown(event); }
+	document.onmouseup = function() { onMouseUp(event); }
+	
+	window.onresize = function() { onResize(); }
+	window.onblur = function() { onBlur(); }
+	window.onfocus = function() { onFocus(); }
+	
+	//	 _                     _ _           
+	//	| |__   __ _ _ __   __| | | ___  ___ 
+	//	| '_ \ / _` | '_ \ / _` | |/ _ \/ __|
+	//	| | | | (_| | | | | (_| | |  __/\__ \
+	//	|_| |_|\__,_|_| |_|\__,_|_|\___||___/
+	
+	return {
+		bindEvent: bindEvent
+	}
+}
+
+var GremlinEventHandler = _GremlinEventHandler(); 
+
+function _GremlinInput() {
+
+	// This may need to go in an init function
+	GremlinEventHandler.bindEvent("onmousemove", handleMouseMove);
+	GremlinEventHandler.bindEvent("onmousedown", handleMouseDown, true);
+	GremlinEventHandler.bindEvent("onmouseup", handleMouseUp);
+	GremlinEventHandler.bindEvent("onkeyup", handleKeyUp);
+	GremlinEventHandler.bindEvent("onkeydown", handleKeyDown);
+	
+	//				 _     _ _      
+	//	 _ __  _   _| |__ | (_) ___ 
+	//	| '_ \| | | | '_ \| | |/ __|
+	//	| |_) | |_| | |_) | | | (__ 
+	//	| .__/ \__,_|_.__/|_|_|\___|
+	//	|_| 
+	
+	// Key State Queries
+	function getMousePos() {
+		return [xPos, yPos];
+	}
+	function keyDown(key) {
+		// TODO: Add mapping from key letter to key code
+		return currentlyPressedKeys[key];
+	}
+	function mouseDown(button) {
+		return mouseState[button];
+	}
+	
+	//				_            _       
+	//	 _ __  _ __(_)_   ____ _| |_ ___ 
+	//	| '_ \| '__| \ \ / / _` | __/ _ \
+	//	| |_) | |  | |\ V / (_| | ||  __/
+	//	| .__/|_|  |_| \_/ \__,_|\__\___|
+	//	|_| 
+	
+	var xPos, yPos;
+	var currentlyPressedKeys = [];
+	var mouseState = [false,false,false];
+	// TODO: Add keyUp and mouseUp data (will either need a poll in game tick, or will need to bind a function).
+	
+	function handleKeyDown(event) {
+        currentlyPressedKeys[event.keyCode] = true;
+	}
+	function handleKeyUp(event) {
+		currentlyPressedKeys[event.keyCode] = false;
+	}
+	function handleMouseMove(event) { // Returns Position in Document
+		xPos = event.pageX;
+		yPos = event.pageY;
+	}
+	function handleMouseDown(event) {
+		mouseState[event.button] = true; 
+	}
+	function handleMouseUp(event) {
+		mouseState[event.button] = false;
+	}
+	
+	//	 _                     _ _           
+	//	| |__   __ _ _ __   __| | | ___  ___ 
+	//	| '_ \ / _` | '_ \ / _` | |/ _ \/ __|
+	//	| | | | (_| | | | | (_| | |  __/\__ \
+	//	|_| |_|\__,_|_| |_|\__,_|_|\___||___/
+	
+	return {
+		getMousePos:	getMousePos,
+		keyDown:		keyDown,
+		mouseDown:		mouseDown
+	}
+}
+
+var GremlinInput = _GremlinInput();

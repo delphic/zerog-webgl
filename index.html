@@ -238,7 +238,9 @@
 		<script type="text/javascript" src="Gremlin.js"></script>
 		<!-- Game Script -->
 		<script type="text/javascript">
-
+function _Game() {
+	// TODO: Convert to public / private functions...
+	
 	var canvas;
 	var	resolutionScale;
 	var lastTime = 0;
@@ -255,33 +257,36 @@
 			}
 			
 			// Handle Input
-			// TODO: Separate into function
 			// TODO: game state variable... switch on this to control handling of input e.g. Menus
 			// BUG: Keys get 'stuck down'
 			var width = parseInt(canvas.style.width, 10);
 			var height = parseInt(canvas.style.height, 10);
+			var mousePos, mouseDown;
+			mousePos = GremlinInput.getMousePos();
+			mouseDown = GremlinInput.mouseDown(0);
+			
 			var dyaw, dpitch, dx, dz;
-			dyaw = 0.05 * elapsed * ((width*0.5)-xPos)/(0.5*width);
-			dpitch = 0.05 * elapsed * ((height*0.5)-yPos)/(0.5*height);
+			dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
+			dpitch = 0.05 * elapsed * ((height*0.5)-mousePos[1])/(0.5*height);
 			if (mouseDown) Gremlin.rotatePlayerCamera(dyaw, dpitch);
 			
-			if (currentlyPressedKeys[37] || currentlyPressedKeys[65]) {
+			if (GremlinInput.keyDown(37) || GremlinInput.keyDown(65)) {
 				// Left cursor key or A
 				// Strafe Left
 				dx = -0.005 * elapsed;
 			} 
-			else if (currentlyPressedKeys[39] || currentlyPressedKeys[68]) {
+			else if (GremlinInput.keyDown(39) || GremlinInput.keyDown(68)) {
 				// Right cursor key or D
 				// Strafe Right
 				dx = 0.005  * elapsed;
 			}
 			else dx = 0;
 
-			if (currentlyPressedKeys[38] || currentlyPressedKeys[87]) {
+			if (GremlinInput.keyDown(38) || GremlinInput.keyDown(87)) {
 				// Up cursor key or W
 				// Move Forward
 				dz = -0.005  * elapsed;
-			} else if (currentlyPressedKeys[40] || currentlyPressedKeys[83]) {
+			} else if (GremlinInput.keyDown(40) || GremlinInput.keyDown(83)) {
 				// Down cursor key or S
 				// Move Backward
 				dz = 0.005  * elapsed;
@@ -397,6 +402,77 @@
 		}
 	}
 	
+	// Creation Objection
+	// TODO: Can't set shininess
+	function createObjectPrimitive(position, primType, textureName, size, latBands, longBands, animation, shininess, isSkyBox) {
+		var object = new gameObject(position[0], position[1], position[2]);
+		var textured;
+		if (textureName) { 
+			textured = true;
+		}
+		else {
+			textured = false;
+		}
+		switch(primType) {
+		case "pyramid":
+			Gremlin.createPyramid(object, textured, size);
+			break;
+		case "cube": 
+			Gremlin.createCube(object, textured, size);
+			break;
+		case "sphere":
+			Gremlin.createSphere(object, textured, size, latBands, longBands);
+			break;
+		case "ray":
+			Gremlin.createRay(object, size);
+			break;
+		case "point":
+			Gremlin.createPoint(object);
+			break;
+		default:
+			alert("Invalid Prim Type: "+primType+"");
+			return;
+		}
+		// TODO: Move to separate texture list and jsut assign appropriate index
+		if(textured) {
+			object.texture = Gremlin.createTexture(textureName);
+			object.texture.image.onload = function() { Gremlin.handleLoadedTexture(object.texture, 3); } // TODO: Replace 3 with FilterType
+		}
+		if(shininess) {
+			object.setShininess(true);
+		}
+		if(isSkyBox) {
+			object.setIsSkyBox(true);
+		}
+		if(animation) {
+			object.animate = animation;
+		}
+		gameObjects.push(object);
+	}
+
+	function createObjectModel(position, modelName, textureName, scale, animation, shininess) {
+		var object = new gameObject(position[0], position[1], position[2]);
+		var textured;
+		if (textureName) { 
+			textured = true;
+		}
+		else {
+			textured = false;
+		}
+		Gremlin.loadModel(object, modelName, scale);
+		// TODO: Move to separate texture list and jsut assign appropriate index
+		if(textured) {
+			object.texture = Gremlin.createTexture(textureName);
+			object.texture.image.onload = function() { Gremlin.handleLoadedTexture(object.texture, 3); } // TODO: Replace 3 with FilterType
+		}
+		if(shininess) {
+			object.setShininess(true);
+		}
+		if(animation) {
+			object.animate = animation;
+		}
+		gameObjects.push(object);
+	}
 	// Game Init
 	function gameInit() {
 		loadLevel("level1.js");
@@ -414,7 +490,7 @@
 	function createMotes() {
 		for(var i = 0; i < maxMotes; i++) {
 			var obj = new gameObject(2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5));
-			Gremlin.createPrimitive(obj, "point", false, false, 0, 0, 0);
+			Gremlin.createPoint(obj);
 			obj.points = true;
 			obj.useLighting = false; // If we want the motes to be lit properly we'll have to figure out the normal to a point!
 			obj.setColor(0.8,0.8,0.8,1);
@@ -455,38 +531,7 @@
 		// Start Game Loop
         tick();
 		
-		document.onkeydown = handleKeyDown;
-		document.onkeyup = handleKeyUp;
-		canvas.onmousemove = handleMouseMove;
-		canvas.onmousedown = handleMouseDown;
-		canvas.onmouseup = handleMouseUp;
     }
-	
-	// Input Handling
-	var xPos, yPos;
-	var currentlyPressedKeys = {};
-	var mouseDown = false;
-
-	function handleKeyDown(event) {
-        currentlyPressedKeys[event.keyCode] = true;
-	}
-	function handleKeyUp(event) {
-		currentlyPressedKeys[event.keyCode] = false;
-	}
-	function handleMouseMove(event) {
-		// TODO: Investigate the difference between clientX and pageX
-		xPos = event.pageX - this.offsetLeft;
-		yPos = event.pageY - this.offsetTop;
-	}
-	function handleMouseDown(event) {
-		// TODO: Add vars for middle and right
-		// 0 = left, 1 = middle, 2 = right
-		if (!event.button) { mouseDown = true; }
-		return false;
-	}
-	function handleMouseUp(event) {
-		if (!event.button) { mouseDown = false; }
-	}
 	
 	// Controller Bar
 	
@@ -546,10 +591,10 @@
 		canvas.style.height = window.innerHeight+"px";
 	}
 	
-	window.onblur = function() { controller.handleWindowBlur(); }
-	window.onfocus = function() { controller.handleWindowFocus(); }
-	window.onresize = function() { setCanvasSize(); Gremlin.resize(); }
-	
+	GremlinEventHandler.bindEvent("onblur", controller.handleWindowBlur);
+	GremlinEventHandler.bindEvent("onfocus", controller.handleWindowFocus);
+	GremlinEventHandler.bindEvent("onresize", setCanvasSize);
+	GremlinEventHandler.bindEvent("onresize", Gremlin.resize);
 	
 	function loadLevel(fileName) {
 		var fileref=document.createElement('script');
@@ -558,14 +603,21 @@
 		if (typeof fileref!="undefined") document.getElementsByTagName("head")[0].appendChild(fileref);
 	}
 	// TODO: Add check for already loaded
-
+	
+	return {
+		createObjectPrimitive: createObjectPrimitive,
+		createObjectModel: createObjectModel,
+		webGLStart: webGLStart
+	}
+}
+var Game = _Game();
 		</script>
 		<style>
 			html, body { margin: 0; padding: 0; overflow: hidden; font-family: monospace; }
 			canvas { display: block; margin: 0 auto; /*cursor: url('data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto; */ cursor: crosshair; }
 		</style>
 	</head>
-	<body onload="webGLStart(1);">
+	<body onload="Game.webGLStart(1);">
 		<div id="container">
 			<canvas id="gremlinCanvas" oncontextmenu="return false;"></canvas>
 		</div>

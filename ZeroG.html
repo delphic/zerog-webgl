@@ -416,7 +416,7 @@
 	function createMotes() {
 		for(var i = 0; i < maxMotes; i++) {
 			var obj = new gameObject(2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5));
-			Gremlin.createPrimitive(obj, "point", false, false, 0, 0, 0);
+			Gremlin.createPoint(obj);
 			obj.points = true;
 			obj.useLighting = false; // If we want the motes to be lit properly we'll have to figure out the normal to a point!
 			obj.setColor(0.8,0.8,0.8,1);
