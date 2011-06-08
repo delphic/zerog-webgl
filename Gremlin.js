@@ -33,7 +33,7 @@ function _Gremlin() {
 	}
 	// Lighting 
 	// Possibly should have it's own namespace
-	var lighting = false;
+	var lightingFlags = [];
 	// Environmental Light
 	var ambientLight = [];
 	var directionalLight = [];
@@ -144,9 +144,9 @@ function _Gremlin() {
 		directionalLight.z = directionalZ;
 	}
 	
-	function setLighting(val) {
-		lighting = val;
-	}	
+	function setLightingFlags(name, val) {
+		lightingFlags[name] = val;
+	}
 	
 	// Prepare Scene - Clears View, and sets perspective and camera 
 	// TODO: Should separate this into several functions
@@ -212,13 +212,16 @@ function _Gremlin() {
 		
 				
 		// Setting Lights 
-		if(lighting && object.useLighting) {
+		if(lightingFlags.lighting && object.useLighting) {
 			// TODO: Move the non-object dependant lights out of the object renderer?
 				// We might want to feed in different lights depedant on value...
-			// TODO: Add Variables Switch functions
 			_gl.uniform1i(_shaderProgram.useLightingUniform, true);
-			_gl.uniform1i(_shaderProgram.useSpecularUniform, false); // TODO: Add variable switch including if object shininess = 0, false
-
+			if (lightingFlags.specularLighting && object.shininess > 0) {
+				_gl.uniform1i(_shaderProgram.useSpecularUniform, true); 
+			}
+			else {
+				_gl.uniform1i(_shaderProgram.useSpecularUniform, false);
+			}
 			// Normals
 			_gl.enableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexNormals); 
@@ -995,7 +998,7 @@ function _Gremlin() {
 		createTexture:				createTexture,
 		handleLoadedTexture:		handleLoadedTexture,
 		setLightEnvironment:		setLightEnvironment,
-		setLighting:				setLighting,
+		setLightingFlags:			setLightingFlags,
 		addPointLight:				addPointLight,
 		setPointLight:				setPointLight,
 		updatePointLight:			updatePointLight,
@@ -1024,6 +1027,7 @@ function _GremlinEventHandler() {
 	//	|_| 
 	
 	function bindEvent(eventName, func, override) {
+		// This can almost certainly be replaced with addEventListener
 		switch(eventName){
 		case "onresize":
 			resize.push(func);

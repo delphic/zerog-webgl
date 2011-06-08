@@ -349,7 +349,7 @@ function _Game() {
 		this.setColor = setColor;
 		this.useLighting = true;
 		this.setUseLighting = setUseLighting;
-		this.shininess = 10;
+		this.shininess = 0;
 		this.setShininess = setShininess;
 		
 		this.isSkyBox = false;
@@ -392,7 +392,7 @@ function _Game() {
 		}
 		function setColor(r,g,b,a) { this.color = [r,g,b,a]; }
 		function setUseLighting(val) { this.useLighting = val; }
-		function setShininess(val) { this.shiniess = val; }
+		function setShininess(val) { this.shininess = val; }
 		
 		function setIsSkyBox(val) { this.isSkyBox = val; if(this.isSkyBox) this.useLighting = false; } 
 		
@@ -403,7 +403,6 @@ function _Game() {
 	}
 	
 	// Creation Objection
-	// TODO: Can't set shininess
 	function createObjectPrimitive(position, primType, textureName, size, latBands, longBands, animation, shininess, isSkyBox) {
 		var object = new gameObject(position[0], position[1], position[2]);
 		var textured;
@@ -439,7 +438,7 @@ function _Game() {
 			object.texture.image.onload = function() { Gremlin.handleLoadedTexture(object.texture, 3); } // TODO: Replace 3 with FilterType
 		}
 		if(shininess) {
-			object.setShininess(true);
+			object.setShininess(shininess);
 		}
 		if(isSkyBox) {
 			object.setIsSkyBox(true);
@@ -466,7 +465,7 @@ function _Game() {
 			object.texture.image.onload = function() { Gremlin.handleLoadedTexture(object.texture, 3); } // TODO: Replace 3 with FilterType
 		}
 		if(shininess) {
-			object.setShininess(true);
+			object.setShininess(shininess);
 		}
 		if(animation) {
 			object.animate = animation;
