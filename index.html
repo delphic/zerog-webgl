@@ -337,6 +337,7 @@ function _Game() {
 		for(var i = 0; i < maxMotes; i++)
 		{
 			// Note: Not an efficient method of rendering particles...
+			// We can get away with this because it's only ~100 objects
 			Gremlin.renderObject(dustMotes[i]);
 		}
 		
