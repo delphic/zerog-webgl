@@ -265,10 +265,16 @@ function _Game() {
 			mousePos = GremlinInput.getMousePos();
 			mouseDown = GremlinInput.mouseDown(0);
 			
-			var dyaw, dpitch, dx, dz;
+			var dyaw, dpitch, droll, dx, dz;
 			dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
 			dpitch = 0.05 * elapsed * ((height*0.5)-mousePos[1])/(0.5*height);
-			if (mouseDown) Gremlin.rotatePlayerCamera(dyaw, dpitch);
+			droll = 0;
+			if (GremlinInput.keyDown(81)) { 
+				droll += 2.5; 
+			}
+			if (GremlinInput.keyDown(69)) { droll -= 2.5; }
+			if (mouseDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
+			else if (GremlinInput.keyDown(81) || GremlinInput.keyDown(69)) { Gremlin.rotatePlayerCamera(0, 0, droll); }
 			
 			if (GremlinInput.keyDown(37) || GremlinInput.keyDown(65)) {
 				// Left cursor key or A
