@@ -161,9 +161,7 @@ function _Gremlin() {
 		// Anything specified in global coords rather than in relation to the newly 
 		// calculated mvMatrix, will also need to be transformed
 		mat4.identity(_mvMatrix);
-		// TODO: Add Roll
-        mat4.rotate(_mvMatrix, -degToRad(_playerCamera.pitch), [1, 0, 0]);
-		mat4.rotate(_mvMatrix, -degToRad(_playerCamera.yaw), [0, 1, 0]);
+		mat4.multiply(_mvMatrix, _playerCamera.rotationMatrix);
         mat4.translate(_mvMatrix, [-_playerCamera.x, -_playerCamera.y, -_playerCamera.z]);
     }
 	
@@ -663,6 +661,10 @@ function _Gremlin() {
 	function movePlayerCamera(dx,dy,dz) {
 		_playerCamera.moveCamera(dx, dy, dz);
 	}
+/*	function rotatePlayerCamera(dyaw, dpitch) {
+		_playerCamera.updateYPR(dyaw, dpitch);
+		_playerCamera.setRotationYPR();
+	}*/
 	function rotatePlayerCamera(dyaw, dpitch) {
 		_playerCamera.rotateCamera(dyaw, dpitch);
 	}
@@ -704,40 +706,65 @@ function _Gremlin() {
 		this.z = z;
 		this.yaw = yaw;
 		this.pitch = pitch;
+
+		// Create Rotation Matrix
+		rotMatrix = mat4.create();
+		mat4.identity(rotMatrix);
+		mat4.rotate(rotMatrix, -degToRad(this.pitch), [1, 0, 0]);
+		mat4.rotate(rotMatrix, -degToRad(this.yaw), [0, 1, 0]);
+		this.rotationMatrix = rotMatrix;
 		
-		this.rotateCamera = rotateCamera;
+		this.updateYPR = updateYPR; // Move YPR including clamping to game code and
+		this.setRotationYPR = setRotationYPR; // ^^
+		this.rotateCamera = rotateCamera; // Add SetRotation which will work in globals
 		this.moveCamera = moveCamera;
 		this.rotation = rotation;
 		this.transform = transform;
 		
 		// TODO: Add rotate around axis function
-		function rotateCamera(dyaw, dpitch) {
+		function updateYPR(dyaw, dpitch) {
 			this.yaw += dyaw;
 			this.pitch += dpitch;
 			// Pitch Clamp
 			if (this.pitch > 89.9) this.pitch = 89.8;
 			else if (this.pitch < -89.9) this.pitch = -89.8;
 		}
+		function setRotationYPR() {
+			mat4.identity(this.rotationMatrix);
+			mat4.rotate(this.rotationMatrix, -degToRad(this.pitch), [1, 0, 0]);
+			mat4.rotate(this.rotationMatrix, -degToRad(this.yaw), [0, 1, 0]);
+		}
+		function rotateCamera(dyaw, dpitch) {
+			var newRotation = mat4.create();
+			mat4.identity(newRotation);
+			mat4.rotate(newRotation, -degToRad(dpitch), [1, 0, 0]);
+			mat4.rotate(newRotation, -degToRad(dyaw), [0, 1, 0]);
+			mat4.multiply(newRotation, this.rotationMatrix, this.rotationMatrix);
+		}
 		function moveCamera(dx,dy,dz) {
-			var syaw = Math.sin(degToRad(this.yaw));
+			/*var syaw = Math.sin(degToRad(this.yaw));
 			var cyaw = Math.cos(degToRad(this.yaw));
 			
 			this.x += dz*syaw+dx*cyaw;
 			this.z += -dx*syaw+dz*cyaw;
-			this.y += dy; // TODO: Implement Unfixed Up Axis
+			this.y += dy; // TODO: Implement Unfixed Up Axis*/
+			/* 
+			* The transpose of the rotation matrix corresponds to:
+			* LocalX.x 	LocalX.y 	LocalX.z 	0
+			* LocalY.x 	LocalY.y 	LocalY.z 	0
+			* LocalZ.x 	LocalZ.y 	LocalZ.z 	0
+			* 0			0			0			1
+			*/
+			this.x += this.rotationMatrix[0]*dx + this.rotationMatrix[1]*dy + this.rotationMatrix[2]*dz
+			this.y += this.rotationMatrix[4]*dx + this.rotationMatrix[5]*dy + this.rotationMatrix[6]*dz
+			this.z += this.rotationMatrix[8]*dx + this.rotationMatrix[9]*dy + this.rotationMatrix[10]*dz
 		}
 		function rotation(vector) {
 			var cameraRotation = mat4.create();
-			mat4.identity(cameraRotation);
-			mat4.rotate(cameraRotation, -degToRad(this.pitch), [1, 0, 0]);
-			mat4.rotate(cameraRotation, -degToRad(this.yaw), [0, 1, 0]);
-			mat4.multiplyVec3(cameraRotation, vector, vector);
+			mat4.multiplyVec3(this.rotationMatrix, vector, vector);
 		}
 		function transform(vector) {
-			var cameraTransform = mat4.create();
-			mat4.identity(cameraTransform);
-			mat4.rotate(cameraTransform, -degToRad(this.pitch), [1, 0, 0]);
-			mat4.rotate(cameraTransform, -degToRad(this.yaw), [0, 1, 0]);
+			var cameraTransform = mat4.create(this.rotationMatrix);
 			mat4.translate(cameraTransform, [-this.x, -this.y, -this.z]);
 			mat4.multiplyVec3(cameraTransform, vector, vector);
 		}

@@ -507,9 +507,9 @@ function _Game() {
 				if (vec3.length(posDiff) >  boundingR) {
 					// Respawn on opposite site of sphere 
 					dustMotes[i].setPosition(
-						pos[0] + posDiff[0],
-						pos[1] + posDiff[1],
-						pos[2] + posDiff[2]
+						pos[0] + 0.99*posDiff[0],
+						pos[1] + 0.99*posDiff[1],
+						pos[2] + 0.99*posDiff[2]
 					);
 				}
 			}
