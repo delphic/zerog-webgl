@@ -244,6 +244,13 @@ function _Game() {
 	var canvas;
 	var	resolutionScale;
 	var lastTime = 0;
+	var gameState;
+	
+	var loadingTargetState;
+	var assetsLoading = 0; // for quick and dirty loading system
+	function decreaseAssetsLoading() { // to be removed / moved to proper loading system
+		assetsLoading -= 1;
+	}
 	
     function animate() {
         var timeNow = new Date().getTime();
@@ -311,7 +318,13 @@ function _Game() {
 
     function tick() {
         if(controller.isRunning()) { requestAnimFrame(tick); }
-
+		
+		if(gameState == "Loading") {
+			// Wait for all assets to load
+			if(assetsLoading) return;
+			else gameState == loadingTargetState;
+		}
+		
 		// Render Scene
 		// TODO: Make separate function
         Gremlin.prepareScene();
@@ -440,8 +453,9 @@ function _Game() {
 		}
 		// TODO: Move to separate texture list and jsut assign appropriate index
 		if(textured) {
+			assetsLoading += 1;
 			object.texture = Gremlin.createTexture(textureName);
-			object.texture.image.onload = function() { Gremlin.handleLoadedTexture(object.texture, 3); } // TODO: Replace 3 with FilterType
+			object.texture.image.onload = function() { Gremlin.handleLoadedTexture(object.texture, 3); assetsLoading -= 1; } // TODO: Replace 3 with FilterType
 		}
 		if(shininess) {
 			object.setShininess(shininess);
@@ -464,11 +478,13 @@ function _Game() {
 		else {
 			textured = false;
 		}
+		assetsLoading += 1; // This currently removed in Gremlin.handleLoadedModel, this needs to change!
 		Gremlin.loadModel(object, modelName, scale);
 		// TODO: Move to separate texture list and jsut assign appropriate index
 		if(textured) {
+			assetsLoading += 1;
 			object.texture = Gremlin.createTexture(textureName);
-			object.texture.image.onload = function() { Gremlin.handleLoadedTexture(object.texture, 3); } // TODO: Replace 3 with FilterType
+			object.texture.image.onload = function() { Gremlin.handleLoadedTexture(object.texture, 3); assetsLoading -= 1; } // TODO: Replace 3 with FilterType
 		}
 		if(shininess) {
 			object.setShininess(shininess);
@@ -480,6 +496,8 @@ function _Game() {
 	}
 	// Game Init
 	function gameInit() {
+		gameState = "Loading";
+		loadingTargetState = "InGame";
 		loadLevel("level1.js");
 		createMotes();
 	}
@@ -612,6 +630,7 @@ function _Game() {
 	return {
 		createObjectPrimitive: createObjectPrimitive,
 		createObjectModel: createObjectModel,
+		decreaseAssetsLoading:  decreaseAssetsLoading, // Remove / move to loading system
 		webGLStart: webGLStart
 	}
 }

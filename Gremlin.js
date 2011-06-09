@@ -847,6 +847,7 @@ function _Gremlin() {
 		object.useIndices = true; 
 		
 		object.visible = true;
+		Game.descreaseAssetsLoading(); // ARGH, Move this out of here!
 	}
 	
 	// Matrix Functions - Stack functions and Set Shader Uniforms
