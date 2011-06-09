@@ -497,6 +497,7 @@ function _Game() {
 	// Game Init
 	function gameInit() {
 		gameState = "Loading";
+		assetsLoading = 0;
 		loadingTargetState = "InGame";
 		loadLevel("level1.js");
 		createMotes();
