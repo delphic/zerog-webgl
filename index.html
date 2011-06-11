@@ -311,12 +311,14 @@ function _Game() {
 				dx /= 1.41421;
 				dz /= 1.41421;
 			}
-			Gremlin.movePlayerCamera(dx,0,dz);
+			player.velocity[0]+=(0.01*dx/player.mass);
+			player.velocity[2]+=(0.01*dz/player.mass);
+			
+			Gremlin.movePlayerCamera(player.velocity[0],player.velocity[1],player.velocity[2]);
+			Gremlin.playerCameraPos(player.position);
 			
 			// Update Motes
-			var playerPos = [];
-			Gremlin.playerCameraPos(playerPos);
-			updateMotes(playerPos, [dx,0,dz]);
+			updateMotes(player.position, player.velocity);
         }
         lastTime = timeNow;
     }
@@ -509,6 +511,14 @@ function _Game() {
 		createMotes();
 	}
 	
+
+	// Player / Ships
+	var player = [];
+	player.position = [0,0,0];
+	player.velocity = [0,0,0];
+	player.mass = 1;
+	player.firingTimer = 1000;
+
 	// Dust Motes
 	// TODO: namespace
 	var dustMotes = [];
