@@ -268,44 +268,49 @@ function _Game() {
 			// BUG: Keys get 'stuck down'
 			var width = parseInt(canvas.style.width, 10);
 			var height = parseInt(canvas.style.height, 10);
-			var mousePos, mouseDown;
+			var mousePos, lmbMouseDown, rmbMouseDown;
 			mousePos = GremlinInput.getMousePos();
-			mouseDown = GremlinInput.mouseDown(0);
+			lmbMouseDown = GremlinInput.mouseDown(0);
+			rmbMouseDown = GremlinInput.mouseDown(2);
 			
 			var dyaw, dpitch, droll, dx, dz;
 			dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
 			dpitch = 0.05 * elapsed * ((height*0.5)-mousePos[1])/(0.5*height);
 			droll = 0;
 			if (GremlinInput.keyDown(81)) { 
-				droll += 2.5; 
+				droll += 0.1 * elapsed; 
 			}
-			if (GremlinInput.keyDown(69)) { droll -= 2.5; }
-			if (mouseDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
+			if (GremlinInput.keyDown(69)) { droll -= 0.1 * elapsed; }
+			if (rmbMouseDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
 			else if (GremlinInput.keyDown(81) || GremlinInput.keyDown(69)) { Gremlin.rotatePlayerCamera(0, 0, droll); }
-			
+
+			dx = 0;
+			dz = 0;
 			if (GremlinInput.keyDown(37) || GremlinInput.keyDown(65)) {
 				// Left cursor key or A
 				// Strafe Left
-				dx = -0.005 * elapsed;
+				dx -= 0.005 * elapsed;
 			} 
 			else if (GremlinInput.keyDown(39) || GremlinInput.keyDown(68)) {
 				// Right cursor key or D
 				// Strafe Right
-				dx = 0.005  * elapsed;
+				dx += 0.005  * elapsed;
 			}
-			else dx = 0;
 
 			if (GremlinInput.keyDown(38) || GremlinInput.keyDown(87)) {
 				// Up cursor key or W
 				// Move Forward
-				dz = -0.005  * elapsed;
+				dz -= 0.005  * elapsed;
 			} else if (GremlinInput.keyDown(40) || GremlinInput.keyDown(83)) {
 				// Down cursor key or S
 				// Move Backward
-				dz = 0.005  * elapsed;
-			} 			
-			else dz = 0;
-			// TODO: Fix diagonal movement speed
+				dz += 0.005  * elapsed;
+			}
+			
+			if(dx && dz) { // Clamp Diagonal Speed
+				dx /= 1.41421;
+				dz /= 1.41421;
+			}
 			Gremlin.movePlayerCamera(dx,0,dz);
 			
 			// Update Motes
