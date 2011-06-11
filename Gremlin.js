@@ -1238,7 +1238,223 @@ function _GremlinInput() {
 	}
 	function keyDown(key) {
 		// TODO: Add mapping from key letter to key code
-		return currentlyPressedKeys[key];
+		if (!isNaN(key) && !key.length) {
+			return currentlyPressedKeys[key];
+		}
+		else {
+			var map;
+			switch(key) {
+			case "a":
+				map = 65;
+				break;
+			case "b":
+				map = 66;
+				break;
+			case "c":
+				map = 67;
+				break;
+			case "d":
+				map = 68;
+				break;
+			case "e":
+				map = 69;
+				break;
+			case "f":
+				map = 70;
+				break;
+			case "g":
+				map = 71;
+				break;
+			case "h":
+				map = 72;
+				break;
+			case "i":
+				map = 73;
+				break;
+			case "j":
+				map = 74;
+				break;
+			case "k":
+				map = 75;
+				break;
+			case "l":
+				map = 76;
+				break;
+			case "m":
+				map = 77;
+				break;
+			case "n":
+				map = 78;
+				break;
+			case "o":
+				map = 79;
+				break;
+			case "p":
+				map = 80;
+				break;
+			case "q":
+				map = 81;
+				break;
+			case "r":
+				map = 82;
+				break;
+			case "s":
+				map = 83;
+				break;
+			case "t":
+				map = 84;
+				break;
+			case "u":
+				map = 85;
+				break;
+			case "v":
+				map = 86;
+				break;
+			case "w":
+				map = 87;
+				break;
+			case "x":
+				map = 88;
+				break;
+			case "y":
+				map = 89;
+				break;
+			case "z":
+				map = 90;
+				break;
+				
+			case "Backspace":
+				map = 8;
+				break;
+			case "Tab":
+				map = 9;
+				break;
+			case "Enter":
+				map = 13;
+				break;
+			case "Shift":
+				map = 16;
+				break;
+			case "Ctrl":
+				map = 17;
+				break;
+			case "Alt":
+				map = 18;
+				break;
+			case "PauseBreak":
+				map = 19;
+				break;
+			case "Caps":
+				map = 20;
+				break;
+			case "Esc":
+				map = 27;
+				break;
+			case "PageUp":
+				map = 33;
+				break;
+			case "PageDown":
+				map = 34;
+				break;
+			case "End":
+				map = 35;
+				break;
+			case "Home":
+				map = 36;
+				break;
+			case "Left":
+				map = 37;
+				break;
+			case "Up":
+				map = 38;
+				break;
+			case "Right":
+				map = 39;
+				break;
+			case "Down":
+				map = 40;
+				break;
+			case "Insert":
+				map = 45;
+				break;
+			case "Delete":
+				map = 46;
+				break;
+			case "0":
+				map = 48;
+				break;
+			case "1":
+				map = 49;
+				break;
+			case "2":
+				map = 50;
+				break;
+			case "3":
+				map = 51;
+				break;
+			case "4":
+				map = 52;
+				break;
+			case "5":
+				map = 53;
+				break;
+			case "6":
+				map = 54;
+				break;
+			case "7":
+				map = 55;
+				break;
+			case "8":
+				map = 56;
+				break;
+			case "9":
+				map = 57;
+				break;
+			case ";":
+				map = 59;
+				break;
+			case "=":
+				map = 61;
+				break;
+			case "-":
+				map = 189;
+				break;
+			case ",":
+				map = 188;
+				break;
+			case ".":
+				map = 190;
+				break;
+			case "/":
+				map = 191;
+				break;
+			case "|":
+				map = 220;
+				break;
+			case "[":
+				map = 219;
+				break;
+			case "]":
+				map = 221;
+				break;
+			case "`":
+				map = 223;
+				break;
+			case "'":
+				map = 192;
+				break;
+			case "#":
+				map = 222;
+				break;
+				
+			// TODO: Add Num Pad
+			
+			default: 
+				return false;
+			}
+			
+			return currentlyPressedKeys[map];
+		}
 	}
 	function mouseDown(button) {
 		return mouseState[button];

@@ -277,32 +277,28 @@ function _Game() {
 			dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
 			dpitch = 0.05 * elapsed * ((height*0.5)-mousePos[1])/(0.5*height);
 			droll = 0;
-			if (GremlinInput.keyDown(81)) { 
+			if (GremlinInput.keyDown("q")) { 
 				droll += 0.1 * elapsed; 
 			}
-			if (GremlinInput.keyDown(69)) { droll -= 0.1 * elapsed; }
+			if (GremlinInput.keyDown("e")) { droll -= 0.1 * elapsed; }
 			if (rmbMouseDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
-			else if (GremlinInput.keyDown(81) || GremlinInput.keyDown(69)) { Gremlin.rotatePlayerCamera(0, 0, droll); }
+			else if (GremlinInput.keyDown("q") || GremlinInput.keyDown("e")) { Gremlin.rotatePlayerCamera(0, 0, droll); }
 
 			dx = 0;
 			dz = 0;
-			if (GremlinInput.keyDown(37) || GremlinInput.keyDown(65)) {
-				// Left cursor key or A
+			if (GremlinInput.keyDown("Left") || GremlinInput.keyDown("a")) {
 				// Strafe Left
 				dx -= 0.005 * elapsed;
 			} 
-			else if (GremlinInput.keyDown(39) || GremlinInput.keyDown(68)) {
-				// Right cursor key or D
+			else if (GremlinInput.keyDown("Right") || GremlinInput.keyDown("d")) {
 				// Strafe Right
 				dx += 0.005  * elapsed;
 			}
 
-			if (GremlinInput.keyDown(38) || GremlinInput.keyDown(87)) {
-				// Up cursor key or W
+			if (GremlinInput.keyDown("Up") || GremlinInput.keyDown("w")) {
 				// Move Forward
 				dz -= 0.005  * elapsed;
-			} else if (GremlinInput.keyDown(40) || GremlinInput.keyDown(83)) {
-				// Down cursor key or S
+			} else if (GremlinInput.keyDown("Down") || GremlinInput.keyDown("s")) {
 				// Move Backward
 				dz += 0.005  * elapsed;
 			}
@@ -311,6 +307,8 @@ function _Game() {
 				dx /= 1.41421;
 				dz /= 1.41421;
 			}
+			// TODO: Add regen-ing to fuel to stop people accelerating to stupid speeds easily
+			// Could have higher fuel use to begin with and particular low if low on fuel
 			player.velocity[0]+=(0.01*dx/player.mass);
 			player.velocity[2]+=(0.01*dz/player.mass);
 			
