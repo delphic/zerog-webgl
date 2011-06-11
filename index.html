@@ -309,10 +309,20 @@ function _Game() {
 			}
 			// TODO: Add regen-ing to fuel to stop people accelerating to stupid speeds easily
 			// Could have higher fuel use to begin with and particular low if low on fuel
-			player.velocity[0]+=(0.01*dx/player.mass);
-			player.velocity[2]+=(0.01*dz/player.mass);
+
+			// Ironically this is in Globals we need it in locals
+			var dvelocity = [];
+			dvelocity[0] = (0.01*dx/player.mass);
+			dvelocity[1] = 0;
+			dvelocity[2] = (0.01*dz/player.mass);
+			Gremlin.playerCameraReverseRotation(dvelocity);
 			
-			Gremlin.movePlayerCamera(player.velocity[0],player.velocity[1],player.velocity[2]);
+			player.velocity[0]+=dvelocity[0];
+			player.velocity[1]+=dvelocity[1];
+			player.velocity[2]+=dvelocity[2];
+			
+			// This moves in local coords, need a set in globals
+			Gremlin.setPlayerCamera(player.position[0]+player.velocity[0],player.position[1]+player.velocity[1],player.position[2]+player.velocity[2]); 
 			Gremlin.playerCameraPos(player.position);
 			
 			// Update Motes

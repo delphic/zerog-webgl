@@ -663,7 +663,10 @@ function _Gremlin() {
 		_playerCamera.moveCamera(dx, dy, dz);
 	}
 	function movePlayerCameraZX(dx,dy,dz) {
-		_playerCamrea.moveCameraZX(dx, dy, dz);
+		_playerCamera.moveCameraZX(dx, dy, dz);
+	}
+	function setPlayerCamera(x,y,z) {
+		_playerCamera.setCamera(x,y,z);
 	}
 	function setPlayerCameraRotation(yaw, pitch, roll) {
 		_playercamera.setRotation(yaw, pitch, roll);
@@ -675,6 +678,18 @@ function _Gremlin() {
 		value[0] = _playerCamera.x;
 		value[1] = _playerCamera.y; 
 		value[2] = _playerCamera.z;
+	}
+	function playerCameraRotation(vector) {
+		_playerCamera.rotation(vector);
+	}
+	function playerCameraTransform(vector) {
+		_playerCamera.transform(vector);
+	}
+	function playerCameraReverseRotation(vector) {
+		_playerCamera.reverseRotation(vector);
+	}
+	function playerCameraReverseTransform(vector) {
+		_playerCamera.reverseTransform(vector);
 	}
 	function pickPosition(x,y,d) {
 		// d is the distance at which x & y coords is calculated
@@ -729,8 +744,10 @@ function _Gremlin() {
 		this.rotateCamera = rotateCamera;
 		this.moveCamera = moveCamera;
 		this.moveCameraZX = moveCameraZX;
+		this.setCamera = setCamera;
 		this.rotation = rotation;
 		this.transform = transform;
+		this.reverseRotation = reverseRotation;
 		this.reverseTransform = reverseTransform;
 		
 		// TODO: Add Roll
@@ -768,14 +785,23 @@ function _Gremlin() {
 			this.y += dy;
 			this.z += this.rotationMatrix[8]*dx + this.rotationMatrix[10]*dz; // Probably need to normalise these
 		}
+		function setCamera(x,y,z) {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
 		function rotation(vector) {
-			var cameraRotation = mat4.create();
 			mat4.multiplyVec3(this.rotationMatrix, vector, vector);
 		}
 		function transform(vector) { // Converts from Global to Camera Coordinates
 			var cameraTransform = mat4.create(this.rotationMatrix);
 			mat4.translate(cameraTransform, [-this.x, -this.y, -this.z]);
 			mat4.multiplyVec3(cameraTransform, vector, vector);
+		}
+		function reverseRotation(vector) {
+			var cameraRotation = mat4.create(this.rotationMatrix);
+			mat4.transpose(cameraRotation);
+			mat4.multiplyVec3(cameraRotation, vector, vector);
 		}
 		function reverseTransform(vector) { // Converts from Camera to Global Coordinates
 			var cameraTranslation = mat4.create();
@@ -1056,9 +1082,14 @@ function _Gremlin() {
 		renderObject:				renderObject,
 		movePlayerCamera:			movePlayerCamera,
 		movePlayerCameraZX:			movePlayerCameraZX,
+		setPlayerCamera:			setPlayerCamera,
 		setPlayerCameraRotation:	setPlayerCameraRotation,
 		rotatePlayerCamera:			rotatePlayerCamera,
 		playerCameraPos:			playerCameraPos,
+		playerCameraRotation:		playerCameraRotation,
+		playerCameraTransform:		playerCameraTransform,
+		playerCameraReverseRotation:	playerCameraReverseRotation,
+		playerCameraReverseTransform:	playerCameraReverseTransform,
 		pickPosition:				pickPosition,
 		degToRad: 					degToRad 
 	};
