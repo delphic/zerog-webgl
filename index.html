@@ -479,8 +479,8 @@ function _Game() {
 		else {
 			textured = false;
 		}
-		assetsLoading += 1; // This currently removed in Gremlin.handleLoadedModel, this needs to change!
-		Gremlin.loadModel(object, modelName, scale);
+		assetsLoading += 1;
+		Gremlin.loadModel(object, modelName, scale, decreaseAssetsLoading);
 		// TODO: Move to separate texture list and jsut assign appropriate index
 		if(textured) {
 			assetsLoading += 1;

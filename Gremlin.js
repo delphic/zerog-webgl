@@ -615,7 +615,7 @@ function _Gremlin() {
 		object.assignBuffer("vertexPosition", pointVertexPositionBuffer);
 	}
 	
-	function loadModel(object, fileName, scale){
+	function loadModel(object, fileName, scale, callback){
 		object.visible = false;
 		object.scale = scale;
 		var request = new XMLHttpRequest();
@@ -623,6 +623,7 @@ function _Gremlin() {
         request.onreadystatechange = function () {
             if (request.readyState == 4) {
                 _handleLoadedModel(object, JSON.parse(request.responseText));
+				callback();
             }
         }
         request.send();
@@ -847,7 +848,6 @@ function _Gremlin() {
 		object.useIndices = true; 
 		
 		object.visible = true;
-		Game.decreaseAssetsLoading(); // ARGH, Move this out of here!
 	}
 	
 	// Matrix Functions - Stack functions and Set Shader Uniforms
