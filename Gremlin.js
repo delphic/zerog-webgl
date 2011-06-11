@@ -154,7 +154,7 @@ function _Gremlin() {
         _gl.viewport(0, 0, _gl.viewportWidth, _gl.viewportHeight);
         _gl.clear(_gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT);
 
-        mat4.perspective(45, _gl.viewportWidth / _gl.viewportHeight, 0.1, 10000.0, _pMatrix);
+        mat4.perspective(45, _gl.viewportWidth / _gl.viewportHeight, 0.1, 20000.0, _pMatrix);
 
 		// Set Camera View
 		// This transforms the model view matrix to use the camera coordinate system
@@ -328,6 +328,8 @@ function _Gremlin() {
 		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 		pyramidVertexPositionBuffer.itemSize = 3;
 		pyramidVertexPositionBuffer.numItems = 18;
+		
+		// BUG: Needs normal buffers will not render
 		
 		object.assignBuffer("vertexPosition", pyramidVertexPositionBuffer);
 	}
@@ -658,7 +660,9 @@ function _Gremlin() {
 		_gl.bindTexture(_gl.TEXTURE_2D, null);
 	}
 	
-	// Camera Functions
+	// Camera Functions 
+	// TODO: These should probably not be for a specific camera!
+	// Argueably we shouldn't be storing camera in engine, and should move to game code
 	function movePlayerCamera(dx,dy,dz) {
 		_playerCamera.moveCamera(dx, dy, dz);
 	}

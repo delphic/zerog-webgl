@@ -268,10 +268,10 @@ function _Game() {
 			// BUG: Keys get 'stuck down'
 			var width = parseInt(canvas.style.width, 10);
 			var height = parseInt(canvas.style.height, 10);
-			var mousePos, lmbMouseDown, rmbMouseDown;
+			var mousePos, lmbDown, rmbDown;
 			mousePos = GremlinInput.getMousePos();
-			lmbMouseDown = GremlinInput.mouseDown(0);
-			rmbMouseDown = GremlinInput.mouseDown(2);
+			lmbDown = GremlinInput.mouseDown(0);
+			rmbDown = GremlinInput.mouseDown(2);
 			
 			var dyaw, dpitch, droll, dx, dz;
 			dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
@@ -281,9 +281,31 @@ function _Game() {
 				droll += 0.1 * elapsed; 
 			}
 			if (GremlinInput.keyDown("e")) { droll -= 0.1 * elapsed; }
-			if (rmbMouseDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
+			if (rmbDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
 			else if (GremlinInput.keyDown("q") || GremlinInput.keyDown("e")) { Gremlin.rotatePlayerCamera(0, 0, droll); }
 
+			// Pew Pew
+			if(lmbDown) {
+				if (player.firingTimer >= 300) {
+					
+					var v = [0,0,-0.5]; // TODO: Pick
+					Gremlin.playerCameraReverseRotation(v);
+					
+					v[0] += player.velocity[0];
+					v[1] += player.velocity[1];
+					v[2] += player.velocity[2];
+					var pos = [0,0,0];
+					Gremlin.playerCameraPos(pos); // Note setting equal to player.position cause updating the camera as well as the projectiles! TODO: put player in an object
+					var newproj = new projectile(pos, v, 10, 30000, true);
+
+					projectiles.push(newproj);
+					player.firingTimer = 0;
+				}
+				else {
+					player.firingTimer += elapsed;
+				}
+			}
+			
 			dx = 0;
 			dz = 0;
 			if (GremlinInput.keyDown("Left") || GremlinInput.keyDown("a")) {
@@ -310,7 +332,6 @@ function _Game() {
 			// TODO: Add regen-ing to fuel to stop people accelerating to stupid speeds easily
 			// Could have higher fuel use to begin with and particular low if low on fuel
 
-			// Ironically this is in Globals we need it in locals
 			var dvelocity = [];
 			dvelocity[0] = (0.01*dx/player.mass);
 			dvelocity[1] = 0;
@@ -321,12 +342,26 @@ function _Game() {
 			player.velocity[1]+=dvelocity[1];
 			player.velocity[2]+=dvelocity[2];
 			
-			// This moves in local coords, need a set in globals
 			Gremlin.setPlayerCamera(player.position[0]+player.velocity[0],player.position[1]+player.velocity[1],player.position[2]+player.velocity[2]); 
 			Gremlin.playerCameraPos(player.position);
 			
 			// Update Motes
 			updateMotes(player.position, player.velocity);
+			
+			// Update Projectiles
+			for(var i = 0; i < projectiles.length; i++) {
+				// Update Lifetime
+				projectiles[i].lifetime -= elapsed;
+				// Despawn if lifetime has expired
+				if (projectiles[i].lifetime < 0) {
+					projectiles.splice(i,1);
+				}
+				else {
+					// Update Position
+					projectiles[i].updatePosition();
+				}
+			}
+			
         }
         lastTime = timeNow;
     }
@@ -354,6 +389,13 @@ function _Game() {
 			// Note: Not an efficient method of rendering particles...
 			// We can get away with this because it's only ~100 objects
 			Gremlin.renderObject(dustMotes[i]);
+		}
+		for(var n = 0; n < projectiles.length; n++)
+		{
+			var position = [0,0,0];
+			position = projectiles[n].getPosition();
+			projectileObject.setPosition(position[0], position[1], position[2]);
+			Gremlin.renderObject(projectileObject);
 		}
 		
 		// Animate Scene
@@ -517,6 +559,8 @@ function _Game() {
 		loadingTargetState = "InGame";
 		loadLevel("level1.js");
 		createMotes();
+		// Create Projectiles
+		Gremlin.createCube(projectileObject, false, 0.01);
 	}
 	
 
@@ -527,6 +571,32 @@ function _Game() {
 	player.mass = 1;
 	player.firingTimer = 1000;
 
+	// Basic Projectile System
+	var projectiles = [];
+	var projectileObject = new gameObject(0,0,0);
+	projectileObject.setColor(5.0,0,0,1);
+	projectileObject.setUseLighting(false);
+		
+	function projectile(position, velocity, dmg, lifetime, friendly) {
+		this.position = position;
+		this.velocity = velocity;
+		this.dmg = dmg;
+		this.lifetime = lifetime;
+		this.friendly = friendly;
+		
+		this.getPosition = getPosition;
+		this.updatePosition = updatePosition;
+		
+		function getPosition() {
+			return this.position;
+		}
+		function updatePosition() {
+			this.position[0] += this.velocity[0];
+			this.position[1] += this.velocity[1];
+			this.position[2] += this.velocity[2];
+		}
+	}
+	
 	// Dust Motes
 	// TODO: namespace
 	var dustMotes = [];
