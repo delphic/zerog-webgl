@@ -117,7 +117,12 @@ v0.6
 * Game Layer - Menu system, loading system, options (texture filtering, lighting, pixel / vertex, resolution).
 
 v0.7+
-* Material System?
+* Add index to array for reference, so that we can alter objects after creation
+* Create Texture & Model Management
+* Decouple objects and their buffers
+
+* Material System - include emmissive
+
 * Render to Texture
 * Alpha Blending
 * Specular Maps

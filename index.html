@@ -336,7 +336,7 @@ function _Game() {
 				dz /= 1.41421;
 			}
 			// TODO: Add regen-ing to fuel to stop people accelerating to stupid speeds easily
-			// Could have higher fuel use to begin with and particular low if low on fuel
+			// Could have higher fuel use to begin with and particularly low use if low on fuel
 
 			var dvelocity = [];
 			dvelocity[0] = (0.01*dx/player.mass);
@@ -566,7 +566,7 @@ function _Game() {
 		loadLevel("level1.js");
 		createMotes();
 		// Create Projectiles
-		Gremlin.createCube(projectileObject, false, 0.01);
+		Gremlin.createPyramid(projectileObject, false, 0.01); // TODO: Tumbling Tetrahedron would be better
 	}
 	
 
@@ -580,6 +580,7 @@ function _Game() {
 	// Basic Projectile System
 	var projectiles = [];
 	var projectileObject = new gameObject(0,0,0);
+	projectileObject.rotate(90, 1, 0, 0)
 	projectileObject.setColor(5.0,0,0,1);
 	projectileObject.setUseLighting(false);
 		

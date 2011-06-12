@@ -329,9 +329,49 @@ function _Gremlin() {
 		pyramidVertexPositionBuffer.itemSize = 3;
 		pyramidVertexPositionBuffer.numItems = 18;
 		
-		// BUG: Needs normal buffers will not render
-		
 		object.assignBuffer("vertexPosition", pyramidVertexPositionBuffer);
+		
+		// BUG: Needs normal buffers will not render
+		// Normal Buffer
+		// WARNING: This is dependant on shader program should make this more robust
+		var pyramidVertexNormalBuffer;
+		pyramidVertexNormalBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexNormalBuffer);
+		var vertexNormals = [
+		  // Front face
+			 0.0, 0.447214,  0.89443,
+			 0.0, 0.447214,  0.89443,
+			 0.0, 0.447214,  0.89443,
+
+			// Right face
+			 0.89443, 0.447214,  0.0,
+			 0.89443, 0.447214,  0.0,
+			 0.89443, 0.447214,  0.0,
+
+			// Back face
+			 0.0, 0.447214, -0.89443,
+			 0.0, 0.447214, -0.89443,
+			 0.0, 0.447214, -0.89443,
+
+			// Left face
+			 -0.89443, 0.447214,  0.0,
+			 -0.89443, 0.447214,  0.0,
+			 -0.89443, 0.447214,  0.0,
+			
+			// Bottom face
+			0.0, -1, 0.0,
+			0.0, -1, 0.0,
+			0.0, -1, 0.0,
+			0.0, -1, 0.0,
+			0.0, -1, 0.0,
+			0.0, -1, 0.0
+			
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
+		pyramidVertexNormalBuffer.itemSize = 3;
+		pyramidVertexNormalBuffer.numItems = 18;
+		
+		object.assignBuffer("vertexNormals", pyramidVertexNormalBuffer);
 	}
 	function createCube(object, textured, size) {
 		// Vertex Buffer
