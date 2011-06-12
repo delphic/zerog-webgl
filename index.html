@@ -287,15 +287,21 @@ function _Game() {
 			// Pew Pew
 			if(lmbDown) {
 				if (player.firingTimer >= 300) {
-					
-					var v = [0,0,-0.5]; // TODO: Pick
-					Gremlin.playerCameraReverseRotation(v);
+					var pos = [0,0,0];
+					Gremlin.playerCameraPos(pos); // Note setting equal to player.position cause updating the camera as well as the projectiles! TODO: put player in an object / namespace rather than store as an array to remove this temptation!
+					var aimtAt = [0,0,0];
+					aimAt = Gremlin.pickPosition(mousePos[0], mousePos[1], 500); // 500 should be replaced by distance to target
+					var v = [0,0,0]; 
+					vec3.subtract(aimAt, pos, v);
+					v[0]/=1000;
+					v[1]/=1000;
+					v[2]/=1000;
+					//Gremlin.playerCameraReverseRotation(v);
 					
 					v[0] += player.velocity[0];
 					v[1] += player.velocity[1];
 					v[2] += player.velocity[2];
-					var pos = [0,0,0];
-					Gremlin.playerCameraPos(pos); // Note setting equal to player.position cause updating the camera as well as the projectiles! TODO: put player in an object
+					
 					var newproj = new projectile(pos, v, 10, 30000, true);
 
 					projectiles.push(newproj);
