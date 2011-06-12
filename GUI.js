@@ -1,3 +1,9 @@
+//     ___                    _ _           ___        _____ 
+//    / _ \_ __ ___ _ __ ___ | (_)_ __     / _ \/\ /\  \_   \
+//   / /_\/ '__/ _ \ '_ ` _ \| | | '_ \   / /_\/ / \ \  / /\/
+//  / /_\\| | |  __/ | | | | | | | | | | / /_\\\ \_/ /\/ /_  
+//  \____/|_|  \___|_| |_| |_|_|_|_| |_| \____/ \___/\____/  
+
 /*
 * GUI is created and controlled by a number of attributes:
 * gui-role, gui-id & gui-target
@@ -12,32 +18,38 @@ function _GUI() {
 	function startGame(val) {
 		// TODO: Start Game with val
 		$("#menuContainer").hide();
-		gameState = "InGame";
-		controller.handlePause();
+		Game.updateGameState("InGame"); 
+		Game.unpause();
 	}
 	function resumeGame() {
 		// TODO: Unpause
 		$("#menuContainer").hide();
-		gameState = "InGame";
-		controller.handlePause();
+		Game.updateGameState("InGame");
+		Game.unpause();
 	}
 	function pauseGame() {
 		// TODO: Pause
 		$("#menuContainer").show();
-		gameState = "InMenu";
-		controller.handlePause();
+		Game.updateGameState("InMenu");
+		Game.pause();
 	}
-	function applyOptions() {
+	function applyOptions() { // TODO: Move controller functions
 		resolutionScale = document.getElementById(optionsResolution).value;
 		lighting = document.getElementById(optionsLighting);
 		if (lighting) { lightingType = lighting; lighting = true; } 
-		textureFiltering = document.getElementById(optionsTextureFiltering);
 		specularLighting = document.getElementById(optionsSpecularLighting);
 	}
 	
+	function pause() {
+		$('div[gui-role="menu"]').hide();
+		$('div[gui-role="menu"][gui-id="pauseMenu"]').show();
+		$('#menuContainer').show();
+	}
+	
 	function setStyleSize() { 
-		// Adds explicit height and font size for GUI scaling
-		$("#menuContainer").css("height",window.innerHeight*0.8);
+		// Adds explicit height (and width for good measure) and font size for GUI scaling
+		$("#menuContainer").css("width",window.innerWidth*1); // TODO: need factor as variable
+		$("#menuContainer").css("height",window.innerHeight*1);
 		$("#menuContainer").css("font-size",window.innerHeight/20);
 	}
 		
@@ -47,7 +59,7 @@ function _GUI() {
 		setStyleSize();
 	
 		$('div[gui-role="menu"]').addClass("menu").hide();
-		$('div[gui-role]"menu"][gui-id="mainMenu"]').show();
+		$('div[gui-role="menu"][gui-id="mainMenu"]').show();
 		$('[gui-role="links"]').addClass("links");
 		$('[gui-role="links"] a').each(function() {
 			$(this).click(function() { 
@@ -82,10 +94,15 @@ function _GUI() {
 		// Value Visulater for Resolution Slider
 		$('#optionsResolution').change(function() { 
 			var factor = parseFloat($(this).val(),10);
-			$('#optionsResolutionOutput').html(factor.toFixed(1)); });
+			$('#optionsResolutionOutput').html(factor.toFixed(1)); 
+		});
+		
+		GremlinEventHandler.bindEvent("onresize", setStyleSize);
 	});
-	$(window).jkey('esc', function() { if(gameState === "InGame") pauseGame(); });
 	
-	return { setStyleSize: setStyleSize }
+	return { 
+		setStyleSize: 	setStyleSize,
+		pause: 			pause,
+	}
 }
-var GUI = _GUI();
+var GremlinGUI = _GUI();

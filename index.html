@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8"/>
 		<title>Gremlin Test Index</title>
-		<!--<script type="text/javascript" src="libs/jquery-1.6.1.min.js"></script>-->
+		<script type="text/javascript" src="libs/jquery-1.6.1.min.js"></script>
 		<script type="text/javascript" src="libs/glMatrix-0.9.5.min.js"></script>
 		<script type="text/javascript" src="libs/webgl-utils.js"></script>
 		<!-- Shaders -->
@@ -236,20 +236,26 @@
 		</script>
 		<!-- Gremlin Engine -->
 		<script type="text/javascript" src="Gremlin.js"></script>
+		<!-- GUI : Note JQuery Depedency -->
+		<script src="GUI.js"></script>
 		<!-- Game Script -->
 		<script type="text/javascript">
 function _Game() {
-	// TODO: Convert to public / private functions...
-	
+	// TODO: Change naming to public / private functions...
 	var canvas;
 	var	resolutionScale;
 	var lastTime = 0;
-	var gameState;
+	var gameState = "InMenu"; // TODO: This should loading for initial load.
 	
 	var loadingTargetState;
 	var assetsLoading = 0; // for quick and dirty loading system
 	function decreaseAssetsLoading() { // to be removed / moved to proper loading system
 		assetsLoading -= 1;
+	}
+
+	// Game State Functions
+	function updateGameState(val) {
+		gameState = val;
 	}
 	
     function animate() {
@@ -263,93 +269,102 @@ function _Game() {
 				gameObjects[object].animate(elapsed);
 			}
 			
-			// Handle Input
+			// Handle Game Input
 			// TODO: game state variable... switch on this to control handling of input e.g. Menus
 			// BUG: Keys get 'stuck down'
-			var width = parseInt(canvas.style.width, 10);
-			var height = parseInt(canvas.style.height, 10);
-			var mousePos, lmbDown, rmbDown;
-			mousePos = GremlinInput.getMousePos();
-			lmbDown = GremlinInput.mouseDown(0);
-			rmbDown = GremlinInput.mouseDown(2);
-			
-			var dyaw, dpitch, droll, dx, dz;
-			dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
-			dpitch = 0.05 * elapsed * ((height*0.5)-mousePos[1])/(0.5*height);
-			droll = 0;
-			if (GremlinInput.keyDown("q")) { 
-				droll += 0.1 * elapsed; 
-			}
-			if (GremlinInput.keyDown("e")) { droll -= 0.1 * elapsed; }
-			if (rmbDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
-			else if (GremlinInput.keyDown("q") || GremlinInput.keyDown("e")) { Gremlin.rotatePlayerCamera(0, 0, droll); }
-
-			// Pew Pew
-			if(lmbDown) {
-				if (player.firingTimer >= 300) {
-					var pos = [0,0,0];
-					Gremlin.playerCameraPos(pos); // Note setting equal to player.position cause updating the camera as well as the projectiles! TODO: put player in an object / namespace rather than store as an array to remove this temptation!
-					var aimtAt = [0,0,0];
-					aimAt = Gremlin.pickPosition(mousePos[0], mousePos[1], 500); // 500 should be replaced by distance to target
-					var v = [0,0,0]; 
-					vec3.subtract(aimAt, pos, v);
-					v[0]/=1000;
-					v[1]/=1000;
-					v[2]/=1000;
-					//Gremlin.playerCameraReverseRotation(v);
-					
-					v[0] += player.velocity[0];
-					v[1] += player.velocity[1];
-					v[2] += player.velocity[2];
-					
-					var newproj = new projectile(pos, v, 10, 30000, true);
-
-					projectiles.push(newproj);
-					player.firingTimer = 0;
+			if(gameState == "InGame") {
+				var width = parseInt(canvas.style.width, 10);
+				var height = parseInt(canvas.style.height, 10);
+				var mousePos, lmbDown, rmbDown;
+				mousePos = GremlinInput.getMousePos();
+				lmbDown = GremlinInput.mouseDown(0);
+				rmbDown = GremlinInput.mouseDown(2);
+				
+				var dyaw, dpitch, droll, dx, dz;
+				dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
+				dpitch = 0.05 * elapsed * ((height*0.5)-mousePos[1])/(0.5*height);
+				droll = 0;
+				if (GremlinInput.keyDown("q")) { 
+					droll += 0.1 * elapsed; 
 				}
-				else {
-					player.firingTimer += elapsed;
+				if (GremlinInput.keyDown("e")) { droll -= 0.1 * elapsed; }
+				if (rmbDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
+				else if (GremlinInput.keyDown("q") || GremlinInput.keyDown("e")) { Gremlin.rotatePlayerCamera(0, 0, droll); }
+
+				// Pew Pew
+				if(lmbDown) {
+					if (player.firingTimer >= 300) {
+						var pos = [0,0,0];
+						Gremlin.playerCameraPos(pos); // Note setting equal to player.position cause updating the camera as well as the projectiles! TODO: put player in an object / namespace rather than store as an array to remove this temptation!
+						var aimtAt = [0,0,0];
+						aimAt = Gremlin.pickPosition(mousePos[0], mousePos[1], 500); // 500 should be replaced by distance to target
+						var v = [0,0,0]; 
+						vec3.subtract(aimAt, pos, v);
+						v[0]/=1000;
+						v[1]/=1000;
+						v[2]/=1000;
+						//Gremlin.playerCameraReverseRotation(v);
+						
+						v[0] += player.velocity[0];
+						v[1] += player.velocity[1];
+						v[2] += player.velocity[2];
+						
+						var newproj = new projectile(pos, v, 10, 30000, true);
+
+						projectiles.push(newproj);
+						player.firingTimer = 0;
+					}
+					else {
+						player.firingTimer += elapsed;
+					}
+				}
+				
+				dx = 0;
+				dz = 0;
+				if (GremlinInput.keyDown("Left") || GremlinInput.keyDown("a")) {
+					// Strafe Left
+					dx -= 0.005 * elapsed;
+				} 
+				else if (GremlinInput.keyDown("Right") || GremlinInput.keyDown("d")) {
+					// Strafe Right
+					dx += 0.005  * elapsed;
+				}
+
+				if (GremlinInput.keyDown("Up") || GremlinInput.keyDown("w")) {
+					// Move Forward
+					dz -= 0.005  * elapsed;
+				} 
+				else if (GremlinInput.keyDown("Down") || GremlinInput.keyDown("s")) {
+					// Move Backward
+					dz += 0.005  * elapsed;
+				}
+				
+				if(dx && dz) { // Clamp Diagonal Speed
+					dx /= 1.41421;
+					dz /= 1.41421;
+				}
+				// TODO: Add regen-ing to fuel to stop people accelerating to stupid speeds easily
+				// Could have higher fuel use to begin with and particularly low use if low on fuel
+
+				var dvelocity = [];
+				dvelocity[0] = (0.01*dx/player.mass);
+				dvelocity[1] = 0;
+				dvelocity[2] = (0.01*dz/player.mass);
+				Gremlin.playerCameraReverseRotation(dvelocity);
+				
+				player.velocity[0]+=dvelocity[0];
+				player.velocity[1]+=dvelocity[1];
+				player.velocity[2]+=dvelocity[2];
+				
+				Gremlin.setPlayerCamera(player.position[0]+player.velocity[0],player.position[1]+player.velocity[1],player.position[2]+player.velocity[2]); 
+				Gremlin.playerCameraPos(player.position);
+				
+				if (GremlinInput.keyDown("Esc")) {
+					updateGameState("InMenu");
+					pause();
+					GremlinGUI.pause();
 				}
 			}
-			
-			dx = 0;
-			dz = 0;
-			if (GremlinInput.keyDown("Left") || GremlinInput.keyDown("a")) {
-				// Strafe Left
-				dx -= 0.005 * elapsed;
-			} 
-			else if (GremlinInput.keyDown("Right") || GremlinInput.keyDown("d")) {
-				// Strafe Right
-				dx += 0.005  * elapsed;
-			}
-
-			if (GremlinInput.keyDown("Up") || GremlinInput.keyDown("w")) {
-				// Move Forward
-				dz -= 0.005  * elapsed;
-			} else if (GremlinInput.keyDown("Down") || GremlinInput.keyDown("s")) {
-				// Move Backward
-				dz += 0.005  * elapsed;
-			}
-			
-			if(dx && dz) { // Clamp Diagonal Speed
-				dx /= 1.41421;
-				dz /= 1.41421;
-			}
-			// TODO: Add regen-ing to fuel to stop people accelerating to stupid speeds easily
-			// Could have higher fuel use to begin with and particularly low use if low on fuel
-
-			var dvelocity = [];
-			dvelocity[0] = (0.01*dx/player.mass);
-			dvelocity[1] = 0;
-			dvelocity[2] = (0.01*dz/player.mass);
-			Gremlin.playerCameraReverseRotation(dvelocity);
-			
-			player.velocity[0]+=dvelocity[0];
-			player.velocity[1]+=dvelocity[1];
-			player.velocity[2]+=dvelocity[2];
-			
-			Gremlin.setPlayerCamera(player.position[0]+player.velocity[0],player.position[1]+player.velocity[1],player.position[2]+player.velocity[2]); 
-			Gremlin.playerCameraPos(player.position);
 			
 			// Update Motes
 			updateMotes(player.position, player.velocity);
@@ -667,12 +682,15 @@ function _Game() {
 		function handlePause() { 
 			if(running) { 
 				_pause();
-				// TODO: save the control objects
-				var btn = document.getElementById("btnPause").value = "Start"; 
 			} 
 			else { 
 				_unpause();
-				var btn = document.getElementById("btnPause").value = "Stop"; 
+			}
+		}
+		
+		function handleUnpause() {
+			if(!running) {
+				_unpause();
 			}
 		}
 		
@@ -697,11 +715,19 @@ function _Game() {
 		return { 
 			isRunning: isRunning, 
 			handlePause: handlePause, 
+			handleUnpause: handleUnpause,
 			handleWindowBlur: handleWindowBlur, 
 			handleWindowFocus: handleWindowFocus 
 		};
 	}
 	var controller = _controller();
+	
+	function pause() {
+		controller.handlePause();
+	}
+	function unpause() {
+		controller.handleUnpause();
+	}
 	
 	function setCanvasSize() {
 		if (resolutionScale) {
@@ -730,10 +756,13 @@ function _Game() {
 	// TODO: Add check for already loaded
 	
 	return {
-		createObjectPrimitive: createObjectPrimitive,
-		createObjectModel: createObjectModel,
-		decreaseAssetsLoading:  decreaseAssetsLoading, // Remove / move to loading system
-		webGLStart: webGLStart
+		createObjectPrimitive: 		createObjectPrimitive,
+		createObjectModel: 			createObjectModel,
+		decreaseAssetsLoading:  	decreaseAssetsLoading, // Remove / move to loading system
+		updateGameState: 			updateGameState,
+		pause:						pause,
+		unpause:					unpause,
+		webGLStart: 				webGLStart
 	}
 }
 var Game = _Game();
@@ -741,10 +770,97 @@ var Game = _Game();
 		<style>
 			html, body { margin: 0; padding: 0; overflow: hidden; font-family: monospace; }
 			canvas { display: block; margin: 0 auto; /*cursor: url('data:image/gif;base64,R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto; */ cursor: crosshair; }
+			/* CSS Styles*/
+			#menuContainer { color: #FFF; margin: 0 auto; position: absolute; padding: 0 2.5%; z-index: 100; }
+			#menuContainer ul { list-style: none; padding: 0; }
+			#menuContainer ul li { margin: 0.5em 0;}
+			#menuContainer ul li a { cursor: pointer; color: #FFF; }
+			#menuContainer a { color: #ACF; }
+			#menuContainer select, #menuContainer input { background-color: #000; color: #FFF; border: none; font-size: 0.8em; font-family: monospace; }
+			#menuContainer input[type=button] { margin: 0.5em 0; color: #ACF; cursor: pointer; }
+			#menuContainer div.small { font-size: 0.5em; overflow-y: scroll; height: 80%; }
+			#menuContainer div.small img { width: 10%; }
 		</style>
 	</head>
 	<body onload="Game.webGLStart(1);">
 		<div id="container">
+			<div id="menuContainer">
+				<!-- Main Menu -->
+				<div gui-role="menu" gui-id="mainMenu">
+					<!--<h1>WebGL ZeroG</h1>-->
+<pre>
+ _____                 ___ 
+/ _  / ___ _ __ ___   / _ \
+\// / / _ \ '__/ _ \ / /_\/
+ / //\  __/ | | (_) / /_\\ 
+/____/\___|_|  \___/\____/ 
+</pre>
+					<ul gui-role="links">
+						<li><a gui-target="levelMenu">New Game</a></li>
+						<li><a gui-target="optionsMenu">Options</a></li>
+						<li><a gui-target="creditsMenu">Credits</a></li>
+					</ul>
+				</div>
+				<!-- Options Menu -->
+				<div gui-role="menu" gui-id="optionsMenu">
+					<h2>Options</h2>
+					<form>
+						<div>
+							<label for="optionsResolution">Resolution</label>
+							<input id="optionsResolution" type="range" min="0.1" max="1.0" step="0.1" value="1" />
+							<span id="optionsResolutionOutput">1.0</span>
+						</div>
+						<div>
+							<label for="optionsLighting">Lighting</label>
+							<select id="optionsLighting">
+								<option value="false">No Lighting</option>
+								<option value="Vertex">Per Vertex</option>
+								<option value="Pixel" selected>Per Pixel</option>
+							</select>
+						</div>
+						<div>
+							<label for="optionsSpecularLighting">Specular Lighting</label>
+							<select id="optionsSpecularLighting">
+								<option value="false" selected>Off</option>
+								<option value="true">On</option>
+							</select>
+						</div>
+						<div>
+							<input gui-role="navButton" gui-target="mainMenu" type="button" value="Cancel" />
+							<input gui-role="navButton applyOptions" gui-target="mainMenu" type="button" value="Okay" />
+						</div>
+					</form>
+				</div>
+				<!-- Level Menu -->
+				<div gui-role="menu" gui-id="levelMenu">
+					<h2>Select Level</h2>
+					<ul class="links">
+						<!-- Add Game Start -->
+						<li><a gui-role="navButton startGame" gui-target="pauseMenu" gui-level="1">Level 1</a></li>
+					</ul>
+					<input gui-role="navButton" gui-target="mainMenu" type="button" value="Back" />
+				</div>
+				<!-- Credits Menu -->
+				<div gui-role="menu" gui-id="creditsMenu">
+					<h2>Credits</h2>
+					<div class="small">
+						<img src="textures/delph.png" alt="delph" />
+						<p>Game design and programming by <a target="_blank" href="http://twitter.com/_delph/">delph</a></p>
+						<p>Powered by Gremlins</p>
+						<p>Thanks To:</p>
+						<p><a  target="_blank" href="http://twitter.com/#!/gpjt">gpjt</a> &amp; <a target="_blank" href="http://twitter.com/Tojiro">Tojiro</a></p>
+					</div>
+					<div><input gui-role="navButton" gui-target="mainMenu" type="button" value="Back" /></div>
+				</div>
+				<!-- Pause Menu -->
+				<div gui-role="menu" gui-id="pauseMenu">
+					<h2>Paused</h2>
+					<div>
+						<div><input gui-role="resumeGame" type="button" value="Resume"/></div>
+						<div><input gui-role="navButton" gui-target="mainMenu" id="btnPauseExit" type="button" value="Main Menu"/></div>
+					</div>
+				</div>
+			</div>
 			<canvas id="gremlinCanvas" oncontextmenu="return false;"></canvas>
 		</div>
 	</body>
