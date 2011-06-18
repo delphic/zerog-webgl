@@ -739,7 +739,7 @@ function _Gremlin() {
 		// d is the distance at which x & y coords is calculated
 		
 		var pickPos = vec3.create();
-		pickPos[0] = (_gl.viewportWidth/_gl.viewportHeight)*((x - _gl.viewportWidth*0.5)/_gl.viewportWidth)*2*d*Math.tan(degToRad(45*0.5)); // This does not appear to be working quite right!
+		pickPos[0] = (_gl.viewportWidth/_gl.viewportHeight)*((x - _gl.viewportWidth*0.5)/_gl.viewportWidth)*2*d*Math.tan(degToRad(45*0.5)); 
 		pickPos[1] = -((y - _gl.viewportHeight*0.5)/_gl.viewportHeight)*2*d*Math.tan(degToRad(45*0.5));
 		pickPos[2] = -d;
 		// We now have pick coords in Camera Coord System - Need to Transform to Globals
