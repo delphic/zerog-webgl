@@ -300,10 +300,8 @@ function _Game() {
 						aimAt = Gremlin.pickPosition(mousePos[0], mousePos[1], 500); // 500 should be replaced by distance to target
 						var v = [0,0,0]; 
 						vec3.subtract(aimAt, pos, v);
-						v[0]/=1000; // This decrease is linked to the distance to target, should normalise this before adjusting to scale
-						v[1]/=1000;
-						v[2]/=1000;
-						//Gremlin.playerCameraReverseRotation(v);
+						vec3.normalize(v);
+						vec3.scale(v,0.1);
 						
 						v[0] += player.velocity[0];
 						v[1] += player.velocity[1];
@@ -530,7 +528,7 @@ function _Game() {
 			alert("Invalid Prim Type: "+primType+"");
 			return;
 		}
-		// TODO: Move to separate texture list and jsut assign appropriate index
+		// TODO: Move to separate texture list and just assign appropriate index
 		if(textured) {
 			assetsLoading += 1;
 			object.texture = Gremlin.createTexture(textureName);
@@ -559,7 +557,7 @@ function _Game() {
 		}
 		assetsLoading += 1;
 		Gremlin.loadModel(object, modelName, scale, decreaseAssetsLoading);
-		// TODO: Move to separate texture list and jsut assign appropriate index
+		// TODO: Move to separate texture list and just assign appropriate index
 		if(textured) {
 			assetsLoading += 1;
 			object.texture = Gremlin.createTexture(textureName);
