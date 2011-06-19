@@ -18,7 +18,13 @@ function _GUI() {
 	function startGame(val) {
 		$("#menuContainer").hide();
 		Game.unloadLevel();
-		Game.loadLevel("level1.js", "InGame"); // TODO: Start Game with val
+		switch(val) {
+			case "1":
+				Game.loadLevel("deepspace.js", "InGame");
+				break;
+			default:
+				return;
+		}
 	}
 	function resumeGame() {
 		// TODO: Unpause
