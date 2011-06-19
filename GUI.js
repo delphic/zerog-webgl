@@ -13,13 +13,12 @@
 
 function _GUI() {
 	// TODO: Move controller functions
-	var resolutionScale, lighting, lightingType, specularLighting, textureFiltering;
+	var resolutionScale, lighting, lightingType, specularLighting;
 	
 	function startGame(val) {
-		// TODO: Start Game with val
 		$("#menuContainer").hide();
-		Game.updateGameState("InGame"); 
-		Game.unpause();
+		Game.unloadLevel();
+		Game.loadLevel("level1.js", "InGame"); // TODO: Start Game with val
 	}
 	function resumeGame() {
 		// TODO: Unpause
@@ -33,11 +32,18 @@ function _GUI() {
 		Game.updateGameState("InMenu");
 		Game.pause();
 	}
+	function exitToMenu() {
+		Game.unpause();
+		Game.unloadLevel();
+		Game.loadLevel("menu.js", "InMenu"); 
+	}
 	function applyOptions() { // TODO: Move controller functions
-		resolutionScale = document.getElementById(optionsResolution).value;
-		lighting = document.getElementById(optionsLighting);
-		if (lighting) { lightingType = lighting; lighting = true; } 
-		specularLighting = document.getElementById(optionsSpecularLighting);
+		resolutionScale = document.getElementById("optionsResolution").value;
+		lighting = document.getElementById("optionsLighting").value;
+		if (lighting != "false") { lightingType = lighting; lighting = true; }
+		else { lighting = false; }		
+		specularLighting = document.getElementById("optionsSpecularLighting").value;
+		Game.applyOptions(resolutionScale, lighting, lightingType, specularLighting);
 	}
 	
 	function pause() {
@@ -88,6 +94,12 @@ function _GUI() {
 		$('[gui-role*="applyOptions"]').each(function() {
 			$(this).click(function() {
 				applyOptions();
+			});
+		});
+		// On exit we don't want the renderer to be paused.
+		$('[gui-role*="menuResume"]').each(function() {
+			$(this).click(function() {
+				exitToMenu();
 			});
 		});
 		

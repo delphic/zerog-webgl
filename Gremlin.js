@@ -148,6 +148,42 @@ function _Gremlin() {
 		lightingFlags[name] = val;
 	}
 	
+	function removeLight(index, type) {
+		switch(type) {
+		case "Ambient":
+			ambientLight.splice(0, ambientLight.length);
+			break;
+		case "Directional":
+			directionalLight.splice(0, directionalLight.length);
+			break;
+		case "Point":
+			pointLights.splice(index, 1);
+			break;
+		case "Spot":
+			spotLights.splice(index, 1);
+			break;
+		default:
+			return;
+		}
+	}
+	
+	function removeLights() {
+		ambientLight.r = ambientLight.g = ambientLight.b = null;
+		directionalLight.r = directionalLight.g = directionalLight.b = directionalLight.x =  directionalLight.y = directionalLight.z = null;
+		pointLights.splice(0,pointLights.length);
+		spotLights.splice(0,spotLights.length);
+	}
+	
+	function setShader(type) {
+		if (type==="Pixel") {
+			_shaderProgram = _shaderPrograms.Pixel; 
+		} 
+		else if (type==="Vertex") {
+			_shaderProgram = _shaderPrograms.Vertex; 
+		}
+		_gl.useProgram(_shaderProgram);
+	}
+	
 	// Prepare Scene - Clears View, and sets perspective and camera 
 	// TODO: Should separate this into several functions
     function prepareScene() {
@@ -713,7 +749,7 @@ function _Gremlin() {
 		_playerCamera.setCamera(x,y,z);
 	}
 	function setPlayerCameraRotation(yaw, pitch, roll) {
-		_playercamera.setRotation(yaw, pitch, roll);
+		_playerCamera.setRotation(yaw, pitch, roll);
 	}
 	function rotatePlayerCamera(dyaw, dpitch, droll) {
 		_playerCamera.rotateCamera(dyaw, dpitch, droll);
@@ -1122,6 +1158,9 @@ function _Gremlin() {
 		setSpotLight:				setSpotLight,
 		updateSpotLight:			updateSpotLight,
 		setLight: 					setLight,
+		removeLight:				removeLight,
+		removeLights:				removeLights,
+		setShader:					setShader,
 		prepareScene: 				prepareScene, 
 		renderObject:				renderObject,
 		movePlayerCamera:			movePlayerCamera,

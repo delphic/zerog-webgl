@@ -245,7 +245,7 @@ function _Game() {
 	var canvas;
 	var	resolutionScale;
 	var lastTime = 0;
-	var gameState = "InMenu"; // TODO: This should loading for initial load.
+	var gameState;
 	
 	var loadingTargetState;
 	var assetsLoading = 0; // for quick and dirty loading system
@@ -301,11 +301,8 @@ function _Game() {
 						var v = [0,0,0]; 
 						vec3.subtract(aimAt, pos, v);
 						vec3.normalize(v);
-						vec3.scale(v,0.1);
-						
-						v[0] += player.velocity[0];
-						v[1] += player.velocity[1];
-						v[2] += player.velocity[2];
+						vec3.scale(v,1);
+						vec3.add(v,player.velocity);
 						
 						var newproj = new projectile(pos, v, 10, 30000, true);
 
@@ -317,24 +314,25 @@ function _Game() {
 					}
 				}
 				
+				var accelRate = 0.005; // TODO: Move to player object
 				dx = 0;
 				dz = 0;
 				if (GremlinInput.keyDown("Left") || GremlinInput.keyDown("a")) {
 					// Strafe Left
-					dx -= 0.005 * elapsed;
+					dx -= accelRate * elapsed;
 				} 
 				else if (GremlinInput.keyDown("Right") || GremlinInput.keyDown("d")) {
 					// Strafe Right
-					dx += 0.005  * elapsed;
+					dx += accelRate * elapsed;
 				}
 
 				if (GremlinInput.keyDown("Up") || GremlinInput.keyDown("w")) {
 					// Move Forward
-					dz -= 0.005  * elapsed;
+					dz -= accelRate * elapsed;
 				} 
 				else if (GremlinInput.keyDown("Down") || GremlinInput.keyDown("s")) {
 					// Move Backward
-					dz += 0.005  * elapsed;
+					dz += accelRate * elapsed;
 				}
 				
 				if(dx && dz) { // Clamp Diagonal Speed
@@ -391,7 +389,9 @@ function _Game() {
 		if(gameState == "Loading") {
 			// Wait for all assets to load
 			if(assetsLoading) return;
-			else gameState == loadingTargetState;
+			else {
+				gameState = loadingTargetState;
+			}
 		}
 		
 		// Render Scene
@@ -403,7 +403,7 @@ function _Game() {
 				Gremlin.renderObject(gameObjects[object]);
 			}
 		}
-		for(var i = 0; i < maxMotes; i++)
+		for(var i = 0; i < dustMotes.length; i++)
 		{
 			// Note: Not an efficient method of rendering particles...
 			// We can get away with this because it's only ~100 objects
@@ -573,13 +573,10 @@ function _Game() {
 	}
 	// Game Init
 	function gameInit() {
-		gameState = "Loading";
 		assetsLoading = 0;
-		loadingTargetState = "InGame";
-		loadLevel("level1.js");
-		createMotes();
 		// Create Projectiles
 		Gremlin.createPyramid(projectileObject, false, 0.01); // TODO: Tumbling Tetrahedron would be better
+		loadLevel("menu.js", "InMenu");
 	}
 	
 
@@ -587,8 +584,8 @@ function _Game() {
 	var player = [];
 	player.position = [0,0,0];
 	player.velocity = [0,0,0];
-	player.mass = 1;
 	player.firingTimer = 1000;
+	player.mass = 1;
 
 	// Basic Projectile System
 	var projectiles = [];
@@ -638,7 +635,7 @@ function _Game() {
  
 	function updateMotes(pos, vel) {
 		if (vec3.length(vel)) {
-			for(var i = 0; i < maxMotes; i++){
+			for(var i = 0; i < dustMotes.length; i++){
 				var boundingR;
 				var posDiff = vec3.create();
 				boundingR = vec3.length(vel) + rootThree*randomFactor;
@@ -726,7 +723,13 @@ function _Game() {
 	function unpause() {
 		controller.handleUnpause();
 	}
-	
+	function applyOptions(resScale, _lighting, _lightingType, _specularLighting) {
+		resolutionScale = resScale;
+		setCanvasSize();
+		Gremlin.setLightingFlags("lighting", _lighting);
+		Gremlin.setLightingFlags("specularLighting", _specularLighting);
+		Gremlin.setShader(_lightingType);
+	}
 	function setCanvasSize() {
 		if (resolutionScale) {
 			canvas.width = resolutionScale*document.width;
@@ -745,19 +748,38 @@ function _Game() {
 	GremlinEventHandler.bindEvent("onresize", setCanvasSize);
 	GremlinEventHandler.bindEvent("onresize", Gremlin.resize);
 	
-	function loadLevel(fileName) {
+	function loadLevel(fileName, targetState) {
+		// Reset Player Object - should be method on player
+		Gremlin.setPlayerCamera(0,0,0);
+		Gremlin.setPlayerCameraRotation(0,0,0);
+		player.position = [0,0,0];
+		player.velocity = [0,0,0];
+		player.firingTimer = 1000;
+		// End Reset Player 
+		gameState = "Loading";
+		loadingTargetState = targetState;
 		var fileref=document.createElement('script');
 		fileref.setAttribute("type","text/javascript");
 		fileref.setAttribute("src", fileName);
 		if (typeof fileref!="undefined") document.getElementsByTagName("head")[0].appendChild(fileref);
+	}// TODO: Add check for already loaded
+	function unloadLevel() {
+		gameObjects.splice(0, gameObjects.length);
+		projectiles.splice(0, projectiles.length);
+		dustMotes.splice(0, dustMotes.length); // Looks like we need a level manager! ;D
+		Gremlin.removeLights();
 	}
-	// TODO: Add check for already loaded
+	
 	
 	return {
 		createObjectPrimitive: 		createObjectPrimitive,
 		createObjectModel: 			createObjectModel,
+		createMotes:				createMotes,
 		decreaseAssetsLoading:  	decreaseAssetsLoading, // Remove / move to loading system
 		updateGameState: 			updateGameState,
+		loadLevel: 					loadLevel,
+		unloadLevel:				unloadLevel,
+		applyOptions:				applyOptions,
 		pause:						pause,
 		unpause:					unpause,
 		webGLStart: 				webGLStart
@@ -791,7 +813,7 @@ var Game = _Game();
 / _  / ___ _ __ ___   / _ \
 \// / / _ \ '__/ _ \ / /_\/
  / //\  __/ | | (_) / /_\\ 
-/____/\___|_|  \___/\____/ 
+/____/\___|_|  \___/\____/  Alpha
 </pre>
 					<ul gui-role="links">
 						<li><a gui-target="levelMenu">New Game</a></li>
@@ -805,7 +827,7 @@ var Game = _Game();
 					<form>
 						<div>
 							<label for="optionsResolution">Resolution</label>
-							<input id="optionsResolution" type="range" min="0.1" max="1.0" step="0.1" value="1" />
+							<input id="optionsResolution" type="range" class="range" min="0.1" max="1.0" step="0.1" value="1" />
 							<span id="optionsResolutionOutput">1.0</span>
 						</div>
 						<div>
@@ -834,7 +856,7 @@ var Game = _Game();
 					<h2>Select Level</h2>
 					<ul class="links">
 						<!-- Add Game Start -->
-						<li><a gui-role="navButton startGame" gui-target="pauseMenu" gui-level="1">Level 1</a></li>
+						<li><a gui-role="navButton startGame" gui-target="pauseMenu" gui-level="1">Deep Space</a></li>
 					</ul>
 					<input gui-role="navButton" gui-target="mainMenu" type="button" value="Back" />
 				</div>
@@ -855,7 +877,7 @@ var Game = _Game();
 					<h2>Paused</h2>
 					<div>
 						<div><input gui-role="resumeGame" type="button" value="Resume"/></div>
-						<div><input gui-role="navButton" gui-target="mainMenu" id="btnPauseExit" type="button" value="Main Menu"/></div>
+						<div><input gui-role="navButton menuResume" gui-target="mainMenu" id="btnPauseExit" type="button" value="Main Menu"/></div>
 					</div>
 				</div>
 			</div>
