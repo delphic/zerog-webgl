@@ -1,5 +1,5 @@
 		// Lighting
-		Gremlin.setLightEnvironment(0.01,0.01,0.01,0.75,0.75,0.6,-1.0,0.0,0.0);
+		Gremlin.setLightEnvironment(0.3,0.3,0.3,0,0,0,0.0,0.0,0.0);
 		Gremlin.setLightingFlags("lighting", true);
 		Gremlin.setLightingFlags("specularLighting", true);
 		

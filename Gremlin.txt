@@ -121,6 +121,8 @@ v0.7+
 * Create Texture & Model Management
 * Decouple objects and their buffers
 
+* Level loading and manangement system (xml reading) to control spawning of enemies and environment
+
 * Material System - include emmissive
 
 * Render to Texture

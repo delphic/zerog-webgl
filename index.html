@@ -270,7 +270,6 @@ function _Game() {
 			}
 			
 			// Handle Game Input
-			// TODO: game state variable... switch on this to control handling of input e.g. Menus
 			// BUG: Keys get 'stuck down'
 			if(gameState == "InGame") {
 				var width = parseInt(canvas.style.width, 10);
@@ -284,9 +283,7 @@ function _Game() {
 				dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
 				dpitch = 0.05 * elapsed * ((height*0.5)-mousePos[1])/(0.5*height);
 				droll = 0;
-				if (GremlinInput.keyDown("q")) { 
-					droll += 0.1 * elapsed; 
-				}
+				if (GremlinInput.keyDown("q")) { droll += 0.1 * elapsed; }
 				if (GremlinInput.keyDown("e")) { droll -= 0.1 * elapsed; }
 				if (rmbDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
 				else if (GremlinInput.keyDown("q") || GremlinInput.keyDown("e")) { Gremlin.rotatePlayerCamera(0, 0, droll); }
@@ -296,6 +293,7 @@ function _Game() {
 					if (player.firingTimer >= 300) {
 						var pos = [0,0,0];
 						Gremlin.playerCameraPos(pos); // Note setting equal to player.position cause updating the camera as well as the projectiles! TODO: put player in an object / namespace rather than store as an array to remove this temptation!
+						// TODO: Also this needs to be turret attach point rather than camera position
 						var aimtAt = [0,0,0];
 						aimAt = Gremlin.pickPosition(mousePos[0], mousePos[1], 500); // 500 should be replaced by distance to target
 						var v = [0,0,0]; 
@@ -342,10 +340,7 @@ function _Game() {
 				// TODO: Add regen-ing to fuel to stop people accelerating to stupid speeds easily
 				// Could have higher fuel use to begin with and particularly low use if low on fuel
 
-				var dvelocity = [];
-				dvelocity[0] = (0.01*dx/player.mass);
-				dvelocity[1] = 0;
-				dvelocity[2] = (0.01*dz/player.mass);
+				var dvelocity = [(0.01*dx/player.mass), 0, (0.01*dz/player.mass) ];
 				Gremlin.playerCameraReverseRotation(dvelocity);
 				
 				player.velocity[0]+=dvelocity[0];
@@ -395,8 +390,7 @@ function _Game() {
 		}
 		
 		// Render Scene
-		// TODO: Make separate function
-        Gremlin.prepareScene();
+		Gremlin.prepareScene();
 		for(object in gameObjects)
 		{
 			if(gameObjects[object].visible) {
@@ -421,9 +415,8 @@ function _Game() {
         animate();
     }
 
-	// Game Objects Array
+	// Game Objects
 	var gameObjects = [];
-	// Lights should possibly be a game objects, else we need to add an animate function
 	var gamePointLights = [];
 	var gameSpotLights = [];
 	
@@ -592,7 +585,7 @@ function _Game() {
 	var projectileObject = new gameObject(0,0,0);
 	projectileObject.rotate(90, 1, 0, 0)
 	projectileObject.setColor(5.0,0,0,1);
-	projectileObject.setUseLighting(false);
+	projectileObject.setUseLighting(false); //TODO: Would be better with lighting true and emissive material
 		
 	function projectile(position, velocity, dmg, lifetime, friendly) {
 		this.position = position;
@@ -615,7 +608,6 @@ function _Game() {
 	}
 	
 	// Dust Motes
-	// TODO: namespace
 	var dustMotes = [];
 	var maxMotes, randomFactor, rootThree;
 	rootThree = 1.73205; // Approximately
@@ -704,7 +696,7 @@ function _Game() {
 		}
 		function isRunning() { return running; }
 		function _pause() { running = false; }
-		// TODO: when the game timer moves to an object adjust this		
+		// TODO: if/when the game timer moves to an object adjust this		
 		function _unpause() { running = true; lastTime = new Date().getTime(); requestAnimFrame(tick); }
 		
 		return { 
@@ -762,7 +754,7 @@ function _Game() {
 		fileref.setAttribute("type","text/javascript");
 		fileref.setAttribute("src", fileName);
 		if (typeof fileref!="undefined") document.getElementsByTagName("head")[0].appendChild(fileref);
-	}// TODO: Add check for already loaded
+	}
 	function unloadLevel() {
 		gameObjects.splice(0, gameObjects.length);
 		projectiles.splice(0, projectiles.length);
