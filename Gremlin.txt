@@ -117,11 +117,11 @@ v0.6
 * Game Layer - Menu system, loading system, options (texture filtering, lighting, pixel / vertex, resolution).
 
 v0.7+
-* Add index to array for reference, so that we can alter objects after creation
 * Create Texture & Model Management
 * Decouple objects and their buffers
 
-* Level loading and manangement system (xml reading) to control spawning of enemies and environment
+* Move asset loading management system into engine / own namespace, move incrementation of number and remove uneccesary removal of numbers once this is done
+GAME CODE * Level loading and manangement system (xml reading) to control spawning of enemies and environment
 
 * Material System - include emmissive
 
