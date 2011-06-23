@@ -217,11 +217,11 @@ function _Gremlin() {
 		
 		if(object.scale != 1) mat4.scale(_mvMatrix, object.scale, _mvMatrix);
 
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexPosition);
-        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, object.buffers.vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexPosition);
+        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, buffersList[object.buffers].vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
 
-		if (object.useIndices) {
-			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, object.buffers.vertexIndex);
+		if (buffersList[object.buffers].useIndices) {
+			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, buffersList[object.buffers].vertexIndex);
 		}
 		
 		_gl.uniform4fv(_shaderProgram.colorUniform, object.color);
@@ -230,8 +230,8 @@ function _Gremlin() {
 			_gl.uniform1i(_shaderProgram.useTexturesUniform, true);
 			_gl.enableVertexAttribArray(_shaderProgram.textureCoordAttribute);
 			// Textures
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.textureCoords);
-			_gl.vertexAttribPointer(_shaderProgram.textureCoordAttribute, object.buffers.textureCoords.itemSize, _gl.FLOAT, false, 0, 0);
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].textureCoords);
+			_gl.vertexAttribPointer(_shaderProgram.textureCoordAttribute, buffersList[object.buffers].textureCoords.itemSize, _gl.FLOAT, false, 0, 0);
 
 			_gl.activeTexture(_gl.TEXTURE0);
 			_gl.bindTexture(_gl.TEXTURE_2D, textureList[object.texture]);
@@ -258,8 +258,8 @@ function _Gremlin() {
 			}
 			// Normals
 			_gl.enableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexNormals); 
-			_gl.vertexAttribPointer(_shaderProgram.vertexNormalAttribute, object.buffers.vertexNormals.itemSize, _gl.FLOAT, false, 0, 0);
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexNormals); 
+			_gl.vertexAttribPointer(_shaderProgram.vertexNormalAttribute, buffersList[object.buffers].vertexNormals.itemSize, _gl.FLOAT, false, 0, 0);
 			
 			// Ambient Light
 			_gl.uniform3f(_shaderProgram.ambientColorUniform, ambientLight.r, ambientLight.g, ambientLight.b);
@@ -299,35 +299,47 @@ function _Gremlin() {
         _setMatrixUniforms();
 		
 		if (!object.wireframe && !object.points) {
-			if(object.useIndices) {
-				_gl.drawElements(_gl.TRIANGLES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+			if(buffersList[object.buffers].useIndices) {
+				_gl.drawElements(_gl.TRIANGLES, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
 			}
 			else {
-				_gl.drawArrays(_gl.TRIANGLES, 0, object.buffers.vertexPosition.numItems);
+				_gl.drawArrays(_gl.TRIANGLES, 0, buffersList[object.buffers].vertexPosition.numItems);
 			}
 		}
 		else if (object.wireframe){
-			if(object.useIndices) {
-				_gl.drawElements(_gl.LINES, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+			if(buffersList[object.buffers].useIndices) {
+				_gl.drawElements(_gl.LINES, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
 			}
 			else {
-				_gl.drawArrays(_gl.LINES, 0, object.buffers.vertexPosition.numItems);
+				_gl.drawArrays(_gl.LINES, 0, buffersList[object.buffers].vertexPosition.numItems);
 			}
 		}
 		else {
 			if(object.useIndices) {
-				_gl.drawElements(_gl.POINTS, object.buffers.vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+				_gl.drawElements(_gl.POINTS, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
 			}
 			else {
-				_gl.drawArrays(_gl.POINTS, 0, object.buffers.vertexPosition.numItems);
+				_gl.drawArrays(_gl.POINTS, 0, buffersList[object.buffers].vertexPosition.numItems);
 			}
 		}
         _mvPopMatrix();
 	}
 
+	// Buffers
+	buffersList = []; 			// Stores the Buffers
+	buffersNameList = []; 		// Stores what buffers have already been created
+	modelLoadingInfo = [];		// An array to store what objects have requested what models and their callbacks
+	
 	// Primitive Creation Functions
 	// TODO: Add Cylinders, Generalise to Cuboids & Elipsoids and add 2D shapes Rays, Elipses, Rectangles 
 	function createPyramid(object, textured) {
+		if(textured) object.useTextures = true;
+		
+		if (!isNaN(buffersNameList["pyramid"])) {
+			object.assignBuffer(buffersNameList["pyramid"]);
+			return;
+		}
+		var buffers = [];
 		// TODO: Convert to use index buffer
 		var pyramidVertexPositionBuffer = _gl.createBuffer();
 		_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
@@ -365,9 +377,8 @@ function _Gremlin() {
 		pyramidVertexPositionBuffer.itemSize = 3;
 		pyramidVertexPositionBuffer.numItems = 18;
 		
-		object.assignBuffer("vertexPosition", pyramidVertexPositionBuffer);
+		buffers["vertexPosition"] = pyramidVertexPositionBuffer;
 		
-		// BUG: Needs normal buffers will not render
 		// Normal Buffer
 		// WARNING: This is dependant on shader program should make this more robust
 		var pyramidVertexNormalBuffer;
@@ -407,9 +418,22 @@ function _Gremlin() {
 		pyramidVertexNormalBuffer.itemSize = 3;
 		pyramidVertexNormalBuffer.numItems = 18;
 		
-		object.assignBuffer("vertexNormals", pyramidVertexNormalBuffer);
+		buffers["vertexNormals"] = pyramidVertexNormalBuffer;
+		
+		buffers["useIndices"] = false;
+		
+		var index = buffersList.push(buffers)-1;
+		buffersNameList["pyramid"] = index;
+		object.assignBuffer(index);
 	}
 	function createCube(object, textured) {
+		if(textured) object.useTextures = true;
+	
+		if (!isNaN(buffersNameList["cube"])){
+			object.assignBuffer(buffersNameList["cube"]);
+			return;
+		}
+		var buffers = [];
 		// Vertex Buffer
 		var cubeVertexPositionBuffer = _gl.createBuffer();
 		_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
@@ -454,7 +478,7 @@ function _Gremlin() {
 		cubeVertexPositionBuffer.itemSize = 3;
 		cubeVertexPositionBuffer.numItems = 24;
 		
-		object.assignBuffer("vertexPosition", cubeVertexPositionBuffer);
+		buffers["vertexPosition"] = cubeVertexPositionBuffer;
 	
 		// Texture Buffer
 		if(textured) {
@@ -502,8 +526,7 @@ function _Gremlin() {
 			cubeVertexTextureCoordBuffer.itemSize = 2;
 			cubeVertexTextureCoordBuffer.numItems = 24;
 			
-			object.assignBuffer("textureCoords", cubeVertexTextureCoordBuffer);
-			object.useTextures = true;
+			buffers["textureCoords"] = cubeVertexTextureCoordBuffer;
 		}
 		
 		// Normal Buffer
@@ -552,7 +575,7 @@ function _Gremlin() {
 		cubeVertexNormalBuffer.itemSize = 3;
 		cubeVertexNormalBuffer.numItems = 24;
 		
-		object.assignBuffer("vertexNormals", cubeVertexNormalBuffer);
+		buffers["vertexNormals"] = cubeVertexNormalBuffer;
 		
 		// Index Buffer
 		var cubeVertexIndexBuffer = _gl.createBuffer();
@@ -569,10 +592,23 @@ function _Gremlin() {
 		cubeVertexIndexBuffer.itemSize = 1;
 		cubeVertexIndexBuffer.numItems = 36;
 		
-		object.assignBuffer("vertexIndex", cubeVertexIndexBuffer);
-		object.useIndices = true; 
+		buffers["vertexIndex"] = cubeVertexIndexBuffer;
+		buffers["useIndices"] = true;
+		
+		var index = buffersList.push(buffers)-1;
+		buffersNameList["cube"] = index;
+		object.assignBuffer(index);
 	}
 	function createSphere(object, textured, latBands, longBands) {
+		
+		if(textured) object.useTextures = true;
+		
+		if (!isNaN(buffersNameList["sphere"+latBands+longBands+""])) {
+			object.assignBuffer(buffersNameList["sphere"+latBands+longBands+""]);
+			return;
+		}
+		var buffers = [];
+		
 		// Method taken from Lesson 11 of learningWebGL.com
 		var latitudeBands = latBands;
 		var longitudeBands = longBands;
@@ -631,7 +667,7 @@ function _Gremlin() {
 		sphereVertexPositionBuffer.itemSize = 3;
 		sphereVertexPositionBuffer.numItems = vertexPositionData.length / 3;
 		
-		object.assignBuffer("vertexPosition", sphereVertexPositionBuffer);
+		buffers["vertexPosition"] = sphereVertexPositionBuffer;
 		
 		// Normals, WARNING: dependant on shaderProgram
 		var sphereVertexNormalBuffer = _gl.createBuffer();
@@ -640,7 +676,7 @@ function _Gremlin() {
 		sphereVertexNormalBuffer.itemSize = 3;
 		sphereVertexNormalBuffer.numItems = normalData.length / 3;
 		
-		object.assignBuffer("vertexNormals", sphereVertexNormalBuffer);
+		buffers["vertexNormals"] = sphereVertexNormalBuffer;
 		
 		if (textured) {
 			var sphereVertexTextureCoordBuffer = _gl.createBuffer();
@@ -650,8 +686,7 @@ function _Gremlin() {
 			sphereVertexTextureCoordBuffer.itemSize = 2;
 			sphereVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
 			
-			object.assignBuffer("textureCoords", sphereVertexTextureCoordBuffer);
-			object.useTextures = true;
+			buffers["textureCoords"] = sphereVertexTextureCoordBuffer;
 		} 
 		
 		// Index Buffer
@@ -661,10 +696,22 @@ function _Gremlin() {
 		sphereVertexIndexBuffer.itemSize = 1;
 		sphereVertexIndexBuffer.numItems = indexData.length;
 		
-		object.assignBuffer("vertexIndex", sphereVertexIndexBuffer);
-		object.useIndices = true; 
+		buffers["vertexIndex"] = sphereVertexIndexBuffer;
+		buffers["useIndices"] = true;
+
+		var index = buffersList.push(buffers)-1;
+		buffersNameList["sphere"+latBands+longBands+""] = index;
+		object.assignBuffer(index);
 	}
 	function createRay(object) {
+		
+		if (!isNaN(buffersNameList["ray"])) {
+			object.assignBuffer(buffersNameList["ray"]);
+			return;
+		}
+		
+		var buffers = [];
+		
 		object.wireframe = true;
 		
 		var rayVertexPositionBuffer = _gl.createBuffer();
@@ -677,9 +724,21 @@ function _Gremlin() {
 		rayVertexPositionBuffer.itemSize = 3;
 		rayVertexPositionBuffer.numItems = 2;
 		
-		object.assignBuffer("vertexPosition", rayVertexPositionBuffer);
+		buffers["vertexPosition"] = rayVertexPositionBuffer;
+		buffers["useIndices"] = false;
+		
+		var index = buffersList.push(buffers)-1;
+		buffersNameList["ray"] = index;
+		object.assignBuffer(index);
 	}
     function createPoint(object) {
+		
+		if (!isNaN(buffersNameList["point"])) {
+			object.assignBuffer(buffersNameList["point"]);
+			return;
+		}
+		var buffers = [];
+		
 		object.points = true;
 			
 		var pointVertexPositionBuffer = _gl.createBuffer();
@@ -690,28 +749,59 @@ function _Gremlin() {
 		pointVertexPositionBuffer.itemSize = 3;
 		pointVertexPositionBuffer.numItems = 1;
 		
-		object.assignBuffer("vertexPosition", pointVertexPositionBuffer);
+		buffers["vertexPosition"] = pointVertexPositionBuffer;
+		buffers["useIndices"] = false;
+		
+		var index = buffersList.push(buffers)-1;
+		buffersNameList["point"] = index;
+		object.assignBuffer(index);
 	}
 	
 	function loadModel(object, fileName, callback){
+		// Object loading
 		object.visible = false;
+
+		if (!isNaN(buffersNameList[fileName])) {
+			if(buffersNameList[fileName] === -1) {
+				// Model is Loading, add to the list
+				modelLoadingInfo[fileName].objectsLoading.push(object);
+				//modelLoadingInfo[fileName].callsbacks.push(callback);
+				callback(); // This is just assets Loading atm, and technically at this point we're not loading anymore so execute callback to decrease number which was incremented in game code
+				// TODO: Should move loading system inside Engine or at least outside of Game Code
+				return;
+			}
+			// Else Object is loaded
+			object.useTextures = true; // TODO: Check if model is textured at all!
+			object.assignBuffer(buffersNameList[fileName]);
+			return;
+		}
+		
+		// Model alread loading
+		buffersNameList[fileName] = -1;
+		// Create Object List and callbacks for use on model load
+		modelLoadingInfo[fileName] = new Array();
+		modelLoadingInfo[fileName]["objectsLoading"] = new Array();
+		// Assign first object in array
+		modelLoadingInfo[fileName].objectsLoading.push(object);
+		//modelLoadingInfo[fileName].callsbacks.push(callback);
+		
 		var request = new XMLHttpRequest();
         request.open("GET", fileName);
         request.onreadystatechange = function () {
             if (request.readyState == 4) {
-                _handleLoadedModel(object, JSON.parse(request.responseText));
-				callback();
+                _handleLoadedModel(fileName, callback, JSON.parse(request.responseText));
             }
         }
         request.send();
 	}
 	
 	// Textures
-	var textureList = [];
-	var textureFileList = [];
+	var textureList = [];			// Stores the textures
+	var textureFileList = [];		// Stores what textures have already been loaded
 	
 	function createTexture(fileName, callback) {
 		if (!isNaN(textureFileList[fileName])) {
+			callback(); // This is currently just loading system
 			return textureFileList[fileName];
 		}
 		else {
@@ -953,14 +1043,16 @@ function _Gremlin() {
 	}
 	
 	// Model Functions
-	function _handleLoadedModel(object, modelData) {
+	function _handleLoadedModel(fileName, callback, modelData) {
+		var buffers = [];
+		
 		var modelVertexNormalBuffer = _gl.createBuffer();
         _gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexNormalBuffer);
         _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexNormals), _gl.STATIC_DRAW);
         modelVertexNormalBuffer.itemSize = 3;
         modelVertexNormalBuffer.numItems = modelData.vertexNormals.length / 3;
 		
-		object.assignBuffer("vertexNormals", modelVertexNormalBuffer);
+		buffers["vertexNormals"] = modelVertexNormalBuffer;
 
         var modelVertexTextureCoordBuffer = _gl.createBuffer();
         _gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexTextureCoordBuffer);
@@ -968,29 +1060,40 @@ function _Gremlin() {
         modelVertexTextureCoordBuffer.itemSize = 2;
         modelVertexTextureCoordBuffer.numItems = modelData.vertexTextureCoords.length / 2;
 		
-		object.assignBuffer("textureCoords", modelVertexTextureCoordBuffer);
-		object.useTextures = true; // TODO: check that there were some tex-coords
-
+		buffers["textureCoords"] = modelVertexTextureCoordBuffer;
+		
         var modelVertexPositionBuffer = _gl.createBuffer();
         _gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexPositionBuffer);
         _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexPositions), _gl.STATIC_DRAW);
         modelVertexPositionBuffer.itemSize = 3;
         modelVertexPositionBuffer.numItems = modelData.vertexPositions.length / 3;
 		
-		object.assignBuffer("vertexPosition", modelVertexPositionBuffer);
-
+		buffers["vertexPosition"] = modelVertexPositionBuffer;
+		
         var modelVertexIndexBuffer = _gl.createBuffer();
         _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer);
         _gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(modelData.indices), _gl.STATIC_DRAW);
         modelVertexIndexBuffer.itemSize = 1;
         modelVertexIndexBuffer.numItems = modelData.indices.length;
 
-		object.assignBuffer("vertexIndex", modelVertexIndexBuffer);
-		object.useIndices = true; 
+		buffers["vertexIndex"] = modelVertexIndexBuffer;
+		buffers["useIndices"] = true;
 		
-		object.visible = true;
+		var index = buffersList.push(buffers)-1;
+		buffersNameList[fileName] = index;
+		
+		for(var i = 0; i < modelLoadingInfo[fileName].objectsLoading.length; i++) {
+			modelLoadingInfo[fileName].objectsLoading[i].assignBuffer(index);
+			modelLoadingInfo[fileName].objectsLoading[i].useTextures = true; // TODO: check that there were some tex-coords
+			modelLoadingInfo[fileName].objectsLoading[i].visible = true;
+		}
+		// Delete Loading Info
+		modelLoadingInfo[fileName].objectsLoading.splice(0,modelLoadingInfo[fileName].objectsLoading.length);
+		
+		callback(); // TODO: as mentioned above, this is currently just doing the loading job so move this elsewhere
 	}
 	
+				
 	// Matrix Functions - Stack functions and Set Shader Uniforms
 	function _mvPushMatrix() {
         var copy = mat4.create();

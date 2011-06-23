@@ -488,8 +488,9 @@ function _Game() {
 		function setIsSkyBox(val) { this.isSkyBox = val; if(this.isSkyBox) this.useLighting = false; } 
 		
 		function defaultAnimation() { /* Blank */ }
-		function assignBuffer(name, buffer) {
-			this.buffers[name] = buffer;
+		//function assignBuffer(name, buffer) {
+		function assignBuffer(index) {
+			this.buffers = index;
 		}
 	}
 	
@@ -564,7 +565,6 @@ function _Game() {
 		}
 		assetsLoading += 1;
 		Gremlin.loadModel(object, modelName, decreaseAssetsLoading);
-		// TODO: Move to separate texture list and just assign appropriate index
 		if(textured) {
 			assetsLoading += 1;
 			object.texture = Gremlin.createTexture(textureName, decreaseAssetsLoading);
