@@ -215,7 +215,7 @@ function _Gremlin() {
 		}
 		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
 		
-		if(object.scale != 1) mat4.scale(_mvMatrix, [object.scale,object.scale,object.scale] , _mvMatrix);
+		if(object.scale != 1) mat4.scale(_mvMatrix, object.scale, _mvMatrix);
 
         _gl.bindBuffer(_gl.ARRAY_BUFFER, object.buffers.vertexPosition);
         _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, object.buffers.vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
@@ -234,7 +234,7 @@ function _Gremlin() {
 			_gl.vertexAttribPointer(_shaderProgram.textureCoordAttribute, object.buffers.textureCoords.itemSize, _gl.FLOAT, false, 0, 0);
 
 			_gl.activeTexture(_gl.TEXTURE0);
-			_gl.bindTexture(_gl.TEXTURE_2D, object.texture);
+			_gl.bindTexture(_gl.TEXTURE_2D, textureList[object.texture]);
 			_gl.uniform1i(_shaderProgram.samplerUniform, 0);
 		}
 		else {
@@ -327,38 +327,38 @@ function _Gremlin() {
 
 	// Primitive Creation Functions
 	// TODO: Add Cylinders, Generalise to Cuboids & Elipsoids and add 2D shapes Rays, Elipses, Rectangles 
-	function createPyramid(object, textured, size) {
+	function createPyramid(object, textured) {
 		// TODO: Convert to use index buffer
 		var pyramidVertexPositionBuffer = _gl.createBuffer();
 		_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
 		var vertices = [
 			// Front face
-			 0.0,  size,  0.0,
-			-size, -size,  size,
-			 size, -size,  size,
+			 0.0,  1.0,  0.0,
+			-1.0, -1.0,  1.0,
+			 1.0, -1.0,  1.0,
 
 			// Right face
-			 0.0,  size,  0.0,
-			 size, -size,  size,
-			 size, -size, -size,
+			 0.0,  1.0,  0.0,
+			 1.0, -1.0,  1.0,
+			 1.0, -1.0, -1.0,
 
 			// Back face
-			 0.0,  size,  0.0,
-			 size, -size, -size,
-			-size, -size, -size,
+			 0.0,  1.0,  0.0,
+			 1.0, -1.0, -1.0,
+			-1.0, -1.0, -1.0,
 
 			// Left face
-			 0.0,  size,  0.0,
-			-size, -size, -size,
-			-size, -size,  size,
+			 0.0,  1.0,  0.0,
+			-1.0, -1.0, -1.0,
+			-1.0, -1.0,  1.0,
 			
 			// Bottom face
-			-size, -size, -size,
-			-size, -size, size,
-			size, -size, size,
-			-size, -size, -size,
-			size, -size, size,
-			size, -size, -size
+			-1.0, -1.0, -1.0,
+			-1.0, -1.0, 1.0,
+			1.0, -1.0, 1.0,
+			-1.0, -1.0, -1.0,
+			1.0, -1.0, 1.0,
+			1.0, -1.0, -1.0
 			
 		];
 		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
@@ -409,46 +409,46 @@ function _Gremlin() {
 		
 		object.assignBuffer("vertexNormals", pyramidVertexNormalBuffer);
 	}
-	function createCube(object, textured, size) {
+	function createCube(object, textured) {
 		// Vertex Buffer
 		var cubeVertexPositionBuffer = _gl.createBuffer();
 		_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
 		vertices = [
 			// Front face
-			-size, -size,  size,
-			 size, -size,  size,
-			 size,  size,  size,
-			-size,  size,  size,
+			-1.0, -1.0,  1.0,
+			 1.0, -1.0,  1.0,
+			 1.0,  1.0,  1.0,
+			-1.0,  1.0,  1.0,
 
 			// Back face
-			-size, -size, -size,
-			-size,  size, -size,
-			 size,  size, -size,
-			 size, -size, -size,
+			-1.0, -1.0, -1.0,
+			-1.0,  1.0, -1.0,
+			 1.0,  1.0, -1.0,
+			 1.0, -1.0, -1.0,
 
 			// Top face
-			-size,  size, -size,
-			-size,  size,  size,
-			 size,  size,  size,
-			 size,  size, -size,
+			-1.0,  1.0, -1.0,
+			-1.0,  1.0,  1.0,
+			 1.0,  1.0,  1.0,
+			 1.0,  1.0, -1.0,
 
 			// Bottom face
-			-size, -size, -size,
-			 size, -size, -size,
-			 size, -size,  size,
-			-size, -size,  size,
+			-1.0, -1.0, -1.0,
+			 1.0, -1.0, -1.0,
+			 1.0, -1.0,  1.0,
+			-1.0, -1.0,  1.0,
 
 			// Right face
-			 size, -size, -size,
-			 size,  size, -size,
-			 size,  size,  size,
-			 size, -size,  size,
+			 1.0, -1.0, -1.0,
+			 1.0,  1.0, -1.0,
+			 1.0,  1.0,  1.0,
+			 1.0, -1.0,  1.0,
 
 			// Left face
-			-size, -size, -size,
-			-size, -size,  size,
-			-size,  size,  size,
-			-size,  size, -size
+			-1.0, -1.0, -1.0,
+			-1.0, -1.0,  1.0,
+			-1.0,  1.0,  1.0,
+			-1.0,  1.0, -1.0
 		];
 		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 		cubeVertexPositionBuffer.itemSize = 3;
@@ -572,11 +572,11 @@ function _Gremlin() {
 		object.assignBuffer("vertexIndex", cubeVertexIndexBuffer);
 		object.useIndices = true; 
 	}
-	function createSphere(object, textured, size, latBands, longBands) {
+	function createSphere(object, textured, latBands, longBands) {
 		// Method taken from Lesson 11 of learningWebGL.com
 		var latitudeBands = latBands;
 		var longitudeBands = longBands;
-		var radius = size;
+		var radius = 1.0;
 
 		var vertexPositionData = [];
 		var normalData = [];
@@ -664,14 +664,14 @@ function _Gremlin() {
 		object.assignBuffer("vertexIndex", sphereVertexIndexBuffer);
 		object.useIndices = true; 
 	}
-	function createRay(object, size) {
+	function createRay(object) {
 		object.wireframe = true;
 		
 		var rayVertexPositionBuffer = _gl.createBuffer();
 		_gl.bindBuffer(_gl.ARRAY_BUFFER, rayVertexPositionBuffer);
 		var vertices = [
 			 0.0,  0.0,  0,
-			 0.0, 0.0,  size,				
+			 0.0, 0.0,  1.0,				
 		];
 		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 		rayVertexPositionBuffer.itemSize = 3;
@@ -693,9 +693,8 @@ function _Gremlin() {
 		object.assignBuffer("vertexPosition", pointVertexPositionBuffer);
 	}
 	
-	function loadModel(object, fileName, scale, callback){
+	function loadModel(object, fileName, callback){
 		object.visible = false;
-		object.scale = scale;
 		var request = new XMLHttpRequest();
         request.open("GET", fileName);
         request.onreadystatechange = function () {
@@ -706,34 +705,25 @@ function _Gremlin() {
         }
         request.send();
 	}
-	// TODO: Add engine texture manager
-	function createTexture(fileName) {
-		var texture;
-		texture = _gl.createTexture();
-		texture.image = new Image();
-		texture.image.src = fileName;
-		return texture;
-	}
-	function handleLoadedTexture(texture, quality) {
-		// Quality
-		// 1 = Nearest Filtering, 2 = Linear Fitlering, 3 = Mipmaps
-		_gl.bindTexture(_gl.TEXTURE_2D, texture);
-		_gl.pixelStorei(_gl.UNPACK_FLIP_Y_WEBGL, true);
-		_gl.texImage2D(_gl.TEXTURE_2D, 0, _gl.RGBA, _gl.RGBA, _gl.UNSIGNED_BYTE, texture.image);
-		if(quality === 3) {
-			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.LINEAR);
-			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.LINEAR_MIPMAP_NEAREST);
-			_gl.generateMipmap(_gl.TEXTURE_2D);
-		}
-		else if (quality === 2) {
-			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.LINEAR);
-			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.LINEAR);
+	
+	// Textures
+	var textureList = [];
+	var textureFileList = [];
+	
+	function createTexture(fileName, callback) {
+		if (!isNaN(textureFileList[fileName])) {
+			return textureFileList[fileName];
 		}
 		else {
-			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.NEAREST);
-			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.NEAREST);
+			var texture;
+			texture = _gl.createTexture();
+			texture.image = new Image();
+			texture.image.src = fileName;
+			var index = textureList.push(texture)-1;
+			textureList[index].image.onload = function() { _handleLoadedTexture(textureList[index], 3, callback); }
+			textureFileList[fileName] = index;
+			return index;
 		}
-		_gl.bindTexture(_gl.TEXTURE_2D, null);
 	}
 	
 	// Camera Functions 
@@ -937,6 +927,30 @@ function _Gremlin() {
             alert("Could not initialise WebGL");
         }
     }
+	
+	// Textures
+	function _handleLoadedTexture(texture, quality, callback) {
+		// Quality
+		// 1 = Nearest Filtering, 2 = Linear Fitlering, 3 = Mipmaps
+		_gl.bindTexture(_gl.TEXTURE_2D, texture);
+		_gl.pixelStorei(_gl.UNPACK_FLIP_Y_WEBGL, true);
+		_gl.texImage2D(_gl.TEXTURE_2D, 0, _gl.RGBA, _gl.RGBA, _gl.UNSIGNED_BYTE, texture.image);
+		if(quality === 3) {
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.LINEAR);
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.LINEAR_MIPMAP_NEAREST);
+			_gl.generateMipmap(_gl.TEXTURE_2D);
+		}
+		else if (quality === 2) {
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.LINEAR);
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.LINEAR);
+		}
+		else {
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.NEAREST);
+			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.NEAREST);
+		}
+		_gl.bindTexture(_gl.TEXTURE_2D, null);
+		callback();
+	}
 	
 	// Model Functions
 	function _handleLoadedModel(object, modelData) {
@@ -1148,7 +1162,6 @@ function _Gremlin() {
 		createPoint:				createPoint,
 		loadModel:					loadModel,
 		createTexture:				createTexture,
-		handleLoadedTexture:		handleLoadedTexture,
 		setLightEnvironment:		setLightEnvironment,
 		setLightingFlags:			setLightingFlags,
 		addPointLight:				addPointLight,

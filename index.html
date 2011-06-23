@@ -430,7 +430,7 @@ function _Game() {
 		mat4.identity(this.rotation);
 		
 		this.buffers = [];
-		this.scale = 1;
+		this.scale = [1, 1, 1];
 		// TODO: Proper Material System?
 		// TODO: Make into array for multiple texture IDs
 		this.texture;
@@ -448,6 +448,7 @@ function _Game() {
 		this.setPosition = setPosition;
 		this.rotate = rotate;
 		this.setRotation = setRotation;
+		this.setScale = setScale;
 		this.animate = defaultAnimation;
 		this.assignBuffer = assignBuffer;
 
@@ -479,6 +480,7 @@ function _Game() {
 			mat4.rotate(this.rotation, Gremlin.degToRad(pitch), [1,0,0]);
 			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,0]);
 		}
+		function setScale(x,y,z) { this.scale = [x,y,z]; }
 		function setColor(r,g,b,a) { this.color = [r,g,b,a]; }
 		function setUseLighting(val) { this.useLighting = val; }
 		function setShininess(val) { this.shininess = val; }
@@ -492,7 +494,7 @@ function _Game() {
 	}
 	
 	// Creation Objection
-	function createObjectPrimitive(position, primType, textureName, size, latBands, longBands, animation, shininess, isSkyBox) {
+	function createObjectPrimitive(position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox) {
 		var object = new gameObject(position[0], position[1], position[2]);
 		var textured;
 		if (textureName) { 
@@ -501,18 +503,25 @@ function _Game() {
 		else {
 			textured = false;
 		}
+		if(scale.length) {
+			object.setScale(scale);
+		}
+		else {
+			object.setScale(scale,scale,scale);
+		}
 		switch(primType) {
+		// TODO: Remove Size
 		case "pyramid":
-			Gremlin.createPyramid(object, textured, size);
+			Gremlin.createPyramid(object, textured);
 			break;
 		case "cube": 
-			Gremlin.createCube(object, textured, size);
+			Gremlin.createCube(object, textured);
 			break;
 		case "sphere":
-			Gremlin.createSphere(object, textured, size, latBands, longBands);
+			Gremlin.createSphere(object, textured, latBands, longBands);
 			break;
 		case "ray":
-			Gremlin.createRay(object, size);
+			Gremlin.createRay(object);
 			break;
 		case "point":
 			Gremlin.createPoint(object);
@@ -524,8 +533,7 @@ function _Game() {
 		// TODO: Move to separate texture list and just assign appropriate index
 		if(textured) {
 			assetsLoading += 1;
-			object.texture = Gremlin.createTexture(textureName);
-			object.texture.image.onload = function() { Gremlin.handleLoadedTexture(object.texture, 3); assetsLoading -= 1; } // TODO: Replace 3 with FilterType
+			object.texture = Gremlin.createTexture(textureName, decreaseAssetsLoading);
 		}
 		if(shininess) {
 			object.setShininess(shininess);
@@ -548,13 +556,18 @@ function _Game() {
 		else {
 			textured = false;
 		}
+		if(scale.length) {
+			object.setScale(scale);
+		}
+		else {
+			object.setScale(scale,scale,scale);
+		}
 		assetsLoading += 1;
-		Gremlin.loadModel(object, modelName, scale, decreaseAssetsLoading);
+		Gremlin.loadModel(object, modelName, decreaseAssetsLoading);
 		// TODO: Move to separate texture list and just assign appropriate index
 		if(textured) {
 			assetsLoading += 1;
-			object.texture = Gremlin.createTexture(textureName);
-			object.texture.image.onload = function() { Gremlin.handleLoadedTexture(object.texture, 3); assetsLoading -= 1; } // TODO: Replace 3 with FilterType
+			object.texture = Gremlin.createTexture(textureName, decreaseAssetsLoading);
 		}
 		if(shininess) {
 			object.setShininess(shininess);
@@ -568,7 +581,8 @@ function _Game() {
 	function gameInit() {
 		assetsLoading = 0;
 		// Create Projectiles
-		Gremlin.createPyramid(projectileObject, false, 0.01); // TODO: Tumbling Tetrahedron would be better
+		Gremlin.createPyramid(projectileObject, false);		// TODO: Tumbling Tetrahedron would be better
+		projectileObject.setScale(0.01,0.01,0.01);
 		loadLevel("menu.js", "InMenu");
 	}
 	
