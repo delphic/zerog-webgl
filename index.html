@@ -248,9 +248,9 @@ function _Game() {
 	var gameState;
 	
 	var loadingTargetState;
-	var assetsLoading = 0; // for quick and dirty loading system
-	function decreaseAssetsLoading() { // to be removed / moved to proper loading system
-		assetsLoading -= 1;
+	var assetsLoading = false; // for quick and dirty loading system - asset counter in the engine.
+	function setLoading(val) {
+		assetsLoadings = val;
 	}
 
 	// Game State Functions
@@ -533,8 +533,7 @@ function _Game() {
 		}
 		// TODO: Move to separate texture list and just assign appropriate index
 		if(textured) {
-			assetsLoading += 1;
-			object.texture = Gremlin.createTexture(textureName, decreaseAssetsLoading);
+			object.texture = Gremlin.createTexture(textureName);
 		}
 		if(shininess) {
 			object.setShininess(shininess);
@@ -563,11 +562,9 @@ function _Game() {
 		else {
 			object.setScale(scale,scale,scale);
 		}
-		assetsLoading += 1;
-		Gremlin.loadModel(object, modelName, decreaseAssetsLoading);
+		Gremlin.loadModel(object, modelName);
 		if(textured) {
-			assetsLoading += 1;
-			object.texture = Gremlin.createTexture(textureName, decreaseAssetsLoading);
+			object.texture = Gremlin.createTexture(textureName);
 		}
 		if(shininess) {
 			object.setShininess(shininess);
@@ -579,7 +576,7 @@ function _Game() {
 	}
 	// Game Init
 	function gameInit() {
-		assetsLoading = 0;
+		assetsLoading = false;
 		// Create Projectiles
 		Gremlin.createPyramid(projectileObject, false);		// TODO: Tumbling Tetrahedron would be better
 		projectileObject.setScale(0.01,0.01,0.01);
@@ -781,7 +778,7 @@ function _Game() {
 		createObjectPrimitive: 		createObjectPrimitive,
 		createObjectModel: 			createObjectModel,
 		createMotes:				createMotes,
-		decreaseAssetsLoading:  	decreaseAssetsLoading, // Remove / move to loading system
+		setLoading:  				setLoading,
 		updateGameState: 			updateGameState,
 		loadLevel: 					loadLevel,
 		unloadLevel:				unloadLevel,
@@ -810,7 +807,7 @@ var Game = _Game();
 	</head>
 	<body onload="Game.webGLStart(1);">
 		<div id="container">
-			<div id="menuContainer">
+			<div id="menuContainer" oncontextmenu="return false;">
 				<!-- Main Menu -->
 				<div gui-role="menu" gui-id="mainMenu">
 					<!--<h1>WebGL ZeroG</h1>-->

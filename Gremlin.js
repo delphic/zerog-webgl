@@ -324,7 +324,7 @@ function _Gremlin() {
 		}
         _mvPopMatrix();
 	}
-
+	
 	// Buffers
 	buffersList = []; 			// Stores the Buffers
 	buffersNameList = []; 		// Stores what buffers have already been created
@@ -757,7 +757,7 @@ function _Gremlin() {
 		object.assignBuffer(index);
 	}
 	
-	function loadModel(object, fileName, callback){
+	function loadModel(object, fileName){
 		// Object loading
 		object.visible = false;
 
@@ -765,18 +765,17 @@ function _Gremlin() {
 			if(buffersNameList[fileName] === -1) {
 				// Model is Loading, add to the list
 				modelLoadingInfo[fileName].objectsLoading.push(object);
-				//modelLoadingInfo[fileName].callsbacks.push(callback);
-				callback(); // This is just assets Loading atm, and technically at this point we're not loading anymore so execute callback to decrease number which was incremented in game code
-				// TODO: Should move loading system inside Engine or at least outside of Game Code
 				return;
 			}
 			// Else Object is loaded
 			object.useTextures = true; // TODO: Check if model is textured at all!
 			object.assignBuffer(buffersNameList[fileName]);
+			object.visible = true;
 			return;
 		}
 		
-		// Model alread loading
+		// Model now loading
+		_increaseAssetsLoading();
 		buffersNameList[fileName] = -1;
 		// Create Object List and callbacks for use on model load
 		modelLoadingInfo[fileName] = new Array();
@@ -789,7 +788,7 @@ function _Gremlin() {
         request.open("GET", fileName);
         request.onreadystatechange = function () {
             if (request.readyState == 4) {
-                _handleLoadedModel(fileName, callback, JSON.parse(request.responseText));
+                _handleLoadedModel(fileName, JSON.parse(request.responseText));
             }
         }
         request.send();
@@ -799,18 +798,18 @@ function _Gremlin() {
 	var textureList = [];			// Stores the textures
 	var textureFileList = [];		// Stores what textures have already been loaded
 	
-	function createTexture(fileName, callback) {
+	function createTexture(fileName) {
 		if (!isNaN(textureFileList[fileName])) {
-			callback(); // This is currently just loading system
 			return textureFileList[fileName];
 		}
 		else {
+			_increaseAssetsLoading();
 			var texture;
 			texture = _gl.createTexture();
 			texture.image = new Image();
 			texture.image.src = fileName;
 			var index = textureList.push(texture)-1;
-			textureList[index].image.onload = function() { _handleLoadedTexture(textureList[index], 3, callback); }
+			textureList[index].image.onload = function() { _handleLoadedTexture(textureList[index], 3); }
 			textureFileList[fileName] = index;
 			return index;
 		}
@@ -1018,8 +1017,19 @@ function _Gremlin() {
         }
     }
 	
+	// Assets (Buffers, Models, Textures)
+	var assetsLoading = 0; 
+	function _increaseAssetsLoading() {
+		if(!assetsLoading) { Game.setLoading(true); }
+		assetsLoading++;
+	}
+	function _decreaseAssetsLoading() {
+		if(assetsLoading) { assetsLoading--; }
+		if(!assetsLoading) { Game.setLoading(false); }
+	}
+	
 	// Textures
-	function _handleLoadedTexture(texture, quality, callback) {
+	function _handleLoadedTexture(texture, quality) {
 		// Quality
 		// 1 = Nearest Filtering, 2 = Linear Fitlering, 3 = Mipmaps
 		_gl.bindTexture(_gl.TEXTURE_2D, texture);
@@ -1039,11 +1049,11 @@ function _Gremlin() {
 			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.NEAREST);
 		}
 		_gl.bindTexture(_gl.TEXTURE_2D, null);
-		callback();
+		_decreaseAssetsLoading();
 	}
 	
 	// Model Functions
-	function _handleLoadedModel(fileName, callback, modelData) {
+	function _handleLoadedModel(fileName, modelData) {
 		var buffers = [];
 		
 		var modelVertexNormalBuffer = _gl.createBuffer();
@@ -1089,8 +1099,7 @@ function _Gremlin() {
 		}
 		// Delete Loading Info
 		modelLoadingInfo[fileName].objectsLoading.splice(0,modelLoadingInfo[fileName].objectsLoading.length);
-		
-		callback(); // TODO: as mentioned above, this is currently just doing the loading job so move this elsewhere
+		_decreaseAssetsLoading();
 	}
 	
 				
