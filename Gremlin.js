@@ -1476,7 +1476,6 @@ function _GremlinInput() {
 		return [xPos, yPos];
 	}
 	function keyDown(key) {
-		// TODO: Add mapping from key letter to key code
 		if (!isNaN(key) && !key.length) {
 			return currentlyPressedKeys[key];
 		}

@@ -124,3 +124,38 @@ function _GUI() {
 	}
 }
 var GremlinGUI = _GUI();
+
+function _HUD() {
+	function showHud() {
+		if(hudActive) return;
+		else hudActive = true;
+		setHudValues(100,100,100,100);
+		$("#hudContainer").show();
+	}
+	
+	function hideHud() {
+		$("#hudContainer").hide();
+		hudActive = false;
+	}
+	
+	function setHudValues(health, shield, fuel, energy) {
+		$("#playerHUD .health").css("width", health+"%");
+		$("#playerHUD .shield").css("width", shield+"%");
+		$("#playerHUD .fuel").css("width", fuel+"%");
+		$("#playerHUD .energy").css("width", energy+"%");
+	}
+	
+	
+	var hudActive = false;
+	
+	// TODO: use non-standard attributes similarly to GUI
+	
+	// TODO: Add Scaling functions with resolution
+	
+	return {
+		showHud:		showHud,
+		hideHud:		hideHud,
+		setHudValues:	setHudValues
+	}	
+}
+var GremlinHUD = _HUD(); 
