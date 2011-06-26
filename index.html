@@ -324,8 +324,10 @@ function _Game() {
 				var accelRate = 0.005; // TODO: Move to player object
 				if(player.fuel > 90) { accelRate  *= 1.2; }
 				else if (player.fuel < 10) { accelRate *= 0.8; }
+
 				dx = 0;
 				dz = 0;
+
 				if (GremlinInput.keyDown("Left") || GremlinInput.keyDown("a")) {
 					// Strafe Left
 					dx -= accelRate * elapsed;
@@ -348,9 +350,7 @@ function _Game() {
 					dx /= 1.41421;
 					dz /= 1.41421;
 				}
-				// TODO: Add regen-ing to fuel to stop people accelerating to stupid speeds easily
-				// Could have higher fuel use to begin with and particularly low use if low on fuel
-
+			
 				var dvelocity = [(0.01*dx/player.mass), 0, (0.01*dz/player.mass) ];
 				Gremlin.playerCameraReverseRotation(dvelocity);
 				
@@ -361,7 +361,7 @@ function _Game() {
 					player.fuel-=elapsed*player.fuelCost;
 				}
 				
-				Gremlin.setPlayerCamera(player.position[0]+player.velocity[0],player.position[1]+player.velocity[1],player.position[2]+player.velocity[2]); 
+				Gremlin.setPlayerCamera(player.position[0]+player.velocity[0],player.position[1]+player.velocity[1],player.position[2]+player.velocity[2]); // !!! TODO: Ooops - is not independant of frame rate!
 				
 				Gremlin.playerCameraPos(player.position);
 				
@@ -376,7 +376,7 @@ function _Game() {
 			GremlinHUD.setHudValues(player.health, player.shield, player.fuel, player.energy);
 			
 			// Update Motes
-			updateMotes(player.position, player.velocity);
+			updateMotes(player.position, player.velocity); //TODO: Needs to take elapsed in order to be indepedant of frame rate
 			
 			// Update Projectiles
 			for(var i = 0; i < projectiles.length; i++) {
@@ -388,7 +388,7 @@ function _Game() {
 				}
 				else {
 					// Update Position
-					projectiles[i].updatePosition();
+					projectiles[i].updatePosition();  //TODO: Needs to take elapsed in order to be indepedant of frame rate
 				}
 			}
 			
@@ -495,7 +495,6 @@ function _Game() {
 		}
 		function setRotation(yaw, pitch, roll) {
 			mat4.identity(this.rotation);
-			// TODO: Check order of rotations
 			mat4.rotate(this.rotation, Gremlin.degToRad(yaw), [0,1,0]);
 			mat4.rotate(this.rotation, Gremlin.degToRad(pitch), [1,0,0]);
 			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,0]);
@@ -508,7 +507,6 @@ function _Game() {
 		function setIsSkyBox(val) { this.isSkyBox = val; if(this.isSkyBox) this.useLighting = false; } 
 		
 		function defaultAnimation() { /* Blank */ }
-		//function assignBuffer(name, buffer) {
 		function assignBuffer(index) {
 			this.buffers = index;
 		}
@@ -597,12 +595,16 @@ function _Game() {
 	// Game Init
 	function gameInit() {
 		assetsLoading = false;
+		
+		// TODO: Player Init
+		
+		// TODO: Projectile Init
 		// Create Projectiles
 		Gremlin.createPyramid(projectileObject, false);		// TODO: Tumbling Tetrahedron would be better
 		projectileObject.setScale(0.01,0.01,0.01);
+		
 		loadLevel("menu.js", "InMenu");
 	}
-	
 
 	// Player / Ships
 	var player = [];
@@ -620,6 +622,42 @@ function _Game() {
 	player.projectileEnergyCost = 5;
 	player.fuelCost = 0.015;
 
+	// Enemies 
+	// WRONG : This is too literal, I've written some of this code once already for player updating, need to refactor this into a better structure
+	// TODO: multiple types
+	function enemy(x,y,z) {
+		this.shipObj = new GameObject(x,y,z);
+		Gremlin.createCube(this.shipObj, false);
+		
+		this.velocity = [0,0,0];
+		this.firingTimer = 0;
+		this.health = 100;
+		this.shield = 100;
+		this.shieldRegen = 0.0025;
+		
+		this.update = update;
+		// Might need this._updatePosition etc - yes we do
+		
+		// Presumably we need to add an set of interfaces for the gameObject (or can we access those directly?) - no we don't
+		
+		function update(elapsed) {
+			_shieldRegen(elapsed);
+			_updatePosition(elapsed);
+		}
+		function _updatePosition(elapsed) {
+			this.shipObj.move(this.velocity[0],this.velocity[1],this.velocity[2]);
+		}
+		function _shieldRegen(elapsed) {
+			if(this.shield < 100) { 
+				this.shield += this.shieldRegen * elapsed; 
+				if(this.shield > 100) {
+					this.shield = 100;
+				}
+			}
+		}
+		
+	}
+	
 	// Basic Projectile System
 	var projectiles = [];
 	var projectileObject = new gameObject(0,0,0);
