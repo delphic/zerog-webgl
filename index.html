@@ -616,9 +616,9 @@ function _Game() {
 	player.fuel = 100;
 	player.shieldRegen = 0.0025;
 	player.energyRegen = 0.01;
-	player.fuelRegen = 0.005;
+	player.fuelRegen = 0.0075;
 	player.projectileEnergyCost = 5;
-	player.fuelCost = 0.01;
+	player.fuelCost = 0.015;
 
 	// Basic Projectile System
 	var projectiles = [];
@@ -937,11 +937,7 @@ var Game = _Game();
 				</div>
 			</div>
 			<div id="hudContainer" oncontextmenu="return false;">
-				<!-- Temporary HUD -->
-				<script>
-					var hudContainer = document.getElementById("hudContainer");
-					hudContainer.onmousedown = return false; 
-				</script>
+				<!-- Temporary HUD - Replace with WebGL implementation -->
 				<style>
 					#hudContainer { display: none; z-index: 100; height: 0; width: 0;}
 					#playerHUD { position: fixed; bottom: 10px; overflow: hidden; width: 100%; padding: 0 2.5%; z-index: 100; }
