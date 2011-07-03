@@ -207,7 +207,7 @@ function _Gremlin() {
 		if (!object.visible) return;
 		_mvPushMatrix();
 		if (!object.isSkyBox) {
-			mat4.translate(_mvMatrix, [object.x, object.y, object.z]);        
+			mat4.translate(_mvMatrix, object.position); // TODO: use a getter
 		}
 		else {
 			// TODO: This is depedant on current implementation of camera, try to decouple

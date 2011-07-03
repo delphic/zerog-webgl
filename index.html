@@ -267,6 +267,7 @@ function _Game() {
 			for(object in gameObjects)
 			{
 				gameObjects[object].animate(elapsed);
+				gameObjects[object].update(elapsed);
 			}
 			
 			if(gameState == "InGame") {
@@ -321,7 +322,7 @@ function _Game() {
 					}
 				}
 				
-				var accelRate = 0.005; // TODO: Move to player object
+				var accelRate = 0.005; // TODO: Move to player object (ship sub-section)
 				if(player.fuel > 90) { accelRate  *= 1.2; }
 				else if (player.fuel < 10) { accelRate *= 0.8; }
 
@@ -354,7 +355,7 @@ function _Game() {
 				var dvelocity = [(0.01*dx/player.mass), 0, (0.01*dz/player.mass) ];
 				Gremlin.playerCameraReverseRotation(dvelocity);
 				
-				if (player.fuel > 0 && (dx != 0 || dz != 0)) {
+				if (player.fuel > 0 && (dx != 0 || dz != 0)) { // TODO: Update to use a player gameobject and update methods
 					player.velocity[0]+=dvelocity[0];
 					player.velocity[1]+=dvelocity[1];
 					player.velocity[2]+=dvelocity[2];
@@ -376,7 +377,7 @@ function _Game() {
 			GremlinHUD.setHudValues(player.health, player.shield, player.fuel, player.energy);
 			
 			// Update Motes
-			updateMotes(player.position, player.velocity); //TODO: Needs to take elapsed in order to be indepedant of frame rate
+			updateMotes(player.position, player.velocity); //TODO: Needs to take elapsed in order to be indepedant of frame rate - make this a method retrieving velocity from player gameobject
 			
 			// Update Projectiles
 			for(var i = 0; i < projectiles.length; i++) {
@@ -388,7 +389,7 @@ function _Game() {
 				}
 				else {
 					// Update Position
-					projectiles[i].updatePosition();  //TODO: Needs to take elapsed in order to be indepedant of frame rate
+					projectiles[i].updatePosition(); 
 				}
 			}
 			
@@ -441,10 +442,9 @@ function _Game() {
 	var gameSpotLights = [];
 	
 	// Game Object Obj
-	function gameObject(x,y,z) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
+	function gameObject(position) { 
+		this.position = [position[0],position[1],position[2]]; 
+		this.velocity = [0,0,0]; 
 		
 		this.rotation = mat4.create();
 		mat4.identity(this.rotation);
@@ -466,6 +466,10 @@ function _Game() {
 		
 		this.move = move;
 		this.setPosition = setPosition;
+		this.setVelocity = setVelocity;
+		this.updateVelocity = updateVelocity;
+		this.update = update;
+		
 		this.rotate = rotate;
 		this.setRotation = setRotation;
 		this.setScale = setScale;
@@ -473,7 +477,7 @@ function _Game() {
 		this.assignBuffer = assignBuffer;
 
 		// Render Flags
-		// Consider: Moving to Renderer
+		// Consider: Moving to Renderer except visible
 		this.visible = true;
 		this.wireframe = false;
 		this.points = false; // TODO: Combine this and wireframe into a render type (triangles / lines / points etc)
@@ -481,15 +485,27 @@ function _Game() {
 		this.useTextures = false;
 		
 		function setPosition(x,y,z) {
-			this.x = x;
-			this.y = y;
-			this.z = z;
+			this.position = [x,y,z];
 		}
 		function move(dx, dy, dz) {
-			this.x += dx;
-			this.y += dy;
-			this.z += dz;
+			this.position[0] += dx;
+			this.position[1] += dy;
+			this.position[2] += dz;
 		}
+		function setVelocity(vx,vy,vz) {
+			this.velocity = [vx,vy,vz];
+		}
+		function updateVelocity(dvx,dvy,dvz) {
+			this.velocity[0] += dvx;
+			this.velocity[1] += dvy;
+			this.velocity[2] += dvz;
+		}
+		function update(elapsed) {
+			this.position[0] += this.velocity[0]*elapsed;
+			this.position[1] += this.velocity[1]*elapsed;
+			this.position[2] += this.velocity[2]*elapsed;
+		}
+		
 		function rotate(amount, X, Y, Z) {
 			mat4.rotate(this.rotation, Gremlin.degToRad(amount), [X, Y, Z]);
 		}
@@ -514,7 +530,7 @@ function _Game() {
 	
 	// Creation Objection
 	function createObjectPrimitive(position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox) {
-		var object = new gameObject(position[0], position[1], position[2]);
+		var object = new gameObject(position);
 		var textured;
 		if (textureName) { 
 			textured = true;
@@ -529,7 +545,6 @@ function _Game() {
 			object.setScale(scale,scale,scale);
 		}
 		switch(primType) {
-		// TODO: Remove Size
 		case "pyramid":
 			Gremlin.createPyramid(object, textured);
 			break;
@@ -549,7 +564,6 @@ function _Game() {
 			alert("Invalid Prim Type: "+primType+"");
 			return;
 		}
-		// TODO: Move to separate texture list and just assign appropriate index
 		if(textured) {
 			object.texture = Gremlin.createTexture(textureName);
 		}
@@ -566,7 +580,7 @@ function _Game() {
 	}
 
 	function createObjectModel(position, modelName, textureName, scale, animation, shininess) {
-		var object = new gameObject(position[0], position[1], position[2]);
+		var object = new gameObject(position);
 		var textured;
 		if (textureName) { 
 			textured = true;
@@ -607,7 +621,7 @@ function _Game() {
 	}
 
 	// Player / Ships
-	var player = [];
+	var player = []; //TODO: player object include a gamobject and use those methods in animate scence
 	player.position = [0,0,0];
 	player.velocity = [0,0,0];
 	player.firingTimer = 1000;
@@ -621,46 +635,10 @@ function _Game() {
 	player.fuelRegen = 0.0075;
 	player.projectileEnergyCost = 5;
 	player.fuelCost = 0.015;
-
-	// Enemies 
-	// WRONG : This is too literal, I've written some of this code once already for player updating, need to refactor this into a better structure
-	// TODO: multiple types
-	function enemy(x,y,z) {
-		this.shipObj = new GameObject(x,y,z);
-		Gremlin.createCube(this.shipObj, false);
-		
-		this.velocity = [0,0,0];
-		this.firingTimer = 0;
-		this.health = 100;
-		this.shield = 100;
-		this.shieldRegen = 0.0025;
-		
-		this.update = update;
-		// Might need this._updatePosition etc - yes we do
-		
-		// Presumably we need to add an set of interfaces for the gameObject (or can we access those directly?) - no we don't
-		
-		function update(elapsed) {
-			_shieldRegen(elapsed);
-			_updatePosition(elapsed);
-		}
-		function _updatePosition(elapsed) {
-			this.shipObj.move(this.velocity[0],this.velocity[1],this.velocity[2]);
-		}
-		function _shieldRegen(elapsed) {
-			if(this.shield < 100) { 
-				this.shield += this.shieldRegen * elapsed; 
-				if(this.shield > 100) {
-					this.shield = 100;
-				}
-			}
-		}
-		
-	}
 	
 	// Basic Projectile System
 	var projectiles = [];
-	var projectileObject = new gameObject(0,0,0);
+	var projectileObject = new gameObject([0,0,0]);
 	projectileObject.rotate(90, 1, 0, 0)
 	projectileObject.setColor(5.0,0,0,1);
 	projectileObject.setUseLighting(false); //TODO: Would be better with lighting true and emissive material
@@ -694,7 +672,7 @@ function _Game() {
 	
 	function createMotes() {
 		for(var i = 0; i < maxMotes; i++) {
-			var obj = new gameObject(2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5));
+			var obj = new gameObject([2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5)]);
 			Gremlin.createPoint(obj);
 			obj.points = true;
 			obj.useLighting = false; // If we want the motes to be lit properly we'll have to figure out the normal to a point!
@@ -709,7 +687,7 @@ function _Game() {
 				var boundingR;
 				var posDiff = vec3.create();
 				boundingR = vec3.length(vel) + rootThree*randomFactor;
-				vec3.subtract(pos,[dustMotes[i].x, dustMotes[i].y, dustMotes[i].z], posDiff); 
+				vec3.subtract(pos,dustMotes[i].position, posDiff); 
 				if (vec3.length(posDiff) >  boundingR) {
 					// Respawn on opposite site of sphere 
 					dustMotes[i].setPosition(
