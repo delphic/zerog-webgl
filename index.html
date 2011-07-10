@@ -366,6 +366,7 @@ function _Game() {
 				updateMotes(player.position, player.velocity); //TODO: Needs to take elapsed in order to be indepedant of frame rate - make this a method retrieving velocity from player gameobject
 				
 				// Update Projectiles
+				projectileObject.animate(elapsed);
 				for(var i = 0; i < projectiles.length; i++) {
 					// Update Lifetime
 					projectiles[i].lifetime -= elapsed;
@@ -601,8 +602,9 @@ function _Game() {
 		
 		// TODO: Projectile Init
 		// Create Projectiles
-		Gremlin.createPyramid(projectileObject, false);		// TODO: Tumbling Tetrahedron would be better
-		projectileObject.setScale(0.01,0.01,0.01);
+		Gremlin.createTetrahedron(projectileObject, false);		// TODO: Tumbling Tetrahedron would be better
+		projectileObject.setScale(0.3,0.3,0.3);
+		projectileObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); }
 		
 		loadLevel("menu.js", "InMenu");
 	}
@@ -910,7 +912,7 @@ var Game = _Game();
 / _  / ___ _ __ ___   / _ \
 \// / / _ \ '__/ _ \ / /_\/
  / //\  __/ | | (_) / /_\\ 
-/____/\___|_|  \___/\____/  Alpha
+/____/\___|_|  \___/\____/
 </pre>
 					<ul gui-role="links">
 						<li><a gui-target="levelMenu">New Game</a></li>

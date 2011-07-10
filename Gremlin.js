@@ -332,6 +332,83 @@ function _Gremlin() {
 	
 	// Primitive Creation Functions
 	// TODO: Add Cylinders, Generalise to Cuboids & Elipsoids and add 2D shapes Rays, Elipses, Rectangles 
+	function createTetrahedron(object,textured) {
+		if(textured) object.useTextures = true;
+		
+		if (!isNaN(buffersNameList["tetrahedron"])) {
+			object.assignBuffer(buffersNameList["tetrahedron"]);
+			return;
+		}
+		var buffers = [];
+		// TODO: Convert to use index buffer
+		var tetrahedronVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, tetrahedronVertexPositionBuffer);
+		var vertices = [
+			// Bottom Side
+			-0.5, -0.27217, -0.28868,
+			 0.5, -0.27217, -0.28868,			
+			 0.0, -0.27217,  0.57735,
+			 
+			 // Rear Side
+			-0.5, -0.27217, -0.28868,
+			 0.0,  0.54433, 0,
+			 0.5, -0.27217, -0.28868,	
+			 
+			// Left Side
+			 0.0, -0.27217,  0.57735,
+			 0.0,  0.54433, 0,
+			-0.5, -0.27217, -0.28868,
+			
+			// Right Side
+			 0.5, -0.27217, -0.28868,	
+			 0.0,  0.54433, 0,
+			 0.0, -0.27217,  0.57735,
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+		tetrahedronVertexPositionBuffer.itemSize = 3;
+		tetrahedronVertexPositionBuffer.numItems = 12;
+		
+		buffers["vertexPosition"] = tetrahedronVertexPositionBuffer;
+		
+		// Normal Buffer
+		// WARNING: This is dependant on shader program should make this more robust
+		var tetrahedronVertexNormalBuffer;
+		tetrahedronVertexNormalBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, tetrahedronVertexNormalBuffer);
+		var vertexNormals = [
+			// Ironically these haven't been normalised
+			// Bottom Side	
+			0, -1, 0,
+			0, -1, 0,
+			0, -1, 0,
+			
+			// Rear Side
+			0, 0.57735, -0.81650,
+			0, 0.57735, -0.81650,
+			0, 0.57735, -0.81650,
+			
+			// Left Side
+			-0.5, 0.81650, 0.28868,
+			-0.5, 0.81650, 0.28868,
+			-0.5, 0.81650, 0.28868,
+			
+			// Right Side
+			0.5, 0.81650, 0.28868,
+			0.5, 0.81650, 0.28868,
+			0.5, 0.81650, 0.28868,
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
+		tetrahedronVertexNormalBuffer.itemSize = 3;
+		tetrahedronVertexNormalBuffer.numItems = 12;
+		
+		buffers["vertexNormals"] = tetrahedronVertexNormalBuffer;
+		
+		buffers["useIndices"] = false;
+		
+		var index = buffersList.push(buffers)-1;
+		buffersNameList["tetrahedron"] = index;
+		object.assignBuffer(index);
+	}
 	function createPyramid(object, textured) {
 		if(textured) object.useTextures = true;
 		
@@ -1267,6 +1344,7 @@ function _Gremlin() {
 	return { 
 		init: 						init, 
 		resize: 					resize,
+		createTetrahedron:			createTetrahedron,
 		createPyramid:				createPyramid,
 		createCube:					createCube,
 		createSphere:				createSphere,
