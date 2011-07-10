@@ -272,12 +272,7 @@ function _Game() {
 			
 			if(gameState == "InGame") {
 				// TODO: Collision Checks and AI (should possibly be run every X frames)
-			
-				// Update Player Reserves - TODO move to functions on player / player ship object
-				if(player.shield < 100) { player.shield += elapsed*player.shieldRegen; if(player.shield>100) player.shield = 100; } 
-				if(player.energy < 100) { player.energy += elapsed*player.energyRegen; if(player.energy>100) player.energy = 100; }
-				if(player.fuel < 100) { player.fuel += elapsed*player.fuelRegen; if(player.fuel>100) player.fuel = 100; }
-				
+				player.updateShip(elapsed);				
 			
 				// Handle Game Input
 				// BUG: Keys get 'stuck down'
@@ -297,9 +292,48 @@ function _Game() {
 				if (rmbDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
 				else if (GremlinInput.keyDown("q") || GremlinInput.keyDown("e")) { Gremlin.rotatePlayerCamera(0, 0, droll); }
 
+				var accelRate = player.accelerationRate(elapsed);
+				dx = 0;
+				dz = 0;
+
+				if (GremlinInput.keyDown("Left") || GremlinInput.keyDown("a")) {
+					// Strafe Left
+					dx -= accelRate;
+				} 
+				else if (GremlinInput.keyDown("Right") || GremlinInput.keyDown("d")) {
+					// Strafe Right
+					dx += accelRate;
+				}
+
+				if (GremlinInput.keyDown("Up") || GremlinInput.keyDown("w")) {
+					// Move Forward
+					dz -= accelRate;
+				} 
+				else if (GremlinInput.keyDown("Down") || GremlinInput.keyDown("s")) {
+					// Move Backward
+					dz += accelRate;
+				}
+				
+				if(dx && dz) { // Clamp Diagonal Speed
+					dx /= 1.41421;
+					dz /= 1.41421;
+				}
+			
+				var dvelocity = [(0.01*dx/player.mass), 0, (0.01*dz/player.mass) ];
+				Gremlin.playerCameraReverseRotation(dvelocity);
+				
+				if (accelRate > 0 && (dx != 0 || dz != 0)) {
+					player.updateVelocity(dvelocity[0], dvelocity[1], dvelocity[2]);
+					player.accelerate(elapsed);
+				}
+				
+				player.update(elapsed);
+				
+				Gremlin.setPlayerCamera(player.position[0],player.position[1],player.position[2]);
+				
 				// Pew Pew
 				if(lmbDown) {
-					if (player.firingTimer >= 300 && player.energy > player.projectileEnergyCost) { // TODO: implement link between high energy reserves and rate of fire
+					if (player.canFire()) {
 						var pos = [0,0,0];
 						Gremlin.playerCameraPos(pos); // Note setting equal to player.position cause updating the camera as well as the projectiles! TODO: put player in an object / namespace rather than store as an array to remove this temptation!
 						// TODO: Also this needs to be turret attach point rather than camera position
@@ -314,82 +348,35 @@ function _Game() {
 						var newproj = new projectile(pos, v, 10, 30000, true);
 
 						projectiles.push(newproj);
-						player.firingTimer = 0;
-						player.energy -= player.projectileEnergyCost; 
-					}
-					else {
-						player.firingTimer += elapsed;
+						player.fire();
 					}
 				}
-				
-				var accelRate = 0.005; // TODO: Move to player object (ship sub-section)
-				if(player.fuel > 90) { accelRate  *= 1.2; }
-				else if (player.fuel < 10) { accelRate *= 0.8; }
-
-				dx = 0;
-				dz = 0;
-
-				if (GremlinInput.keyDown("Left") || GremlinInput.keyDown("a")) {
-					// Strafe Left
-					dx -= accelRate * elapsed;
-				} 
-				else if (GremlinInput.keyDown("Right") || GremlinInput.keyDown("d")) {
-					// Strafe Right
-					dx += accelRate * elapsed;
-				}
-
-				if (GremlinInput.keyDown("Up") || GremlinInput.keyDown("w")) {
-					// Move Forward
-					dz -= accelRate * elapsed;
-				} 
-				else if (GremlinInput.keyDown("Down") || GremlinInput.keyDown("s")) {
-					// Move Backward
-					dz += accelRate * elapsed;
-				}
-				
-				if(dx && dz) { // Clamp Diagonal Speed
-					dx /= 1.41421;
-					dz /= 1.41421;
-				}
-			
-				var dvelocity = [(0.01*dx/player.mass), 0, (0.01*dz/player.mass) ];
-				Gremlin.playerCameraReverseRotation(dvelocity);
-				
-				if (player.fuel > 0 && (dx != 0 || dz != 0)) { // TODO: Update to use a player gameobject and update methods
-					player.velocity[0]+=dvelocity[0];
-					player.velocity[1]+=dvelocity[1];
-					player.velocity[2]+=dvelocity[2];
-					player.fuel-=elapsed*player.fuelCost;
-				}
-				
-				Gremlin.setPlayerCamera(player.position[0]+player.velocity[0],player.position[1]+player.velocity[1],player.position[2]+player.velocity[2]); // !!! TODO: Ooops - is not independant of frame rate!
-				
-				Gremlin.playerCameraPos(player.position);
 				
 				if (GremlinInput.keyDown("Esc")) {
 					updateGameState("InMenu");
 					pause();
 					GremlinGUI.pause();
 				}
-			}
 			
-			// Update HUD
-			GremlinHUD.setHudValues(player.health, player.shield, player.fuel, player.energy);
 			
-			// Update Motes
-			updateMotes(player.position, player.velocity); //TODO: Needs to take elapsed in order to be indepedant of frame rate - make this a method retrieving velocity from player gameobject
-			
-			// Update Projectiles
-			for(var i = 0; i < projectiles.length; i++) {
-				// Update Lifetime
-				projectiles[i].lifetime -= elapsed;
-				// Despawn if lifetime has expired
-				if (projectiles[i].lifetime < 0) {
-					projectiles.splice(i,1);
-				}
-				else {
-					// Update Position
-					projectiles[i].updatePosition(); 
+				// Update HUD
+				GremlinHUD.setHudValues((player.healthPoints/player.healthMax)*100, (player.shieldPoints/player.shieldMax)*100, (player.fuelPoints/player.fuelMax)*100, (player.energyPoints/player.energyMax)*100);
+				
+				// Update Motes
+				updateMotes(player.position, player.velocity); //TODO: Needs to take elapsed in order to be indepedant of frame rate - make this a method retrieving velocity from player gameobject
+				
+				// Update Projectiles
+				for(var i = 0; i < projectiles.length; i++) {
+					// Update Lifetime
+					projectiles[i].lifetime -= elapsed;
+					// Despawn if lifetime has expired
+					if (projectiles[i].lifetime < 0) {
+						projectiles.splice(i,1);
+					}
+					else {
+						// Update Position
+						projectiles[i].updatePosition(); 
+					}
 				}
 			}
 			
@@ -621,20 +608,81 @@ function _Game() {
 	}
 
 	// Player / Ships
-	var player = []; //TODO: player object include a gamobject and use those methods in animate scence
-	player.position = [0,0,0];
-	player.velocity = [0,0,0];
-	player.firingTimer = 1000;
-	player.mass = 1;
-	player.health = 100;
-	player.shield = 100;
-	player.energy = 100;
-	player.fuel = 100;
-	player.shieldRegen = 0.0025;
-	player.energyRegen = 0.01;
-	player.fuelRegen = 0.0075;
-	player.projectileEnergyCost = 5;
-	player.fuelCost = 0.015;
+	function attachShip(object) {
+		object.mass = 10;
+		object.shieldMax = 100;
+		object.shieldPoints = 100;
+		object.shieldRegen = 0.0025;
+		object.fuelMax = 100;
+		object.fuelPoints = 100;
+		object.fuelRegen = 0.0075;
+		object.healthMax = 100;
+		object.healthPoints = 100;
+		object.energyMax = 100;
+		object.energyPoints = 100;
+		object.energyRegen = 0.01;
+		object.firingPeriod = 300;
+		object.firingTimer = 300;
+		object.firingCost = 5;
+		object.fuelFactor = 5;
+		object.canFire = function() { 
+			if(this.firingTimer > this.firingPeriod && (this.energyPoints > this.firingCost)) { 
+				return true; 
+			} 
+			else {			
+				return false; 
+			}
+		}
+		object.fire = function() { 
+			if(this.canFire()) { 
+				if (this.energyPoints > 0.8*this.energyMax) {
+					this.firingTimer = 0.2*this.firingPeriod; // 20% increase in firing rate when energy is over 80%
+				}
+				else {
+					this.firingTimer = 0; 
+				}
+				this.energyPoints -= this.firingCost;
+			}
+		}
+		object.updateShip = function(elapsed) {
+			this.shieldPoints += elapsed*this.shieldRegen; if(this.shieldPoints>this.shieldMax) this.shieldPoints = this.shieldMax;
+			this.fuelPoints += elapsed*this.fuelRegen; if(this.fuelPoints>this.fuelMax) this.fuelPoints = this.fuelMax;
+			this.energyPoints += elapsed*this.energyRegen; if(this.energyPoints>this.energyMax) this.energyPoints = this.energyMax;
+			this.firingTimer += elapsed;
+		}
+		object.accelerationRate = function(elapsed) {
+			var accelerationAmount = 0.03 * elapsed;
+			if(this.fuelPoints > 0.8*this.fuelMax) {
+				accelerationAmount*=1.2; // 20% increase in acceleration rate when fuel is over 80%
+			}
+			else if (this.fueldPoints < 0.2*this.fuelMax) {
+				accelerationAmount*=0.8;
+			}
+			accelerationAmount/=this.mass
+			// This check should not be here
+			if (this.fuelFactor*accelerationAmount > this.fuelPoints) return 0;
+			
+			return accelerationAmount;
+		}
+		object.accelerate = function(elapsed) {
+			this.fuelPoints -= this.fuelFactor*this.accelerationRate(elapsed);
+		}
+		object.takeDamage = function(damage) {
+			if(this.shieldPoints > 0) {
+				this.shieldPoints -= damage;
+				if(this.shieldPoints < 0) {
+					this.healthPoints -= -this.shieldPoints;
+					this.shieldPoints = 0;
+				}
+			}
+			else {
+				this.healthPoints -= damage;
+			}
+		}
+	}
+	
+	var player = new gameObject([0,0,0]);
+	attachShip(player);
 	
 	// Basic Projectile System
 	var projectiles = [];
