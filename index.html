@@ -603,7 +603,7 @@ function _Game() {
 		// TODO: Projectile Init
 		// Create Projectiles
 		Gremlin.createTetrahedron(projectileObject, false);		// TODO: Tumbling Tetrahedron would be better
-		projectileObject.setScale(0.3,0.3,0.3);
+		projectileObject.setScale(0.03,0.03,0.03);
 		projectileObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); }
 		
 		loadLevel("menu.js", "InMenu");
@@ -685,6 +685,44 @@ function _Game() {
 	
 	var player = new gameObject([0,0,0]);
 	attachShip(player);
+	
+	// Enemy Ship Mananger
+	function _ShipManager() {
+		this.shipList = [];
+		this.createShip = function(position, color) {
+			var tmpShip = new GameObject(position);
+			tmpShip.setColor(color);
+			tmpShip.attachShip(tmpShip);
+			this.shipList.push(tmpShip);
+		}
+		this.destroyShip = function(index) {
+			this.shipList.splice(index,1);
+		}	
+		this.updateShips = function(elapsed) {
+			for(var i = 0; i < shipList.length; i++) {
+			
+				// Run AI - Argueably should be in separate function
+			
+				this.shipList[i].update(elapsed);
+				this.shipList[i].updateShip(elapsed);
+				this.shipList[i].animate(elapsed); // Argueably should be in separate function
+			}
+		}
+		this.renderShips = function() {
+			for(var i = 0; i < shipList.length; i++) {
+				Gremlin.renderObject(shiptList[i]);
+			}
+		}
+		
+		return {
+			createShip:			createShip,
+			destroyShip:		destroyShip,
+			updateShips:		updateShips,
+			renderShips:		renderShips
+		}
+	}
+	
+	var ShipManager = _ShipManager();
 	
 	// Basic Projectile System
 	var projectiles = [];
