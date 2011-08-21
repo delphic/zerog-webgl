@@ -20,7 +20,7 @@ function _GUI() {
 		Game.unloadLevel();
 		switch(val) {
 			case "1":
-				Game.loadLevel("deepspace.js", "InGame");
+				Game.loadLevel("levels/deepspace.js", "InGame");
 				break;
 			default:
 				return;

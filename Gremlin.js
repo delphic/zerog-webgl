@@ -215,7 +215,7 @@ function _Gremlin() {
 		}
 		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
 		
-		if(object.scale != 1) mat4.scale(_mvMatrix, object.scale, _mvMatrix);
+		if(object.scale != [1,1,1]) mat4.scale(_mvMatrix, object.scale, _mvMatrix);
 
         _gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexPosition);
         _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, buffersList[object.buffers].vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
