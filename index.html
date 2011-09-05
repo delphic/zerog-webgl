@@ -356,6 +356,14 @@
 						<div><input gui-role="navButton menuResume" gui-target="mainMenu" id="btnPauseExit" type="button" value="Main Menu"/></div>
 					</div>
 				</div>
+				<!-- End Game Menu -->
+				<!-- TODO: Remove this and replace with in game HUD - press any key to continue - which will then spit you back to the main menu -->
+				<div gui-role="menu" gui-id="endGameMenu" class="menu">
+					<div id="endGameMessage"></div>
+					<div>
+						<div><input gui-role="navButton menuResume" gui-target="mainMenu" id="btnEndGameExit" type="button" value="Main Menu"/></div>
+					</div>
+				</div>
 			</div>
 			<div id="hudContainer" oncontextmenu="return false;">
 				<!-- Temporary HUD - Replace with WebGL implementation -->

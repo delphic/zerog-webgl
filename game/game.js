@@ -40,12 +40,20 @@ function _Game() {
 				// Check for projectile - ship collision
 				for(var i = 0; i < projectiles.length; i++){
 					// Check enemy ships
-					if (ShipManager.checkShipsCollision(projectiles[i].position, 0.03, projectiles[i].dmg)){
+					if (projectiles[i].friendly && ShipManager.checkShipsCollision(projectiles[i].position, 0.03, projectiles[i].dmg)){
 						// TODO: remove hardcoded radius
 						// Remove Projectile
 						removeProjectile(i);
 					}
-					// TODO: Check player
+					// TODO: remove hardcoded radi
+					else if(!(projectiles[i].friendly) && GremlinCollision.sphereToSphereIntersect(projectiles[i].position, 0.03, player.position, 1)) {
+						if(player.takeDamage(projectiles[i].dmg)){
+							// GAME OVER
+							GremlinGUI.endGame("<h2>Game Over</h2>")
+						}
+						removeProjectile(i);
+					}
+				
 				}
 				
 				// TODO: this should possibly also run every X frames.
@@ -102,7 +110,7 @@ function _Game() {
 					dz /= 1.41421;
 				}
 			
-				var dvelocity = [(0.01*dx/player.mass), 0, (0.01*dz/player.mass) ];
+				var dvelocity = [dx, 0, dz ];
 				Gremlin.playerCameraReverseRotation(dvelocity);
 				
 				if (accelRate > 0 && (dx != 0 || dz != 0)) {
@@ -117,20 +125,17 @@ function _Game() {
 				// Pew Pew
 				if(lmbDown) {
 					if (player.canFire()) {
-						var pos = [0,0,0];
-						Gremlin.playerCameraPos(pos); // Note setting equal to player.position cause updating the camera as well as the projectiles! TODO: put player in an object / namespace rather than store as an array to remove this temptation!
+						var pos = vec3.create(player.position);
 						// TODO: Also this needs to be turret attach point rather than camera position
 						var aimtAt = [0,0,0];
 						aimAt = Gremlin.pickPosition(mousePos[0], mousePos[1], 500); // TODO: 500 should be replaced by distance to target
 						var v = [0,0,0]; 
 						vec3.subtract(aimAt, pos, v);
 						vec3.normalize(v);
-						vec3.scale(v,1);
+						vec3.scale(v,player.weaponSpeed);
 						vec3.add(v,player.velocity);
 						
-						var newproj = new projectile(pos, v, 30, 30000, true);
-
-						projectiles.push(newproj);
+						spawnProjectile(pos, v, 30, 30000, true);
 						player.fire();
 					}
 				}
@@ -146,7 +151,7 @@ function _Game() {
 				GremlinHUD.setHudValues((player.healthPoints/player.healthMax)*100, (player.shieldPoints/player.shieldMax)*100, (player.fuelPoints/player.fuelMax)*100, (player.energyPoints/player.energyMax)*100);
 				
 				// Update Motes
-				updateMotes(player.position, player.velocity); //TODO: Needs to take elapsed in order to be indepedant of frame rate - make this a method retrieving velocity from player gameobject
+				updateMotes(player.position, player.velocity); 
 				
 				// Update Projectiles
 				projectileObject.animate(elapsed);
@@ -159,7 +164,7 @@ function _Game() {
 					}
 					else {
 						// Update Position
-						projectiles[i].updatePosition(); 
+						projectiles[i].updatePosition(elapsed); 
 					}
 				}
 			}
@@ -277,6 +282,7 @@ function _Game() {
 			this.position[1] += this.velocity[1]*elapsed;
 			this.position[2] += this.velocity[2]*elapsed;
 		}
+
 		
 		function rotate(amount, X, Y, Z) {
 			mat4.rotate(this.rotation, Gremlin.degToRad(amount), [X, Y, Z]);
@@ -384,6 +390,7 @@ function _Game() {
 		}
 		gameObjects.push(object);
 	}
+	
 	// Game Init
 	function gameInit() {
 		assetsLoading = false;
@@ -400,7 +407,7 @@ function _Game() {
 	}
 
 	// Player / Ships
-	function attachShip(object) {
+	function attachShip(object, attributes) {
 		object.mass = 10;
 		object.shieldMax = 100;
 		object.shieldPoints = 100;
@@ -412,11 +419,17 @@ function _Game() {
 		object.healthPoints = 100;
 		object.energyMax = 100;
 		object.energyPoints = 100;
-		object.energyRegen = 0.01;
-		object.firingPeriod = 300;
+		object.energyRegen = 0.1;
+		if(attributes && attributes["FiringPeriod"]) {
+			object.firingPeriod = attributes["FiringPeriod"];
+		}
+		else {
+			object.firingPeriod = 300;	
+		}
 		object.firingTimer = 300;
 		object.firingCost = 5;
-		object.fuelFactor = 5;
+		object.fuelFactor = 4000;
+		object.weaponSpeed = 0.1;
 		object.canFire = function() { 
 			if(this.firingTimer > this.firingPeriod && (this.energyPoints > this.firingCost)) { 
 				return true; 
@@ -443,7 +456,7 @@ function _Game() {
 			this.firingTimer += elapsed;
 		}
 		object.accelerationRate = function(elapsed) {
-			var accelerationAmount = 0.03 * elapsed;
+			var accelerationAmount = 0.00005 * elapsed;
 			if(this.fuelPoints > 0.8*this.fuelMax) {
 				accelerationAmount*=1.2; // 20% increase in acceleration rate when fuel is over 80%
 			}
@@ -477,8 +490,10 @@ function _Game() {
 				return false;
 			}
 		}
-	}
-	
+		object.setWeaponSpeed = function(speed) {
+			this.weaponSpeed = speed;
+		}
+	}_controller
 	var player = new gameObject([0,0,0]);
 	attachShip(player);
 	
@@ -497,6 +512,12 @@ function _Game() {
 		//player.setRotation(rotation[0], rotation[1], rotation[2]);
 		Gremlin.setPlayerCameraRotation(rotation[0], rotation[1], rotation[2]);
 	}
+	function getPlayerPosition() {
+		return player.position;
+	}
+	function getPlayerVelocity() {
+		return player.velocity;
+	}
 	
 	// Basic Projectile System
 	// TODO: namespace
@@ -506,6 +527,7 @@ function _Game() {
 	projectileObject.setColor(5.0,0,0,1);
 	projectileObject.setUseLighting(false); //TODO: Would be better with lighting true and emissive material
 	// Would also be better if when we had a particle system that it would leave a short lived trail.
+	// Also don't know if we want more than one protecile object... but we do want more than one colour.
 	
 	function projectile(position, velocity, dmg, lifetime, friendly) {
 		this.position = position;
@@ -520,11 +542,16 @@ function _Game() {
 		function getPosition() {
 			return this.position;
 		}
-		function updatePosition() {
-			this.position[0] += this.velocity[0];
-			this.position[1] += this.velocity[1];
-			this.position[2] += this.velocity[2];
+		function updatePosition(elapsed) {
+			this.position[0] += this.velocity[0]*elapsed;
+			this.position[1] += this.velocity[1]*elapsed;
+			this.position[2] += this.velocity[2]*elapsed;
 		}
+	}
+	
+	function spawnProjectile(position, velocity, damage, lifetime, friendly) {
+		var newproj = new projectile(position, velocity, damage, lifetime, friendly);
+		projectiles.push(newproj);
 	}
 	
 	function removeProjectile(index) {
@@ -558,13 +585,16 @@ function _Game() {
 				var boundingR;
 				var posDiff = vec3.create();
 				boundingR = vec3.length(vel) + rootThree*randomFactor;
-				vec3.subtract(pos,dustMotes[i].position, posDiff); 
+				vec3.subtract(pos,dustMotes[i].position, posDiff);
 				if (vec3.length(posDiff) >  boundingR) {
+					// As posDiff > bounding radius, reset to be bounding radius
+					vec3.normalize(posDiff);
+					vec3.scale(posDiff, boundingR);
 					// Respawn on opposite site of sphere 
 					dustMotes[i].setPosition(
-						pos[0] + 0.99*posDiff[0],
-						pos[1] + 0.99*posDiff[1],
-						pos[2] + 0.99*posDiff[2]
+						pos[0] + posDiff[0],
+						pos[1] + posDiff[1],
+						pos[2] + posDiff[2]
 					);
 				}
 			}
@@ -727,9 +757,12 @@ function _Game() {
 		setLevelThink:				setLevelThink,
 		getLevelVar:				getLevelVar,
 		setLevelVar:				setLevelVar,
+		getPlayerPosition:			getPlayerPosition,
+		getPlayerVelocity:			getPlayerVelocity,
 		setPlayerPosition:          setPlayerPosition,
 		setPlayerVelocity:			setPlayerVelocity,
-		setPlayerRotation:			setPlayerRotation,
+		setPlayerRotation:			setPlayerRotation,	
+		spawnProjectile:			spawnProjectile,
 		applyOptions:				applyOptions,
 		pause:						pause,
 		unpause:					unpause,
@@ -766,7 +799,10 @@ function _ShipManager() {
 			null, 
 			true);
 		tmpShip.setColor(color[0], color[1], color[2], color[3]);
-		Game.attachShip(tmpShip);
+		var attributes = {};
+		attributes.FiringPeriod = 600;
+		Game.attachShip(tmpShip, attributes);
+		ShipAI.attachAI(tmpShip);
 		shipList.push(tmpShip);
 	}
 	function destroyShip(index) {
@@ -775,10 +811,13 @@ function _ShipManager() {
 	function destroyShips() {
 		shipList.splice(0,shipList.length);
 	}
-	function updateShips(elapsed) {
+
+	function updateShips(elapsed, playerPos, playerVel) {
 		if(shipList.length > 0) {
 			for(var i = 0; i < shipList.length; i++) {	
 				// Run AI - Argueably should be in separate function
+				shipList[i].runAI(shipList[i], elapsed);
+				
 				shipList[i].update(elapsed);
 				shipList[i].updateShip(elapsed);
 				shipList[i].animate(elapsed); // Argueably should be in separate function
@@ -799,9 +838,14 @@ function _ShipManager() {
 		for(var i = 0; i < shipList.length; i++) {
 			// TODO: Remove hardcoded ship radius - add radius method to gameobject (returns average scale)
 			if(GremlinCollision.sphereToSphereIntersect(position, radius, shipList[i].position, 1)){
+				shipList[i].takeDamageAi();
 				if (shipList[i].takeDamage(dmg))
 				{
 					this.destroyShip(i);
+					i--; 
+					// Because we are removing an element from the array, 
+					// the index needs to be decreased as next element now 
+					// has the index of the element we just removed,
 				}
 				return true;
 			}
@@ -821,12 +865,340 @@ function _ShipManager() {
 }
 	
 var ShipManager = _ShipManager();
-		
 
 function _ShipAI() {
+
 	// Attach Ship AI
+	function attachAI(obj, attributes) {
+		// AI State - enum - 0, Idle; 1, Close; 2, Attack; 3, Flee; 4, Evasive; 5, Patrol
+		obj.AiState = 0;
+		obj.AiStateTimer = 0;
+		
+		// AI friendly - bool 
+		// TODO: Create enum for factions including neutral, to make for more complex interactions
+		if(attributes && attributes["Friendly"]) {
+			obj.AiFiendly = attributes["Friendly"];
+		}
+		else {
+			obj.AiFriendly = false;
+		}
+		
+		// AI In Combat - bool
+		obj.AiInCombat = false;
+		
+		// AI Skill - number - skill factor
+		if(attributes && attributes["Skill"]) {
+			obj.AiSkill = attributes["Skill"];
+		}
+		else {
+			obj.AiSkill = 1;
+		}
+		
+		// AI Confidence - number - affects state changes
+		if(attributes && attributes["Confidence"]) {
+			obj.AiConfidence = attributes["Confidence"];
+		}
+		else {
+			obj.AiConfidence = obj.AiSkill; 
+		}
+		
+		// AI Engage Distance - number - number of units at which non-friendly AI engages.
+		if(attributes && attributes["EngageDistance"]) {
+			obj.AiEngageDistance = attributes["EngageDistance"];
+		}
+		else {
+			obj.AiEngageDistance = 50*obj.AiSkill; // TODO: Tweak once units have been actually figured out!
+		}
+		
+		// AI Disengage Distance - number - number of units at which AI stops pursuing.
+		if(attributes && attributes["DisengageDistance"]) {
+			obj.AiDisengageDistance = attributes["DisengageDistance"];
+		}
+		else {
+			obj.AiDisengageDistance = 10*obj.AiEngageDistance;
+		}		
+
+		obj.runAI = _runAI;
+		obj.takeDamageAi = _takeDamageAi;
+	}
 	
-	// Ship AI Object
+	function _takeDamageAi(aggressor) {
+		// If currently idle switch to attack
+		if(this.AiState == 0) {
+			this.AiState = 2;
+			//TODO: if / when AI has targets, rather than just the player then target aggressor
+		}
+	}
+	
+	function _runAI(ship, elapsed) {
+		this.AiStateTimer += elapsed;		
+		// Check state and change if necessary.
+		// Simple minimum of 1 sec in state currently
+		var stateChanged = false;
+		if(this.AiStateTimer > 1000) {
+			switch(this.AiState){
+			// Close
+			case 1:
+				// Check own health/shield - if below certain amount change to Flee / Evasive
+				if (this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax < 0.5/this.AiConfidence)
+				{
+					this.AiState = 3;
+					stateChanged = true;
+					break;
+				}
+				
+				// Check distance and relative velocity is close enough switch to attack
+				separation = vec3.create();
+				velocityDifference = vec3.create();
+				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
+				vec3.subtract(Game.getPlayerVelocity(), this.velocity, velocityDifference);
+				if (vec3.length(separation) < 100 && vec3.length(velocityDifference) < 25) {
+					this.AiState = 2;
+					stateChanged = true;
+					break;
+				}
+				
+				// if > disengage, then change attribute and idle
+				if (vec3.length(separation) > this.AiDisengageDistance) {
+					this.AiState = 0;
+					stateChanged = true;
+					break;
+				}
+				break;
+			// Attack
+			case 2: 
+				// Check health and shield and if low switch to flee / evasive
+				if (this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax < 0.5/this.AiConfidence)
+				{
+					this.AiState = 3;
+					stateChanged = true;
+					break;
+				}
+				
+				// Check distance and relative velocity and change to close if necessary
+				separation = vec3.create();
+				velocityDifference = vec3.create();
+				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
+				vec3.subtract(Game.getPlayerVelocity(), this.velocity, velocityDifference);
+				if (vec3.length(separation) > 150 || vec3.length(velocityDifference) > 40) {
+					this.AiState = 1;
+					stateChanged = true;
+					break;
+				}
+				
+				break;
+			//Flee
+			case 3: 
+				separation = vec3.create();
+				velocityDifference = vec3.create();
+				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
+				// Check distance if greater than a safety distance (disengage distance?)
+				if (this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax > 0.5/this.AiConfidence
+					|| vec3.length(separation) > this.AiDisengageDistance)
+				{
+					// Check relative health and shield and switch to either close or idle
+					this.AiState = 0;
+					stateChanged = true;
+					break;
+				}
+				// Check distance if less than safety distance (disengage distance?)
+					// Check relative health and shield and attack if safe appropriate
+				break;
+			// Evade
+			case 4:
+				separation = vec3.create();
+				velocityDifference = vec3.create();
+				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
+				// As Above
+				if (vec3.length(separation) > this.AiDisengageDistance
+					&& this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax > 0.5/this.AiConfidence)
+				{
+					// Check relative health and shield and switch to either close or idle
+					this.AiState = 1;
+					stateChanged = true;
+					break;
+				}
+				break;
+			// Default / Idle
+			default:
+				// Check Aggro distance, and attack if within range and is not friendly.
+				if(!this.AiFriendly) {
+					separation = vec3.create();
+					velocityDifference = vec3.create();
+					vec3.subtract(Game.getPlayerPosition(), this.position, separation);
+					if(vec3.length(separation) < this.AiEngageDistance) {
+						this.AiState = 2;
+						stateChanged = true;
+						break;
+					}
+				}
+				break;				
+			}
+		}
+		
+		// Run current state
+		if(!stateChanged)
+		{
+			var accelRate = this.accelerationRate(elapsed);
+			var playerPos = Game.getPlayerPosition();
+			var playerVel = Game.getPlayerVelocity();
+			var separation = vec3.create();
+			var relativeVelocity = vec3.create();
+			vec3.subtract(playerPos, this.position, separation);
+			vec3.subtract(playerVel, this.velocity, relativeVelocity);
+				
+			switch(this.AiState) {
+			// Close
+			case 1:
+				// Accelerate to minimise relative velocity and separation
+				var direction = [
+					(separation[0]+relativeVelocity[0]), 
+					(separation[1]+relativeVelocity[1]),
+					(separation[2]+relativeVelocity[2])];
+				vec3.normalize(direction);
+				vec3.scale(direction,accelRate);
+				this.updateVelocity(direction[0], direction[1], direction[2]);
+				this.accelerate(elapsed);
+				break;
+			// Attack
+			case 2:
+				// Maintain distance / velocity within range
+				if(vec3.length(relativeVelocity) > 5)
+				{
+					var direction = vec3.create(relativeVelocity);
+					vec3.normalize(direction);
+					vec3.scale(direction,accelRate);
+					this.updateVelocity(direction[0],direction[1],direction[2]);
+					this.accelerate(elapsed);
+				}
+				// Check firing timer and fire if possible
+				if (this.canFire()) {
+					// Caculate desired velocity
+					// TODO: Add random offset dependant on skill level.
+					var pos = vec3.create(this.position);
+					var projectileVelocity = vec3.create();
+	
+					if(_calculateProjectileVelocity(separation, playerVel, (this.weaponSpeed+vec3.length(this.velocity)), projectileVelocity))
+					{
+						// Spawn new projectile
+						Game.spawnProjectile(pos, projectileVelocity, 10, 30000, false);
+						this.fire();	
+					}
+				}
+				break;
+			// Flee
+			case 3:
+				// Accelerate to maximize relative velocity and separation
+				var direction = [
+					(-separation[0]-relativeVelocity[0]), 
+					(-separation[1]-relativeVelocity[1]),
+					(-separation[2]-relativeVelocity[2])];
+				vec3.normalize(direction);
+				vec3.scale(direction,accelRate);
+				this.updateVelocity(direction[0], direction[1], direction[2]);
+				this.accelerate(elapsed);
+				break;
+				
+			// TODO: Implement	
+			//case 4:
+				// Accelerate in a random direction mostly away from aggresor
+				// break;
+			// case 5:
+				// Patrol along path
+				// break;
+			
+			default:
+				// Slow to Stop
+				if (vec3.length(this.velocity) > accelRate)
+				{
+					var direction = vec3.create();
+					vec3.negate(this.velocity, direction);
+					vec3.normalize(direction);
+					vec3.scale(direction,accelRate);
+					this.updateVelocity(direction[0], direction[1], direction[2]);
+					this.accelerate(elapsed);
+				}
+				else if (vec3.length(this.velocity) != 0)
+				{
+					this.setVelocity(0,0,0);
+				}
+				break;
+			}
+		}
+		else {
+			this.AiStateTimer = 0;
+		}
+	}
+	
+	/**
+	 * Returns false if it is not possible to hit target with given projectile speed.
+	 * Else returns true and sets projectile velocity to velocity required to hit target
+	 */
+	function _calculateProjectileVelocity(separation, targetVelocity, projectileSpeed, projectileVelocity){
+		var collisionTime = _calculateCollisionTime(separation, targetVelocity, projectileSpeed);	
+		if (collisionTime != 0) {
+			var separationScaled = vec3.create();
+			vec3.scale(separation, 1/collisionTime, separationScaled);
+			vec3.add(targetVelocity, separationScaled, projectileVelocity);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	function _calculateCollisionTime(separation, targetVelocity, projectileSpeed) {
+		// TODO: Separate Quadratic calculation into separate function?
+		
+		// Calculation the solution to a quadratic for T.
+		// a = magnitude of Relative Velocity squared - magnitude of Projectile Velocity squared
+		// b = 2 * dot product of Relative Velocity and Separaation
+		// c = magnitude of separation squared
+		var a = (targetVelocity[0]*targetVelocity[0] + targetVelocity[1]*targetVelocity[1] + targetVelocity[2]*targetVelocity[0]) - projectileSpeed*projectileSpeed;
+		var b = 2*vec3.dot(targetVelocity, separation);
+		var c = (separation[0]*separation[0] + separation[1]*separation[1] + separation[2]*separation[2]);
+		
+		var quadDet;
+		if (b*b > 4*a*c)
+		{ 
+			quadDet = Math.sqrt(b*b - 4*a*c);
+		}
+		else
+		{
+			// No Solutions
+			// Probably means target velocity > projectile velocity
+			return 0;
+		}
+		if(quadDet == 0) {
+			// Single Root - this shouldn't really happen but oh well.
+			return (-b/(2*a));
+		}
+		else {
+			// Two Solutions
+			var solution1 = (-b + quadDet)/(2*a);
+			var solution2 = (-b - quadDet)/(2*a);
+			
+			// One solution should be in the past, one should be in the future if neither or both are, then the variables we've passed in are incorrect.
+			// We are only interested in the solution for the future.
+			if(solution1 > 0 && solution2 <= 0) {
+				return solution1;
+			}
+			else if (solution1 <= 0 && solution2 > 0) {
+				return solution2;
+			}
+			else {
+				if (solution1 > 0 && solution2 > 0) {
+					throw ("Both solutions to projectile calculation positive, check arguments");
+				}
+				else {
+					throw ("Both solutions to projectile calculation negative, check arguments");
+				}
+			}
+		}
+	}	
+	return {
+		attachAI:				attachAI
+	}
 }
 
 var ShipAI = _ShipAI();

@@ -34,7 +34,7 @@
 				// First Wave Spawns Immediately so no need to reset player
 				
 				// Spawn first wave of enemies at + view dir
-				ShipManager.createShip([0,0,-20],[0,1.0,0,1.0]);
+				ShipManager.createShip([0,0,-40],[0,2.0,0,1.0]);
 			}
 			else if (!Game.getLevelVar("WaveTwoSpawned") && Game.getLevelVar("WaveOneDestroyed")) {
 				Game.setLevelVar("WaveTwoSpawned", true);
@@ -42,9 +42,9 @@
 				// Spawn Second Wave with 5 second delay
 				setTimeout(
 					function() {
-						ShipManager.createShip([-10,0,-20],[0,1.0,0,1.0]);
-						ShipManager.createShip([0,0,-20],[0,1.0,0,1.0]);
-						ShipManager.createShip([10,0,-20],[0,1.0,0,1.0]);
+						ShipManager.createShip([-10,0,-40],[0,1.0,0,1.0]);
+						ShipManager.createShip([0,0,-40],[0,1.0,0,1.0]);
+						ShipManager.createShip([10,0,-40],[0,1.0,0,1.0]);
 						resetPlayer();
 					}, 
 					5000); // This can unfortunately spawn ships when your in the main menu! 

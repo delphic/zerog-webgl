@@ -26,6 +26,14 @@ function _GUI() {
 				return;
 		}
 	}
+	function endGame(message) {
+		$('div[gui-role="menu"]').hide();
+		$('div[gui-role="menu"][gui-id="endGameMenu"]').show();
+		$("#endGameMessage").html(message);
+		$("#menuContainer").show();
+		Game.updateGameState("InMenu");
+		Game.pause();
+	}
 	function resumeGame() {
 		// TODO: Unpause
 		$("#menuContainer").hide();
@@ -121,6 +129,7 @@ function _GUI() {
 	return { 
 		setStyleSize: 	setStyleSize,
 		pause: 			pause,
+		endGame:		endGame
 	}
 }
 var GremlinGUI = _GUI();

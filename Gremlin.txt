@@ -121,7 +121,7 @@ v0.7+
 * Decouple objects and their buffers
 
 * Move asset loading management system into engine / own namespace, move incrementation of number and remove uneccesary removal of numbers once this is done
-GAME CODE * Level loading and manangement system (xml reading) to control spawning of enemies and environment
+GAME CODE * Level loading and manangement system to control spawning of enemies and environment
 
 * Material System - include emmissive
 * Use canvas as texture (for HUD - text and easy geometric shapes)
