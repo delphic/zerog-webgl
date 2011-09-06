@@ -144,7 +144,7 @@ function _Game() {
 						vec3.scale(v,player.weaponSpeed);
 						vec3.add(v,player.velocity);
 						
-						spawnProjectile(pos, v, 30, 30000, true);
+						spawnProjectile(pos, v, [5.0,0,0,1.0], 30, 30000, true);
 						player.fire();
 					}
 				}
@@ -212,8 +212,11 @@ function _Game() {
 		for(var n = 0; n < projectiles.length; n++)
 		{
 			var position = [0,0,0];
+			var colour = [1,1,1,1];
 			position = projectiles[n].getPosition();
+			colour = projectiles[n].getColor();
 			projectileObject.setPosition(position[0], position[1], position[2]);
+			projectileObject.setColor(colour[0], colour[1], colour[2], colour[3], colour[4]);
 			Gremlin.renderObject(projectileObject);
 		}
 		ShipManager.renderShips();
@@ -534,23 +537,28 @@ function _Game() {
 	var projectiles = [];
 	var projectileObject = new gameObject([0,0,0]);
 	projectileObject.rotate(90, 1, 0, 0)
-	projectileObject.setColor(5.0,0,0,1);
+	projectileObject.setColor(1,1,1,1);
 	projectileObject.setUseLighting(false); //TODO: Would be better with lighting true and emissive material
 	// Would also be better if when we had a particle system that it would leave a short lived trail.
 	// Also don't know if we want more than one protecile object... but we do want more than one colour.
 	
-	function projectile(position, velocity, dmg, lifetime, friendly) {
+	function projectile(position, velocity, color, dmg, lifetime, friendly) {
 		this.position = position;
 		this.velocity = velocity;
 		this.dmg = dmg;
 		this.lifetime = lifetime;
 		this.friendly = friendly;
+		this.color = color;
 		
+		this.getColor = getColor;
 		this.getPosition = getPosition;
 		this.updatePosition = updatePosition;
 		
 		function getPosition() {
 			return this.position;
+		}
+		function getColor() {
+			return this.color;
 		}
 		function updatePosition(elapsed) {
 			this.position[0] += this.velocity[0]*elapsed;
@@ -559,8 +567,8 @@ function _Game() {
 		}
 	}
 	
-	function spawnProjectile(position, velocity, damage, lifetime, friendly) {
-		var newproj = new projectile(position, velocity, damage, lifetime, friendly);
+	function spawnProjectile(position, velocity, color, damage, lifetime, friendly) {
+		var newproj = new projectile(position, velocity, color, damage, lifetime, friendly);
 		projectiles.push(newproj);
 	}
 	
@@ -732,7 +740,12 @@ function _Game() {
 		player.position = [0,0,0];
 		player.velocity = [0,0,0];
 		player.firingTimer = 1000;
+		player.healthPoints = player.healthMax;
+		player.shieldPoints = player.shieldMax;
+		player.energyPoints = player.energyMax;
+		player.fuelPoints = player.fuelMax;
 		// End Reset Player 
+		
 		gameState = "Loading";
 		loadingTargetState = targetState;
 		var fileref=document.createElement('script');
@@ -1092,14 +1105,21 @@ function _ShipAI() {
 				// Check firing timer and fire if possible
 				if (this.canFire()) {
 					// Caculate desired velocity
-					// TODO: Add random offset dependant on skill level.
 					var pos = vec3.create(this.position);
 					var projectileVelocity = vec3.create();
+					
+					// Create Estimated player position - Skill Accuracy Effect
+					var estimatedSeparation = vec3.create();
+					
+					// At 20 units skill of 1 has 0-1 unit inaccuracy
+					// TODO: link this to target size.
+					var scalingFactor = vec3.length(separation) / (20 * this.AiSkill);
+					vec3.add(separation, [ (Math.random()-0.5)*scalingFactor, (Math.random()-0.5)*scalingFactor, (Math.random()-0.5)*scalingFactor], estimatedSeparation);
 	
-					if(_calculateProjectileVelocity(separation, playerVel, (this.weaponSpeed+vec3.length(this.velocity)), projectileVelocity))
+					if(_calculateProjectileVelocity(estimatedSeparation, playerVel, (this.weaponSpeed+vec3.length(this.velocity)), projectileVelocity))
 					{
 						// Spawn new projectile
-						Game.spawnProjectile(pos, projectileVelocity, 10, 30000, false);
+						Game.spawnProjectile(pos, projectileVelocity, this.color, 10, 30000, false);
 						this.fire();	
 					}
 				}
