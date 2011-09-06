@@ -1,6 +1,15 @@
-//////////////////////////
-// TODO: Add ASCI Title //
-//////////////////////////
+ //  _____                 ___     ___                     
+//  / _  / ___ _ __ ___   / _ \   / _ \__ _ _ __ ___   ___ 
+//  \// / / _ \ '__/ _ \ / /_\/  / /_\/ _` | '_ ` _ \ / _ \
+//   / //\  __/ | | (_) / /_\\  / /_\\ (_| | | | | | |  __/
+//  /____/\___|_|  \___/\____/  \____/\__,_|_| |_| |_|\___|
+                                                       
+//    __                   __           _       _   
+//    \ \  __ ___   ____ _/ _\ ___ _ __(_)_ __ | |_ 
+//     \ \/ _` \ \ / / _` \ \ / __| '__| | '_ \| __|
+//  /\_/ / (_| |\ V / (_| |\ \ (__| |  | | |_) | |_ 
+//  \___/ \__,_| \_/ \__,_\__/\___|_|  |_| .__/ \__|
+//                                       |_|     
 
 function _Game() {
 	// TODO: Change naming to public / private functions...
@@ -493,7 +502,8 @@ function _Game() {
 		object.setWeaponSpeed = function(speed) {
 			this.weaponSpeed = speed;
 		}
-	}_controller
+	}
+	
 	var player = new gameObject([0,0,0]);
 	attachShip(player);
 	
@@ -618,7 +628,6 @@ function _Game() {
     }
 	
 	// Controller Bar
-	
 	function _controller() {
 		var running = true;
 		var windowPaused = false;
@@ -771,9 +780,12 @@ function _Game() {
 }
 var Game = _Game();
 
-//////////////////	
-// Ship Manager //
-//////////////////
+//   __ _     _                                                  
+//  / _\ |__ (_)_ __     /\/\   __ _ _ __   __ _  __ _  ___ _ __ 
+//  \ \| '_ \| | '_ \   /    \ / _` | '_ \ / _` |/ _` |/ _ \ '__|
+//  _\ \ | | | | |_) | / /\/\ \ (_| | | | | (_| | (_| |  __/ |   
+//  \__/_| |_|_| .__/  \/    \/\__,_|_| |_|\__,_|\__, |\___|_|   
+//             |_|                               |___/         
 
 // Enemy Ship Mananger
 
@@ -865,6 +877,12 @@ function _ShipManager() {
 }
 	
 var ShipManager = _ShipManager();
+
+//     _      _____ 
+//    /_\     \_   \
+//   //_\\     / /\/
+//  /  _  \_/\/ /__ 
+//  \_/ \_(_)____(_)
 
 function _ShipAI() {
 
