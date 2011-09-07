@@ -296,7 +296,7 @@ function _Gremlin() {
 			_gl.disableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
 		}
 		
-        _setMatrixUniforms();
+        _setMatrixUniforms(_pMatrix, _mvMatrix);
 		
 		if (!object.wireframe && !object.points) {
 			if(buffersList[object.buffers].useIndices) {
@@ -324,6 +324,109 @@ function _Gremlin() {
 		}
         _mvPopMatrix();
 	}
+	
+	/**
+	 * 
+	 * Render 2D Object - renders in orthogonal projection at z=-1.0 
+	 *
+	 * object required attributes:
+	 * visible - bool 
+	 * position - 2D vector - x and y coordinates of centre of object in percentages, top-left (0,0)
+	 * size - 2D vector - width and height in percentage of screen size
+	 * color - 4D vector - r,g,b,a of tint colour
+	 * buffers - integer - index of buffers in bufferList
+	 * 
+	 * object optional attributes:
+	 * useTextures - bool
+	 * wireframe - bool - renders as line list
+	 * points - bool - renders as points
+	 * 
+	 */
+	/*function render2dObject(object) {
+		if(!object.visible) return;
+		
+		// Convert Position and Dimensions
+		var position = [0,0,-1];
+		var scale = [1.0,1.0,1.0];
+		
+		position[0] = ((object.position[0]/100)-0.5)*(_gl.viewportWidth/_gl.viewportHeight)*2*Math.tan(degToRad(45*0.5));
+		position[1] = -((object.position[1]/100)-0.5)*2*Math.tan(degToRad(45*0.5));
+		
+		scale[0] = (object.size[0]/100)*(_gl.viewportWidth/_gl.viewportHeight);
+		scale[1] = (object.size[1]/100);
+		
+		var orthogonalMvMatrix = mat4.create();
+		mat4.identity(orthogonalMvMatrix);
+		
+		// Translate Object
+		mat4.translate(orthogonalMvMatrix, position);
+		
+		// Scale Object
+		if(object.scale != [1,1,1]) mat4.scale(orthogonalMvMatrix, scale, orthogonalMvMatrix);
+		
+		// Set Vertex Info
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexPosition);
+        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, buffersList[object.buffers].vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
+
+		if (buffersList[object.buffers].useIndices) {
+			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, buffersList[object.buffers].vertexIndex);
+		}
+		
+		// Set Colour
+		_gl.uniform4fv(_shaderProgram.colorUniform, object.color);
+
+		// Set Texture		
+		if (object.useTextures) {
+			_gl.uniform1i(_shaderProgram.useTexturesUniform, true);
+			_gl.enableVertexAttribArray(_shaderProgram.textureCoordAttribute);
+			// Textures
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].textureCoords);
+			_gl.vertexAttribPointer(_shaderProgram.textureCoordAttribute, buffersList[object.buffers].textureCoords.itemSize, _gl.FLOAT, false, 0, 0);
+
+			_gl.activeTexture(_gl.TEXTURE0);
+			_gl.bindTexture(_gl.TEXTURE_2D, textureList[object.texture]);
+			_gl.uniform1i(_shaderProgram.samplerUniform, 0);
+		}
+		else {
+			// BUG: This does not result in full colour, but a reduced colour
+			// This can be combatted by increasing the colour
+			_gl.disableVertexAttribArray(_shaderProgram.textureCoordAttribute);
+			_gl.uniform1i(_shaderProgram.useTexturesUniform, false);
+		}
+		
+		// Disable Lighting
+		_gl.uniform1i(_shaderProgram.useLightingUniform, false);
+		_gl.disableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
+
+		// Set Uniforms
+		_setMatrixUniforms(_pMatrix, orthogonalMvMatrix)
+
+		// Render Object in desired mode
+		if (!object.wireframe && !object.points) {
+			if(buffersList[object.buffers].useIndices) {
+				_gl.drawElements(_gl.TRIANGLES, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+			}
+			else {
+				_gl.drawArrays(_gl.TRIANGLES, 0, buffersList[object.buffers].vertexPosition.numItems);
+			}
+		}
+		else if (object.wireframe){
+			if(buffersList[object.buffers].useIndices) {
+				_gl.drawElements(_gl.LINES, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+			}
+			else {
+				_gl.drawArrays(_gl.LINES, 0, buffersList[object.buffers].vertexPosition.numItems);
+			}
+		}
+		else {
+			if(object.useIndices) {
+				_gl.drawElements(_gl.POINTS, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+			}
+			else {
+				_gl.drawArrays(_gl.POINTS, 0, buffersList[object.buffers].vertexPosition.numItems);
+			}
+		}
+	}*/
 	
 	// Buffers
 	buffersList = []; 			// Stores the Buffers
@@ -557,54 +660,52 @@ function _Gremlin() {
 		
 		buffers["vertexPosition"] = cubeVertexPositionBuffer;
 	
-		// Texture Buffer
-		if(textured) {
-			var cubeVertexTextureCoordBuffer;
-			cubeVertexTextureCoordBuffer = _gl.createBuffer();
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-			var textureCoords = [
-			  // Front face
-			  0.0, 0.0,
-			  1.0, 0.0,
-			  1.0, 1.0,
-			  0.0, 1.0,
+		// Texture Buffer	
+		var cubeVertexTextureCoordBuffer;
+		cubeVertexTextureCoordBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
+		var textureCoords = [
+		  // Front face
+		  0.0, 0.0,
+		  1.0, 0.0,
+		  1.0, 1.0,
+		  0.0, 1.0,
 
-			  // Back face
-			  1.0, 0.0,
-			  1.0, 1.0,
-			  0.0, 1.0,
-			  0.0, 0.0,
+		  // Back face
+		  1.0, 0.0,
+		  1.0, 1.0,
+		  0.0, 1.0,
+		  0.0, 0.0,
 
-			  // Top face
-			  0.0, 1.0,
-			  0.0, 0.0,
-			  1.0, 0.0,
-			  1.0, 1.0,
+		  // Top face
+		  0.0, 1.0,
+		  0.0, 0.0,
+		  1.0, 0.0,
+		  1.0, 1.0,
 
-			  // Bottom face
-			  1.0, 1.0,
-			  0.0, 1.0,
-			  0.0, 0.0,
-			  1.0, 0.0,
+		  // Bottom face
+		  1.0, 1.0,
+		  0.0, 1.0,
+		  0.0, 0.0,
+		  1.0, 0.0,
 
-			  // Right face
-			  1.0, 0.0,
-			  1.0, 1.0,
-			  0.0, 1.0,
-			  0.0, 0.0,
+		  // Right face
+		  1.0, 0.0,
+		  1.0, 1.0,
+		  0.0, 1.0,
+		  0.0, 0.0,
 
-			  // Left face
-			  0.0, 0.0,
-			  1.0, 0.0,
-			  1.0, 1.0,
-			  0.0, 1.0,
-			];
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
-			cubeVertexTextureCoordBuffer.itemSize = 2;
-			cubeVertexTextureCoordBuffer.numItems = 24;
+		  // Left face
+		  0.0, 0.0,
+		  1.0, 0.0,
+		  1.0, 1.0,
+		  0.0, 1.0,
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
+		cubeVertexTextureCoordBuffer.itemSize = 2;
+		cubeVertexTextureCoordBuffer.numItems = 24;
 			
-			buffers["textureCoords"] = cubeVertexTextureCoordBuffer;
-		}
+		buffers["textureCoords"] = cubeVertexTextureCoordBuffer;
 		
 		// Normal Buffer
 		// WARNING: This is dependant on shader program should make this more robust
@@ -755,16 +856,14 @@ function _Gremlin() {
 		
 		buffers["vertexNormals"] = sphereVertexNormalBuffer;
 		
-		if (textured) {
-			var sphereVertexTextureCoordBuffer = _gl.createBuffer();
+		var sphereVertexTextureCoordBuffer = _gl.createBuffer();
 			
-			_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexTextureCoordBuffer);
-			_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordData), _gl.STATIC_DRAW);
-			sphereVertexTextureCoordBuffer.itemSize = 2;
-			sphereVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
-			
-			buffers["textureCoords"] = sphereVertexTextureCoordBuffer;
-		} 
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexTextureCoordBuffer);
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordData), _gl.STATIC_DRAW);
+		sphereVertexTextureCoordBuffer.itemSize = 2;
+		sphereVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
+		
+		buffers["textureCoords"] = sphereVertexTextureCoordBuffer; 
 		
 		// Index Buffer
 		var sphereVertexIndexBuffer = _gl.createBuffer();
@@ -831,6 +930,81 @@ function _Gremlin() {
 		
 		var index = buffersList.push(buffers)-1;
 		buffersNameList["point"] = index;
+		object.assignBuffer(index);
+	}
+
+	function createSquare(object, textured) {
+		if(textured) object.useTextures = true;
+	
+		if (!isNaN(buffersNameList["square"])){
+			object.assignBuffer(buffersNameList["square"]);
+			return;
+		}
+		var buffers = [];
+		// Vertex Buffer
+		var squareVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+		vertices = [
+			-0.5, -0.5,  0.0,
+			 0.5, -0.5,  0.0,
+			 0.5,  0.5,  0.0,
+			-0.5,  0.5,  0.0
+		];
+		
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+		squareVertexPositionBuffer.itemSize = 3;
+		squareVertexPositionBuffer.numItems = 4;
+		
+		buffers["vertexPosition"] = squareVertexPositionBuffer;
+	
+		// Texture Buffer
+		var squareVertexTextureCoordBuffer;
+		squareVertexTextureCoordBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
+		var textureCoords = [
+		  0.0, 0.0,
+		  1.0, 0.0,
+		  1.0, 1.0,
+		  0.0, 1.0
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
+		squareVertexTextureCoordBuffer.itemSize = 2;
+		squareVertexTextureCoordBuffer.numItems = 4;
+		
+		buffers["textureCoords"] = squareVertexTextureCoordBuffer;
+		
+		// Normal Buffer
+		// WARNING: This is dependant on shader program should make this more robust
+		var squareVertexNormalBuffer;
+		squareVertexNormalBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, squareVertexNormalBuffer);
+		var vertexNormals = [
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
+		squareVertexNormalBuffer.itemSize = 3;
+		squareVertexNormalBuffer.numItems = 4;
+		
+		buffers["vertexNormals"] = squareVertexNormalBuffer;
+		
+		// Index Buffer
+		var squareVertexIndexBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, squareVertexIndexBuffer);
+		var squareVertexIndices = [
+			0, 1, 2,      0, 2, 3
+		];
+		_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareVertexIndices), _gl.STATIC_DRAW);
+		squareVertexIndexBuffer.itemSize = 1;
+		squareVertexIndexBuffer.numItems = 6;
+		
+		buffers["vertexIndex"] = squareVertexIndexBuffer;
+		buffers["useIndices"] = true;
+		
+		var index = buffersList.push(buffers)-1;
+		buffersNameList["square"] = index;
 		object.assignBuffer(index);
 	}
 	
@@ -1195,13 +1369,13 @@ function _Gremlin() {
     }
 
 	// Question - Should this be group with Shader or Rendering Code?
-    function _setMatrixUniforms() {
-        _gl.uniformMatrix4fv(_shaderProgram.pMatrixUniform, false, _pMatrix);
-        _gl.uniformMatrix4fv(_shaderProgram.mvMatrixUniform, false, _mvMatrix);
+    function _setMatrixUniforms(pMatrix, mvMatrix) {
+        _gl.uniformMatrix4fv(_shaderProgram.pMatrixUniform, false, pMatrix);
+        _gl.uniformMatrix4fv(_shaderProgram.mvMatrixUniform, false, mvMatrix);
 		
 		// TODO: Lighting Shader Only
 		var normalMatrix = mat3.create();
-		mat4.toInverseMat3(_mvMatrix, normalMatrix);
+		mat4.toInverseMat3(mvMatrix, normalMatrix);
 		mat3.transpose(normalMatrix);
 		_gl.uniformMatrix3fv(_shaderProgram.nMatrixUniform, false, normalMatrix);
     }
@@ -1350,6 +1524,7 @@ function _Gremlin() {
 		createSphere:				createSphere,
 		createRay:					createRay,
 		createPoint:				createPoint,
+		createSquare:				createSquare,
 		loadModel:					loadModel,
 		createTexture:				createTexture,
 		setLightEnvironment:		setLightEnvironment,

@@ -135,6 +135,8 @@ function _GUI() {
 var GremlinGUI = _GUI();
 
 function _HUD() {
+	
+	// Old HUD
 	function showHud() {
 		if(hudActive) return;
 		else hudActive = true;
@@ -157,14 +159,74 @@ function _HUD() {
 	
 	var hudActive = false;
 	
-	// TODO: use non-standard attributes similarly to GUI
+	// New HUD
+	var hudElements = [];
 	
-	// TODO: Add Scaling functions with resolution
+	function hudElement(position, size, color) {
+		this.position = position; 
+		this.size = size;
+		this.color = color;
+		
+		this.buffers = [];
+		this.texture;
+		
+		this.setPosition = function(position) { this.position = position; }
+		this.setSize = function(size) { this.size = size; }
+		this.setColor = function(color) { this.color = color; }
+		this.assignBuffer = function(index) { this.buffers = index; }
+
+		// Render Flags
+		this.visible = true;
+		this.wireframe = false;
+		this.points = false; // TODO: Combine this and wireframe into a render type (triangles / lines / points etc)
+		this.useIndices = false;
+		this.useTextures = false;
+	}
+	
+	function createHudElement(position,size,color,textureName) {
+		var element = new hudElement(position,size,color);
+		var textured;
+		
+		if (textureName) { 
+			textured = true;
+		}
+		else {
+			textured = false;
+		}
+		
+		//Gremlin.createSquare(element, textured);
+		
+		if(textured) {
+			element.texture = Gremlin.createTexture(textureName);
+		}
+				
+		hudElements.push(element);
+		
+		return element;
+	}
+	
+	function renderHud() {
+		for (element in hudElements) {
+			//Gremlin.render2dObject(hudElements[element]);
+		}
+	}
+	
+	function clearHud() {
+		hudElements.splice(0, hudElements.length);
+	}
+	
+	function updateHud() {
+		// TODO: link any variables by function to get so we can set values accordingly
+	}
 	
 	return {
-		showHud:		showHud,
-		hideHud:		hideHud,
-		setHudValues:	setHudValues
+		showHud:			showHud,
+		hideHud:			hideHud,
+		setHudValues:		setHudValues,
+		createHudElement:	createHudElement,
+		clearHud:			clearHud,
+		renderHud:			renderHud,
+		updateHud:			updateHud
 	}	
 }
 var GremlinHUD = _HUD(); 

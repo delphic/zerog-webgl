@@ -22,7 +22,7 @@ function _Game() {
 	var gameState;
 	
 	var loadingTargetState;
-	var assetsLoading = false; // for quick and dirty loading system - asset counter in the engine.
+	var assetsLoading = false; 
 	function setLoading(val) {
 		assetsLoadings = val;
 	}
@@ -221,6 +221,12 @@ function _Game() {
 		}
 		ShipManager.renderShips();
 		
+		// WebGL HUD
+		if(gameState == "InGame") {
+			GremlinHUD.renderHud();
+		}
+		
+		
 		// Animate Scene
         animate();
     }
@@ -229,7 +235,7 @@ function _Game() {
 	var gameObjects = [];
 	var gamePointLights = [];
 	var gameSpotLights = [];
-	
+
 	// Game Object Obj
 	function gameObject(position) { 
 		this.position = [position[0],position[1],position[2]]; 
@@ -305,7 +311,10 @@ function _Game() {
 			mat4.rotate(this.rotation, Gremlin.degToRad(pitch), [1,0,0]);
 			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,0]);
 		}
-		function setScale(x,y,z) { this.scale = [x,y,z]; }
+		function setScale(x,y,z) { 
+			if(y && z) { this.scale = [x,y,z]; } 
+			else { this.scale = x; }
+		}
 		function setColor(r,g,b,a) { this.color = [r,g,b,a]; }
 		function setUseLighting(val) { this.useLighting = val; }
 		function setShininess(val) { this.shininess = val; }
@@ -319,7 +328,7 @@ function _Game() {
 	}
 	
 	// Creation Objection
-	// TODO: Refactor to take an object as an argument, then the names of the object will be a guide on required arguments
+	// TODO: Refactor to take an object as an argument, then the names of the object will be a guide on required values
 	function createObjectPrimitive(position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush) {
 		var object = new gameObject(position);
 		var textured;
@@ -402,7 +411,7 @@ function _Game() {
 		}
 		gameObjects.push(object);
 	}
-	
+			
 	// Game Init
 	function gameInit() {
 		assetsLoading = false;
@@ -411,7 +420,7 @@ function _Game() {
 		
 		// TODO: Projectile Init
 		// Create Projectiles
-		Gremlin.createTetrahedron(projectileObject, false);		// TODO: Tumbling Tetrahedron would be better
+		Gremlin.createTetrahedron(projectileObject, false);
 		projectileObject.setScale(0.03,0.03,0.03);
 		projectileObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); }
 		
@@ -764,6 +773,7 @@ function _Game() {
 		projectiles.splice(0, projectiles.length);
 		dustMotes.splice(0, dustMotes.length); // Looks like we need a level manager! ;D
 		Gremlin.removeLights();
+		GremlinHUD.clearHud();
 	}
 	
 	
