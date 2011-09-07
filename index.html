@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8"/>
-		<title>Gremlin Test Index</title>
+		<title>ZeroG Alpha - Cube Combat Evolved</title>
 		<script type="text/javascript" src="libs/jquery-1.6.1.min.js"></script>
 		<script type="text/javascript" src="libs/glMatrix-0.9.5.min.js"></script>
 		<script type="text/javascript" src="libs/webgl-utils.js"></script>
@@ -249,6 +249,7 @@
 			#menuContainer ul { list-style: none; padding: 0; }
 			#menuContainer ul li { margin: 0.5em 0;}
 			#menuContainer ul li a { cursor: pointer; color: #FFF; }
+			#menuContainer ul li a:hover { color: #46F; }
 			#menuContainer a { color: #ACF; }
 			#menuContainer select, #menuContainer input { background-color: #000; color: #FFF; border: none; font-size: 0.8em; font-family: monospace; }
 			#menuContainer input[type=button] { margin: 0.5em 0; color: #ACF; cursor: pointer; }
@@ -267,7 +268,7 @@
 / _  / ___ _ __ ___   / _ \
 \// / / _ \ '__/ _ \ / /_\/
  / //\  __/ | | (_) / /_\\ 
-/____/\___|_|  \___/\____/
+/____/\___|_|  \___/\____/ Alpha
 </pre>
 					<ul gui-role="links">
 						<li><a gui-target="levelMenu">New Game</a></li>
@@ -326,7 +327,8 @@
 					<h2>Select Level</h2>
 					<ul class="links">
 						<!-- Add Game Start -->
-						<li><a gui-role="navButton startGame" gui-target="pauseMenu" gui-level="1">Deep Space</a></li>
+						<li><a gui-role="navButton startGame" gui-target="pauseMenu" gui-level="2">Alone in Space</a>(except for a teapot)</li>
+						<li><a gui-role="navButton startGame" gui-target="pauseMenu" gui-level="1">Deep Space</a>(evil spinning crates)</li>
 					</ul>
 					<input gui-role="navButton" gui-target="mainMenu" type="button" value="Back" />
 				</div>
@@ -362,40 +364,6 @@
 					<div id="endGameMessage"></div>
 					<div>
 						<div><input gui-role="navButton menuResume" gui-target="mainMenu" id="btnEndGameExit" type="button" value="Main Menu"/></div>
-					</div>
-				</div>
-			</div>
-			<div id="hudContainer" oncontextmenu="return false;">
-				<!-- Temporary HUD - Replace with WebGL implementation -->
-				<style>
-					#hudContainer { display: none; z-index: 100; height: 0; width: 0;}
-					#playerHUD { position: fixed; bottom: 10px; overflow: hidden; width: 100%; padding: 0 2.5%; z-index: 100; }
-					#playerHUD .col { float: left; width: 25%; }
-					#playerHUD .col label { font-size: 12px; line-height: 25px; color: #FFF; font-family: monospace; }
-					#playerHUD .col .container { border: 1px solid #ACF; overflow: hidden; height: 25px; width: 80%; }
-					#playerHUD .health, #playerHUD .shield, #playerHUD .energy { float: left; height: 100%; }
-					#playerHUD .health { background-color: #090; }
-					#playerHUD .shield { background-color: #009; }
-					#playerHUD .energy { background-color: #D90; }
-				</style>	
-				<div id="playerHUD">
-					<div class="col">
-						<label>Health:</label>
-						<div class="container">
-							<div class="health"></div>
-						</div>
-					</div>
-					<div class="col">
-						<label>Shield:</label>
-						<div class="container">
-							<div class="shield"></div>
-						</div>
-					</div>
-					<div class="col">
-						<label>Energy:</label>
-						<div class="container">
-							<div class="energy"></div>
-						</div>
 					</div>
 				</div>
 			</div>

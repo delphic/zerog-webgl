@@ -5,7 +5,7 @@
 //  \____/|_|  \___|_| |_| |_|_|_|_| |_|  \___|_| |_|\__, |_|_| |_|\___|
 //                                                   |___/             
 // 		A simultaneous learning WebGL & JavaScript Experiment!
-//		v0.6
+//		v0.7
 // 		Delph 2011
 
 function _Gremlin() {
@@ -324,7 +324,78 @@ function _Gremlin() {
 		}
         _mvPopMatrix();
 	}
+	
+	function renderPlane(object) {
+		if (!object.visible) return;
+		var mvMatrix = mat4.create();
+		var pMatrix = mat4.create();
 		
+		mat4.identity(pMatrix);
+		mat4.identity(mvMatrix);
+		mat4.translate(mvMatrix, [object.position[0], object.position[1],0]);
+		
+		if(object.size != [1,1]) mat4.scale(mvMatrix, [object.size[0],object.size[1],1], mvMatrix);
+
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexPosition);
+        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, buffersList[object.buffers].vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
+
+		if (buffersList[object.buffers].useIndices) {
+			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, buffersList[object.buffers].vertexIndex);
+		}
+		
+		_gl.uniform4fv(_shaderProgram.colorUniform, object.color);
+		
+		if (object.useTextures) {
+			_gl.uniform1i(_shaderProgram.useTexturesUniform, true);
+			_gl.enableVertexAttribArray(_shaderProgram.textureCoordAttribute);
+			// Textures
+			_gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].textureCoords);
+			_gl.vertexAttribPointer(_shaderProgram.textureCoordAttribute, buffersList[object.buffers].textureCoords.itemSize, _gl.FLOAT, false, 0, 0);
+
+			_gl.activeTexture(_gl.TEXTURE0);
+			_gl.bindTexture(_gl.TEXTURE_2D, textureList[object.texture]);
+			_gl.uniform1i(_shaderProgram.samplerUniform, 0);
+		}
+		else {
+			// BUG: This does not result in full colour, but a reduced colour
+			// This can be combatted by increasing the colour
+			_gl.disableVertexAttribArray(_shaderProgram.textureCoordAttribute);
+			_gl.uniform1i(_shaderProgram.useTexturesUniform, false);
+		}
+		
+				
+		// Disable Lights 
+		_gl.uniform1i(_shaderProgram.useLightingUniform, false);
+		_gl.disableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
+		
+		_setMatrixUniforms(pMatrix, mvMatrix);
+		
+		if (!object.wireframe && !object.points) {
+			if(buffersList[object.buffers].useIndices) {
+				_gl.drawElements(_gl.TRIANGLES, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+			}
+			else {
+				_gl.drawArrays(_gl.TRIANGLES, 0, buffersList[object.buffers].vertexPosition.numItems);
+			}
+		}
+		else if (object.wireframe){
+			if(buffersList[object.buffers].useIndices) {
+				_gl.drawElements(_gl.LINES, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+			}
+			else {
+				_gl.drawArrays(_gl.LINES, 0, buffersList[object.buffers].vertexPosition.numItems);
+			}
+		}
+		else {
+			if(object.useIndices) {
+				_gl.drawElements(_gl.POINTS, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
+			}
+			else {
+				_gl.drawArrays(_gl.POINTS, 0, buffersList[object.buffers].vertexPosition.numItems);
+			}
+		}
+	}
+			
 	// Buffers
 	buffersList = []; 			// Stores the Buffers
 	buffersNameList = []; 		// Stores what buffers have already been created
@@ -842,10 +913,10 @@ function _Gremlin() {
 		var squareVertexPositionBuffer = _gl.createBuffer();
 		_gl.bindBuffer(_gl.ARRAY_BUFFER, squareVertexPositionBuffer);
 		vertices = [
-			-0.5, -0.5,  0.0,
-			 0.5, -0.5,  0.0,
-			 0.5,  0.5,  0.0,
-			-0.5,  0.5,  0.0
+			 -1.0, -1.0,  0.0,
+			  1.0, -1.0,  0.0,
+			  1.0,  1.0,  0.0,
+			 -1.0,  1.0,  0.0
 		];
 		
 		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
@@ -905,6 +976,67 @@ function _Gremlin() {
 		object.assignBuffer(index);
 	}
 	
+	function createBox(object) {
+
+		object.wireframe = true;
+
+		if (!isNaN(buffersNameList["box"])){
+			object.assignBuffer(buffersNameList["box"]);
+			return;
+		}
+		var buffers = [];
+		// Vertex Buffer
+		var squareVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+		vertices = [
+			 -1.0, -1.0,  0.0,
+			  1.0, -1.0,  0.0,
+			  1.0,  1.0,  0.0,
+			 -1.0,  1.0,  0.0
+		];
+		
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+		squareVertexPositionBuffer.itemSize = 3;
+		squareVertexPositionBuffer.numItems = 4;
+		
+		buffers["vertexPosition"] = squareVertexPositionBuffer;
+	
+		// Normal Buffer
+		// WARNING: This is dependant on shader program should make this more robust
+		var squareVertexNormalBuffer;
+		squareVertexNormalBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, squareVertexNormalBuffer);
+		var vertexNormals = [
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
+		squareVertexNormalBuffer.itemSize = 3;
+		squareVertexNormalBuffer.numItems = 4;
+		
+		buffers["vertexNormals"] = squareVertexNormalBuffer;
+		
+		// Index Buffer
+		var squareVertexIndexBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, squareVertexIndexBuffer);
+		var squareVertexIndices = [
+			0, 1, 2,    1,2,3,
+			2, 3, 0,    3,0,1
+		];
+		_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareVertexIndices), _gl.STATIC_DRAW);
+		squareVertexIndexBuffer.itemSize = 1;
+		squareVertexIndexBuffer.numItems = 12;
+		
+		buffers["vertexIndex"] = squareVertexIndexBuffer;
+		buffers["useIndices"] = true;
+		
+		var index = buffersList.push(buffers)-1;
+		buffersNameList["box"] = index;
+		object.assignBuffer(index);
+		
+	}
 	function loadModel(object, fileName){
 		// Object loading
 		object.visible = false;
@@ -944,7 +1076,7 @@ function _Gremlin() {
 	
 	// Textures
 	var textureList = [];			// Stores the textures
-	var textureFileList = [];		// Stores what textures have already been loaded
+	var textureFileList = [];		// Stores which textures have already been loaded
 	
 	function createTexture(fileName) {
 		if (!isNaN(textureFileList[fileName])) {
@@ -1265,7 +1397,7 @@ function _Gremlin() {
         _mvMatrix = _mvMatrixStack.pop();
     }
 
-	// Question - Should this be group with Shader or Rendering Code?
+	// This should be grouped with the appropriate rendering code
     function _setMatrixUniforms(pMatrix, mvMatrix) {
         _gl.uniformMatrix4fv(_shaderProgram.pMatrixUniform, false, pMatrix);
         _gl.uniformMatrix4fv(_shaderProgram.mvMatrixUniform, false, mvMatrix);
@@ -1279,7 +1411,7 @@ function _Gremlin() {
 	
 	// Shader Code
 	// TODO: Move programs to a manager in render
-	// TODO: Move shader specific stuff to it's own JS file
+	// TODO: Move shader specific stuff to it's own namespace
 	var _shaderProgram;	
 	var _shaderPrograms = [];
 	
@@ -1390,15 +1522,8 @@ function _Gremlin() {
 		return program;
 	}
 	
-	function _setShaderByObject(type) {
-		if (type==="Pixel") {
-			_shaderProgram = _shaderPrograms.Pixel; 
-		} 
-		else if (type==="Vertex") {
-			_shaderProgram = _shaderPrograms.Vertex; 
-		}
-		_gl.useProgram(_shaderProgram);
-	}
+	
+	
 	function _initShaders() {
 		_shaderPrograms["Vertex"] = _createShader("vertex-shader-vs", "vertex-shader-fs");
 		_shaderPrograms["Pixel"] = _createShader("pixel-shader-vs", "pixel-shader-fs");
@@ -1422,6 +1547,7 @@ function _Gremlin() {
 		createRay:					createRay,
 		createPoint:				createPoint,
 		createSquare:				createSquare,
+		createBox:					createBox,
 		loadModel:					loadModel,
 		createTexture:				createTexture,
 		setLightEnvironment:		setLightEnvironment,
@@ -1438,6 +1564,7 @@ function _Gremlin() {
 		setShader:					setShader,
 		prepareScene: 				prepareScene, 
 		renderObject:				renderObject,
+		renderPlane:				renderPlane,
 		movePlayerCamera:			movePlayerCamera,
 		movePlayerCameraZX:			movePlayerCameraZX,
 		setPlayerCamera:			setPlayerCamera,

@@ -37,9 +37,8 @@
 				// Spawn first wave of enemies at + view dir
 				ShipManager.createShip([0,0,-40],[0,2.0,0,1.0]);
 			}
-			else if (!Game.getLevelVar("WaveTwoSpawned") && Game.getLevelVar("WaveOneDestroyed")) {
-				Game.setLevelVar("WaveTwoSpawned", true);
-				
+			else if (!Game.getLevelVar("WaveTwoTriggered") && Game.getLevelVar("WaveOneDestroyed")) {
+				Game.setLevelVar("WaveTwoTriggered",true);
 				// Spawn Second Wave with 5 second delay
 				setTimeout(
 					function() {
@@ -47,6 +46,7 @@
 						ShipManager.createShip([0,0,-40],[0,1.0,0,1.0]);
 						ShipManager.createShip([10,0,-40],[0,1.0,0,1.0]);
 						resetPlayer();
+						Game.setLevelVar("WaveTwoSpawned", true);						
 					}, 
 					5000); // This can unfortunately spawn ships when your in the main menu! 
 			}
@@ -62,6 +62,18 @@
 					Game.setLevelVar("WaveOneDestroyed", true);
 				}
 				// Else carry on
+			}
+			if(Game.getLevelVar("WaveTwoSpawned"))
+			{
+				if(ShipManager.numberOfShips() < 1)
+				{
+					// You Win!
+					setTimeout(
+						function() {
+							GremlinGUI.endGame("<h1 style='colour=purple'>You Win</h1><p>Congratulations! More content coming soon I promise!</p>")
+						},
+						2000);
+				}
 			}
 		}
 	);

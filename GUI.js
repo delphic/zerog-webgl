@@ -22,7 +22,11 @@ function _GUI() {
 			case "1":
 				Game.loadLevel("levels/deepspace.js", "InGame");
 				break;
+			case "2":
+				Game.loadLevel("levels/alone.js", "InGame");
+				break;
 			default:
+				alert("Level not Found!");
 				return;
 		}
 	}
@@ -136,31 +140,13 @@ var GremlinGUI = _GUI();
 
 function _HUD() {
 	
-	// Old HUD
-	function showHud() {
-		if(hudActive) return;
-		else hudActive = true;
-		setHudValues(100,100,100,100);
-		$("#hudContainer").show();
-	}
-	
-	function hideHud() {
-		$("#hudContainer").hide();
-		hudActive = false;
-	}
-	
-	function setHudValues(health, shield, energy) {
-		$("#playerHUD .health").css("width", health+"%");
-		$("#playerHUD .shield").css("width", shield+"%");
-		$("#playerHUD .energy").css("width", energy+"%");
-	}
-	
-	
 	var hudActive = false;
 	
 	// New HUD
 	var hudElements = [];
 	
+	// Note: Position is of centre of Rect to draw, where x=-1 is left side and x=+1 is right side, y = +1 is top and y=-1 is bottom.
+	// Note: Size is amount of the screen to take up x=1 & y=1 will cover the screen.
 	function hudElement(position, size, color) {
 		this.position = position; 
 		this.size = size;
@@ -193,20 +179,75 @@ function _HUD() {
 			textured = false;
 		}
 		
-		// Create Object
+		Gremlin.createSquare(element, textured);
 		
 		if(textured) {
 			element.texture = Gremlin.createTexture(textureName);
 		}
 				
-		hudElements.push(element);
+		return hudElements.push(element)-1;
+	}
+	
+	function createHudBar(position,size,color,alignment,textureName) {
+		// Create Bar
+		// Values passed in to stop bar element and box elements sizes becoming linked
+		var barElement = new hudElement([position[0],position[1]],[size[0],size[1]],color);
 		
-		return element;
+		// Set up bar specific variables
+		if(alignment != "Horizontal" && alignment != "Vertical") {
+			throw("Invalid Bar Alignment");
+		}
+		barElement.alignment = alignment;
+		barElement.currentValue = 1.0;
+		
+		if (alignment == "Horizontal") {
+			barElement.maxSize = size[0];
+			barElement.normalOffset = position[0];
+		}
+		else {
+			barElement.maxSize = size[1];
+			barElement.normalOffset = position[1];
+		}
+		
+		barElement.updateValue = function(value) {
+			this.currentValue = value;
+			var index = 0;
+			if (this.alignment == "Vertical") index = 1;
+			
+			this.size[index] = this.currentValue*this.maxSize;
+			this.position[index] =  this.normalOffset-(this.maxSize - this.size[index]);
+		}
+		
+		var textured;
+				
+		if (textureName) { 
+			textured = true;
+		}
+		else {
+			textured = false;
+		}
+		
+		Gremlin.createSquare(barElement, textured);
+		
+		if(textured) {
+			barElement.texture = Gremlin.createTexture(textureName);
+		}
+				
+		var result = hudElements.push(barElement)-1;
+		
+		// Containing Box
+		var boxElement = new hudElement(position,size,color);
+
+		Gremlin.createBox(boxElement);
+		
+		hudElements.push(boxElement);
+		
+		return result;
 	}
 	
 	function renderHud() {
 		for (element in hudElements) {
-			// Render
+			Gremlin.renderPlane(hudElements[element]);
 		}
 	}
 	
@@ -214,15 +255,15 @@ function _HUD() {
 		hudElements.splice(0, hudElements.length);
 	}
 	
-	function updateHud() {
-		// TODO: link any variables by function to get so we can set values accordingly
+	function updateHud(items) {
+		for(item in items) {
+			hudElements[items[item].index].updateValue(items[item].value);
+		}		
 	}
 	
 	return {
-		showHud:			showHud,
-		hideHud:			hideHud,
-		setHudValues:		setHudValues,
 		createHudElement:	createHudElement,
+		createHudBar:		createHudBar,
 		clearHud:			clearHud,
 		renderHud:			renderHud,
 		updateHud:			updateHud

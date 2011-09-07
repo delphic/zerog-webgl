@@ -157,7 +157,12 @@ function _Game() {
 			
 			
 				// Update HUD
-				GremlinHUD.setHudValues((player.healthPoints/player.healthMax)*100, (player.shieldPoints/player.shieldMax)*100, (player.energyPoints/player.energyMax)*100);
+				GremlinHUD.updateHud( 
+				{ 
+					health: { index: healthBar, value: (player.healthPoints/player.healthMax) },
+					shield: { index: shieldBar, value: (player.shieldPoints/player.shieldMax) },
+					energy: { index: energyBar, value: (player.energyPoints/player.energyMax) } 
+				});
 				
 				// Update Motes
 				updateMotes(player.position, player.velocity); 
@@ -190,10 +195,6 @@ function _Game() {
 			if(assetsLoading) return;
 			else gameState = loadingTargetState;
 		}
-		
-		// Show / Hide HUD
-		if(gameState == "InGame") { GremlinHUD.showHud(); }
-		else { GremlinHUD.hideHud(); }
 		
 		// Render Scene
 		Gremlin.prepareScene();
@@ -230,7 +231,6 @@ function _Game() {
 		// Animate Scene
         animate();
     }
-
 	// Game Objects
 	var gameObjects = [];
 	var gamePointLights = [];
@@ -506,6 +506,11 @@ function _Game() {
 	var player = new gameObject([0,0,0]);
 	attachShip(player);
 	
+	// Player HUD Values
+	var healthBar;
+	var shieldBar;
+	var energyBar;// Om Nom Nom Nom
+	
 	// Player Access Functions
 	function setPlayerPosition(position) {
 		// TODO: Check input is vector
@@ -740,6 +745,11 @@ function _Game() {
 		player.shieldPoints = player.shieldMax;
 		player.energyPoints = player.energyMax;
 		// End Reset Player 
+		
+		// Load HUD
+		healthBar = GremlinHUD.createHudBar([-0.9,-0.65],[0.04,0.3],[0.2,1,0.2,1], "Vertical");
+		shieldBar = GremlinHUD.createHudBar([0.9,-0.65],[0.04,0.3],[0.2,0.2,1,1], "Vertical");
+		energyBar = GremlinHUD.createHudBar([0,-0.9],[0.25,0.05],[1,0.3,0.1,1], "Horizontal");
 		
 		gameState = "Loading";
 		loadingTargetState = targetState;
