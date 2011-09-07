@@ -149,10 +149,9 @@ function _HUD() {
 		hudActive = false;
 	}
 	
-	function setHudValues(health, shield, fuel, energy) {
+	function setHudValues(health, shield, energy) {
 		$("#playerHUD .health").css("width", health+"%");
 		$("#playerHUD .shield").css("width", shield+"%");
-		$("#playerHUD .fuel").css("width", fuel+"%");
 		$("#playerHUD .energy").css("width", energy+"%");
 	}
 	
@@ -194,7 +193,7 @@ function _HUD() {
 			textured = false;
 		}
 		
-		//Gremlin.createSquare(element, textured);
+		// Create Object
 		
 		if(textured) {
 			element.texture = Gremlin.createTexture(textureName);
@@ -207,7 +206,7 @@ function _HUD() {
 	
 	function renderHud() {
 		for (element in hudElements) {
-			//Gremlin.render2dObject(hudElements[element]);
+			// Render
 		}
 	}
 	

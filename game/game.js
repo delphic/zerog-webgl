@@ -157,7 +157,7 @@ function _Game() {
 			
 			
 				// Update HUD
-				GremlinHUD.setHudValues((player.healthPoints/player.healthMax)*100, (player.shieldPoints/player.shieldMax)*100, (player.fuelPoints/player.fuelMax)*100, (player.energyPoints/player.energyMax)*100);
+				GremlinHUD.setHudValues((player.healthPoints/player.healthMax)*100, (player.shieldPoints/player.shieldMax)*100, (player.energyPoints/player.energyMax)*100);
 				
 				// Update Motes
 				updateMotes(player.position, player.velocity); 
@@ -433,14 +433,11 @@ function _Game() {
 		object.shieldMax = 100;
 		object.shieldPoints = 100;
 		object.shieldRegen = 0.0025;
-		object.fuelMax = 100;
-		object.fuelPoints = 100;
-		object.fuelRegen = 0.0075;
 		object.healthMax = 100;
 		object.healthPoints = 100;
 		object.energyMax = 100;
 		object.energyPoints = 100;
-		object.energyRegen = 0.1;
+		object.energyRegen = 0.0125;
 		if(attributes && attributes["FiringPeriod"]) {
 			object.firingPeriod = attributes["FiringPeriod"];
 		}
@@ -449,7 +446,6 @@ function _Game() {
 		}
 		object.firingTimer = 300;
 		object.firingCost = 5;
-		object.fuelFactor = 4000;
 		object.weaponSpeed = 0.1;
 		object.canFire = function() { 
 			if(this.firingTimer > this.firingPeriod && (this.energyPoints > this.firingCost)) { 
@@ -472,26 +468,17 @@ function _Game() {
 		}
 		object.updateShip = function(elapsed) {
 			this.shieldPoints += elapsed*this.shieldRegen; if(this.shieldPoints>this.shieldMax) this.shieldPoints = this.shieldMax;
-			this.fuelPoints += elapsed*this.fuelRegen; if(this.fuelPoints>this.fuelMax) this.fuelPoints = this.fuelMax;
 			this.energyPoints += elapsed*this.energyRegen; if(this.energyPoints>this.energyMax) this.energyPoints = this.energyMax;
 			this.firingTimer += elapsed;
 		}
 		object.accelerationRate = function(elapsed) {
 			var accelerationAmount = 0.00005 * elapsed;
-			if(this.fuelPoints > 0.8*this.fuelMax) {
-				accelerationAmount*=1.2; // 20% increase in acceleration rate when fuel is over 80%
-			}
-			else if (this.fueldPoints < 0.2*this.fuelMax) {
-				accelerationAmount*=0.8;
-			}
 			accelerationAmount/=this.mass
-			// This check should not be here
-			if (this.fuelFactor*accelerationAmount > this.fuelPoints) return 0;
 			
 			return accelerationAmount;
 		}
 		object.accelerate = function(elapsed) {
-			this.fuelPoints -= this.fuelFactor*this.accelerationRate(elapsed);
+			// Nothing Doing
 		}
 		object.takeDamage = function(damage) {
 			if(this.shieldPoints > 0) {
@@ -752,7 +739,6 @@ function _Game() {
 		player.healthPoints = player.healthMax;
 		player.shieldPoints = player.shieldMax;
 		player.energyPoints = player.energyMax;
-		player.fuelPoints = player.fuelMax;
 		// End Reset Player 
 		
 		gameState = "Loading";
