@@ -21,29 +21,29 @@ Using ogre font from http://www.network-science.de/ascii/ for headings
 		* Directional
 		* Point Lights
 		* Specular Lighting
-		* Phase 2: Spot lights
+		* Spot lights
 		* Specular Maps
-		* Phase 2: Shadow Maps
+		* Shadow Maps
 	* Height Map Terrian Rendering
 * Camera Model - basic setting of rotation
 	* Sub Camera Objects - FPS, Third Person, Space Camera etc.
 * JSON static model loading
-	* Phase 2: In engine JSON model creation
-	* Phase 3: JSON Animated Models.
+	* In engine JSON model creation
+	* JSON Animated Models.
 * Level Loading from file - setting lighting, models, etc
-	* Phase 2: In engine level creation
+	* In engine level creation
 * Keyboard and Mouse Input
 	* Bindable Keys
 * Full screen options
-* HTML GUI overlays
-	* Need to investigate ability to load JQuery event binds after creating inputs - if we plan to use JQuery, try this with normal JS first.
-	* GUIs stored in separate files
+* HTML GUI
+* WebGL HUD
+	* HUDs as separate files
 * Maths library
-	* Use existing libraries where possible, make sure it contains planes and ray maths
+	* Use existing libraries where possible
 * Physics
 	* Collision Detection
 		* Bounding Spheres
-			- Bounding Ellipsoid ( only really needed for games with 'shields' 
+			- Bounding Ellipsoid ( only really needed for games with 'shields')
 		* Bounding Boxes
 			- Sub levels for locational damage
 	* Basic Gravity (both directional and point)
@@ -52,8 +52,8 @@ Using ogre font from http://www.network-science.de/ascii/ for headings
 * Sound
 	* BG Music
 	* Triggered Sound Effects
-	* Phase 2: Directional sound
-* Logging - log errors
+	* Directional sound
+* Logging
 
 * Phase 2: AI framework
 
@@ -79,8 +79,6 @@ v0.1
 	* Static Debug Shapes
 		Cubes, Spheres and Pyramids
 	
-Using LearningWebGL lesson 4 as a basis, stole the moon from Lesson 11 though!
-
 v0.2
 * Fix input not working for not fullscreen - (need to set width)
 * Fix Cursor Issues - override default action (also invisible cursor)
@@ -96,8 +94,7 @@ v0.3
 	* Add Normals to Primitives
 	* Add uniforms for ambient and single directional light
 	* Add useLighting to objects / fullBright
-	* Think about how to do multiple lights (passing an array of uniforms to the shader perhaps?)
-* External Shader Scripts (maybe)
+	* Think about how to do multiple lights
 
 v0.4 
 * Point Lights - unskew from camera - need coordinate transform functions for rotation (directional light) and position (point lights & presumably spot lights).
@@ -109,27 +106,26 @@ v0.4
 
 v0.5
 * Implement Scaling
-* Specular Lighting (Still todo separate colours)
+* Specular Lighting
 * Loading 'levels' from Files
 
 v0.6 
 * Separte CSS Width and resolution of canvas
 * Game Layer - Menu system, loading system, options (texture filtering, lighting, pixel / vertex, resolution).
 
-v0.7+
+v0.7
 * Create Texture & Model Management
 * Decouple objects and their buffers
-
-* Move asset loading management system into engine / own namespace, move incrementation of number and remove uneccesary removal of numbers once this is done
+* Move asset loading management system into engine / own namespace
 GAME CODE * Level loading and manangement system to control spawning of enemies and environment
 
+v0.8+
 * Material System - include emmissive
-* Use canvas as texture (for HUD - text and easy geometric shapes)
 * Orthogonal rendering
-
 * Render to Texture
 * Alpha Blending
 * Specular Maps
 * Normal Maps
+* Model Animation
 
-THEN onto GUI & HUD (using HTML), sound and input controls (separate files perhaps), Model Conversion Collada -> JSON
+THEN onto sound and  Model Conversion Collada -> JSON
