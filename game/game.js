@@ -941,17 +941,21 @@ function _ShipManager() {
 			// Remove Player Component, as it is removed from aiming calculation, arguably it shouldn't be
 			vec3.subtract(projectileVelocity, Game.getPlayerVelocity());
 
-			// Reverse Pick at z=-500 units (this is currenlty hardcoded in aiming) along velocity vector.
+			// Reverse Pick at z=-500 units in z-direction (this is currenlty hardcoded in aiming) along velocity vector.
 			var aimAtPoint = vec3.create(projectileVelocity);
 			vec3.normalize(aimAtPoint);
-			var scaleFactor = 500 / aimAtPoint[2];
+			var scaleFactor = - 500 / aimAtPoint[2];			
+			if(aimAtPoint[2] > 0) {
+				scaleFactor *= -1;
+			}
 			vec3.scale(aimAtPoint, scaleFactor);
 
 			// Move to Global Coordinate System
 			vec3.add(aimAtPoint, Game.getPlayerPosition());
 							
 			var coords = [0,0];
-			if(Gremlin.reversePick(aimAtPoint[0],aimAtPoint[1],aimAtPoint[2], coords)){
+
+			if(Gremlin.reversePick(aimAtPoint[0],aimAtPoint[1],aimAtPoint[2], coords)) {
 				var canvasSize = Game.getCanvasSize();
 				var separation = vec3.create();
 				vec3.subtract(ship.position, Game.getPlayerPosition(),separation);

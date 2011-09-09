@@ -1277,7 +1277,7 @@ function _Gremlin() {
 		// We have coords in Globals, convert to Camera Coordinates
 		_playerCamera.transform(position);
 		
-		if(position[2] < 0) {
+		if(position[2] > 0) {
 			// Object is behind camera.
 			return false;
 		}
