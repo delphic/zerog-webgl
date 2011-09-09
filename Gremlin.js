@@ -1335,7 +1335,6 @@ function _Gremlin() {
 		this.reverseRotation = reverseRotation;
 		this.reverseTransform = reverseTransform;
 		
-		// TODO: Add Roll
 		function setRotation(yaw, pitch, roll) {
 			// Sets Rotation Matrix in Global Y P R
 			mat4.identity(this.rotationMatrix);

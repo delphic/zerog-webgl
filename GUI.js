@@ -139,8 +139,8 @@ function _GUI() {
 var GremlinGUI = _GUI();
 
 function _HUD() {
-	
-	var hudActive = false;
+	var viewPortRatio = 1.6; // Height is used to calculate size of elements, so horizonal sizes need to be resized.
+	var hudActive = false; // TODO: Actually use this!
 	
 	// List of HUD elements
 	var hudElements = [];
@@ -170,7 +170,7 @@ function _HUD() {
 	}
 	
 	function createElement(position, size, color, textureName) {
-		var element = new hudElement(position,size,color);
+		var element = new hudElement(position,[size[0]/viewPortRatio,size[1]],color);
 		var textured;
 		
 		if (textureName) { 
@@ -190,7 +190,7 @@ function _HUD() {
 	}
 	
 	function createWireframe(type, position, size, color) {
-		var element = new hudElement(position,size,color);
+		var element = new hudElement(position,[size[0]/viewPortRatio,size[1]],color);
 		
 		element.updateValue = function(value) {
 			// Updates Position
@@ -218,7 +218,7 @@ function _HUD() {
 	function createBar(position, size, barColor, boxColor, alignment, textureName) {
 		// Create Bar
 		// Values passed in to stop bar element and box elements sizes becoming linked
-		var barElement = new hudElement([position[0],position[1], -0.5],[size[0],size[1]],barColor);
+		var barElement = new hudElement([position[0],position[1], -0.5],[size[0]/viewPortRatio,size[1]],barColor);
 		
 		// Set up bar specific variables
 		if(alignment != "Horizontal" && alignment != "Vertical") {
@@ -228,7 +228,7 @@ function _HUD() {
 		barElement.currentValue = 1.0;
 		
 		if (alignment == "Horizontal") {
-			barElement.maxSize = size[0];
+			barElement.maxSize = size[0]/viewPortRatio;
 			barElement.normalOffset = position[0];
 		}
 		else {
@@ -264,7 +264,7 @@ function _HUD() {
 		var result = hudElements.push(barElement)-1;
 		
 		// Containing Box
-		var boxElement = new hudElement([position[0],position[1], -1],size,boxColor);
+		var boxElement = new hudElement([position[0],position[1], -1],[size[0]/viewPortRatio,size[1]],boxColor);
 
 		Gremlin.createBox(boxElement);
 		
@@ -279,6 +279,21 @@ function _HUD() {
 		}
 	}
 	
+	function rescaleHud() {
+		var canvasSize = Game.getCanvasSize();
+		var newRatio = canvasSize[0]/canvasSize[1];
+		
+		for(i in hudElements) {
+			hudElements[i].size[0] *= (viewPortRatio)/(newRatio);
+			if(hudElements[i].maxSize && hudElements[i].alignment == "Horizontal") {
+				hudElements[i].maxSize *= (viewPortRatio)/(newRatio);
+			}
+		}
+		viewPortRatio = newRatio;
+	}
+	
+	GremlinEventHandler.bindEvent("onresize", rescaleHud); // TODO: This should probably go in an init
+	
 	function clearHud() {
 		hudElements.splice(0, hudElements.length);
 	}
@@ -291,7 +306,7 @@ function _HUD() {
 	
 	function updateElement(index, position, size) {
 		hudElements[index].position = position;
-		hudElements[index].size = size;
+		hudElements[index].size = [size[0]/viewPortRatio, size[1]];
 	}
 	
 	// Use with caution! Invalidates existing references, if index != last element
@@ -311,7 +326,8 @@ function _HUD() {
 		createBar:			createBar,
 		createWireframe:	createWireframe,
 		clearHud:			clearHud,
-		renderHud:			renderHud,
+		renderHud:			renderHud,	
+		rescaleHud:			rescaleHud,
 		updateHud:			updateHud,
 		updateElement:		updateElement,
 		removeElement:		removeElement,

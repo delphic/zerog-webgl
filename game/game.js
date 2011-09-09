@@ -767,7 +767,7 @@ function _Game() {
 			"Vertical");
 		energyBar = GremlinHUD.createBar(
 			[0,-0.9],
-			[0.25,0.05],
+			[0.4,0.04],
 			[0.5,0.15,0.05,1],
 			[1,0.8,0.5,1], 
 			"Horizontal");
@@ -862,8 +862,7 @@ function _ShipManager() {
 		var separation = vec3.create();
 		vec3.subtract(position, Game.getPlayerPosition(),separation);
 		var scaleFactor = 1/vec3.length(separation);
-		var size = [scaleFactor*(canvasSize[1]/canvasSize[0]),scaleFactor];
-		tmpShip.aimAtIndex = GremlinHUD.createWireframe("Box",[0,0,0], size, [1,0,0,1]);
+		tmpShip.aimAtIndex = GremlinHUD.createWireframe("Box",[0,0,0], [scaleFactor,scaleFactor], [1,0,0,1]);
 
 		// Attach Ship Attributes
 		var attributes = {};
@@ -957,9 +956,8 @@ function _ShipManager() {
 				var separation = vec3.create();
 				vec3.subtract(ship.position, Game.getPlayerPosition(),separation);
 				var scaleFactor = 1/vec3.length(separation);
-				var size = [scaleFactor*(canvasSize[1]/canvasSize[0]),scaleFactor];  // TODO: Should not have to check for screen resize here, should be a factor in HUD / GUI.
 				GremlinHUD.showElement(ship.aimAtIndex);
-				GremlinHUD.updateElement(ship.aimAtIndex, [coords[0],coords[1],-1], size); 
+				GremlinHUD.updateElement(ship.aimAtIndex, [coords[0],coords[1],-1], [scaleFactor,scaleFactor]); 
 			}
 			else {
 				GremlinHUD.hideElement(ship.aimAtIndex);
@@ -1031,7 +1029,7 @@ function _ShipAI() {
 			obj.AiEngageDistance = attributes["EngageDistance"];
 		}
 		else {
-			obj.AiEngageDistance = 50*obj.AiSkill; // TODO: Tweak once units have been actually figured out!
+			obj.AiEngageDistance = 100*obj.AiSkill; // TODO: Tweak once units have been actually figured out!
 		}
 		
 		// AI Disengage Distance - number - number of units at which AI stops pursuing.
