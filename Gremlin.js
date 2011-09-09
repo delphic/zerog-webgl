@@ -332,7 +332,8 @@ function _Gremlin() {
 		
 		mat4.identity(pMatrix);
 		mat4.identity(mvMatrix);
-		mat4.translate(mvMatrix, [object.position[0], object.position[1],0]);
+		
+		mat4.translate(mvMatrix, [object.position[0], object.position[1],object.position[2]]);
 		
 		if(object.size != [1,1]) mat4.scale(mvMatrix, [object.size[0],object.size[1],1], mvMatrix);
 
@@ -402,7 +403,9 @@ function _Gremlin() {
 	modelLoadingInfo = [];		// An array to store what objects have requested what models and their callbacks
 	
 	// Primitive Creation Functions
-	// TODO: Add Cylinders, Generalise to Cuboids & Elipsoids and add 2D shapes Rays, Elipses, Rectangles 
+	// TODO: Move these elsewhere
+	// TODO: Should not take object as argument, should simply return index of static buffer
+	// alterations of object such as useTextures, wireframes, etc should be done elsewhere
 	function createTetrahedron(object,textured) {
 		if(textured) object.useTextures = true;
 		
@@ -975,7 +978,7 @@ function _Gremlin() {
 		buffersNameList["square"] = index;
 		object.assignBuffer(index);
 	}
-	
+	// Wireframe objects
 	function createBox(object) {
 
 		object.wireframe = true;
@@ -1022,12 +1025,12 @@ function _Gremlin() {
 		var squareVertexIndexBuffer = _gl.createBuffer();
 		_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, squareVertexIndexBuffer);
 		var squareVertexIndices = [
-			0, 1, 2,    1,2,3,
-			2, 3, 0,    3,0,1
+			0, 1,   2, 1,
+			2, 3,   3, 0,
 		];
 		_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareVertexIndices), _gl.STATIC_DRAW);
 		squareVertexIndexBuffer.itemSize = 1;
-		squareVertexIndexBuffer.numItems = 12;
+		squareVertexIndexBuffer.numItems = 8;
 		
 		buffers["vertexIndex"] = squareVertexIndexBuffer;
 		buffers["useIndices"] = true;
@@ -1037,6 +1040,133 @@ function _Gremlin() {
 		object.assignBuffer(index);
 		
 	}
+	function createCross(object) {
+		object.wireframe = true;
+
+		if (!isNaN(buffersNameList["cross"])){
+			object.assignBuffer(buffersNameList["cross"]);
+			return;
+		}
+		var buffers = [];
+		// Vertex Buffer
+		var crossVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, crossVertexPositionBuffer);
+		vertices = [
+			 -0.5,  0.0,  0.0,
+			  0.0, -0.5,  0.0,
+			  0.5,  0.0,  0.0,
+			  0.0,  0.5,  0.0
+		];
+		
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+		crossVertexPositionBuffer.itemSize = 3;
+		crossVertexPositionBuffer.numItems = 4;
+		
+		buffers["vertexPosition"] = crossVertexPositionBuffer;
+	
+		// Normal Buffer
+		// WARNING: This is dependant on shader program should make this more robust
+		var crossVertexNormalBuffer;
+		crossVertexNormalBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, crossVertexNormalBuffer);
+		var vertexNormals = [
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
+		crossVertexNormalBuffer.itemSize = 3;
+		crossVertexNormalBuffer.numItems = 4;
+		
+		buffers["vertexNormals"] = crossVertexNormalBuffer;
+		
+		// Index Buffer
+		var crossVertexIndexBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, crossVertexIndexBuffer);
+		var vertexIndices = [
+			0, 2, 1, 3
+		];
+		_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexIndices), _gl.STATIC_DRAW);
+		crossVertexIndexBuffer.itemSize = 1;
+		crossVertexIndexBuffer.numItems = 4;
+		
+		buffers["vertexIndex"] = crossVertexIndexBuffer;
+		buffers["useIndices"] = true;
+		
+		var index = buffersList.push(buffers)-1;
+		buffersNameList["cross"] = index;
+		object.assignBuffer(index);
+	}
+	function createBrace(object) {
+		object.wireframe = true;
+
+		if (!isNaN(buffersNameList["brace"])){
+			object.assignBuffer(buffersNameList["brace"]);
+			return;
+		}
+		var buffers = [];
+		// Vertex Buffer
+		var braceVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, braceVertexPositionBuffer);
+		vertices = [
+			 -1.0, -1.0, 0.0,
+			 -0.9, -1.0, 0.0,
+			  0.9, -1.0, 0.0,
+			  1.0, -1.0, 0.0,
+			  1.0, 	1.0, 0.0,
+			  0.9,  1.0, 0.0,
+			 -0.9,  1.0, 0.0,
+			 -1.0,  1.0, 0.0
+		];
+		
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
+		braceVertexPositionBuffer.itemSize = 3;
+		braceVertexPositionBuffer.numItems = 8;
+		
+		buffers["vertexPosition"] = braceVertexPositionBuffer;
+	
+		// Normal Buffer
+		// WARNING: This is dependant on shader program should make this more robust
+		var braceVertexNormalBuffer;
+		braceVertexNormalBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, braceVertexNormalBuffer);
+		var vertexNormals = [
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0,
+		   0.0,  0.0,  1.0
+		];
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
+		braceVertexNormalBuffer.itemSize = 3;
+		braceVertexNormalBuffer.numItems = 8;
+		
+		buffers["vertexNormals"] = braceVertexNormalBuffer;
+		
+		// Index Buffer
+		var braceVertexIndexBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, braceVertexIndexBuffer);
+		var vertexIndices = [
+			0, 1, 	2, 3,
+			3, 4,	4, 5,
+			6, 7,	7, 0	
+		];
+		_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexIndices), _gl.STATIC_DRAW);
+		braceVertexIndexBuffer.itemSize = 1;
+		braceVertexIndexBuffer.numItems = 12;
+		
+		buffers["vertexIndex"] = braceVertexIndexBuffer;
+		buffers["useIndices"] = true;
+		
+		var index = buffersList.push(buffers)-1;
+		buffersNameList["brace"] = index;
+		object.assignBuffer(index);
+	}
+	
 	function loadModel(object, fileName){
 		// Object loading
 		object.visible = false;
@@ -1141,6 +1271,22 @@ function _Gremlin() {
 		_playerCamera.reverseTransform(pickPos);
 		
 		return pickPos;
+	}
+	function reversePick(x,y,z, coords) {
+		var position = [x,y,z];
+		// We have coords in Globals, convert to Camera Coordinates
+		_playerCamera.transform(position);
+		
+		if(position[2] < 0) {
+			// Object is behind camera.
+			return false;
+		}
+		
+		// Now find x and y position - note finds in ortho coords not pixels.
+		coords[0] = -(_gl.viewportHeight/_gl.viewportWidth)*position[0]/(position[2]*Math.tan(degToRad(45*0.5)));
+		coords[1] = -position[1]/(position[2]*Math.tan(degToRad(45*0.5)));
+		
+		return true;		
 	}
 	// Maths Functions
     function degToRad(degrees) {
@@ -1548,6 +1694,8 @@ function _Gremlin() {
 		createPoint:				createPoint,
 		createSquare:				createSquare,
 		createBox:					createBox,
+		createCross:				createCross,
+		createBrace:				createBrace,
 		loadModel:					loadModel,
 		createTexture:				createTexture,
 		setLightEnvironment:		setLightEnvironment,
@@ -1576,6 +1724,7 @@ function _Gremlin() {
 		playerCameraReverseRotation:	playerCameraReverseRotation,
 		playerCameraReverseTransform:	playerCameraReverseTransform,
 		pickPosition:				pickPosition,
+		reversePick:				reversePick,
 		degToRad: 					degToRad 
 	};
 }
@@ -2046,3 +2195,101 @@ function _GremlinCollision() {
 }
 
 var GremlinCollision = _GremlinCollision();
+
+// GremlinMaths
+function _GremlinMaths() {
+	
+	// Calculates the time at which two objects will collide for a known separation
+	// one object has known velocity other has known velocity magnitude.
+	function calculateCollisionTime(separation, targetVelocity, projectileSpeed) {
+		// Calculation the solution to a quadratic for T.
+		// a = magnitude of Relative Velocity squared - magnitude of Projectile Velocity squared
+		// b = 2 * dot product of Relative Velocity and Separaation
+		// c = magnitude of separation squared
+		var a = (targetVelocity[0]*targetVelocity[0] + targetVelocity[1]*targetVelocity[1] + targetVelocity[2]*targetVelocity[0]) - projectileSpeed*projectileSpeed;
+		var b = 2*vec3.dot(targetVelocity, separation);
+		var c = (separation[0]*separation[0] + separation[1]*separation[1] + separation[2]*separation[2]);
+		
+		var results = _solveQuadratic(a,b,c);
+		
+		if (results) {			
+			if (results.length == 1) {
+				// Single Root
+				// This implies that the objects are on top of each other... should never happen, but do not want to explictly forbid it.
+				return results[0];
+			}
+			else {
+				// Two Roots
+				// One should be in the future and one in the past, we return the future result.
+				if(results[0] > 0 && results[1] <= 0) {
+					return results[0];
+				}
+				else if (results[0] <= 0 && results[1] > 0) {
+					return results[1];
+				}
+				else {
+					if (results[0] > 0 && results[1] > 0) {
+						throw ("Both solutions to projectile calculation positive, check arguments");
+					}
+					else {
+						throw ("Both solutions to projectile calculation negative, check arguments");
+					}
+				}
+			}
+		}
+		else {
+			// No Solution, return 0
+			return 0;
+		}
+	}
+	
+	/**
+	 * Returns false if it is not possible to hit target with given projectile speed.
+	 * Else returns true and sets projectile velocity to velocity required to hit target
+	 */
+	function calculateProjectileVelocity(separation, targetVelocity, projectileSpeed, projectileVelocity){
+		var collisionTime = calculateCollisionTime(separation, targetVelocity, projectileSpeed);	
+		if (collisionTime != 0) {
+			var separationScaled = vec3.create();
+			vec3.scale(separation, 1/collisionTime, separationScaled);
+			vec3.add(targetVelocity, separationScaled, projectileVelocity);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	// Returns false if no real roots
+	// Returns array with single or multiple roots
+	function _solveQuadratic(a,b,c) {
+		var results = [];
+		var quadDet;
+		
+		if (b*b > 4*a*c) { 
+			quadDet = Math.sqrt(b*b - 4*a*c);
+		}
+		else {
+			// No Real Roots
+			return false;
+		}
+		if(quadDet == 0) {
+			// Single Root
+			results[0] = (-b/(2*a));
+		}
+		else {
+			// Two Real Roots
+			results[0] = (-b + quadDet)/(2*a);
+			results[1] = (-b - quadDet)/(2*a);
+		}
+		
+		return results;
+	}
+	
+	return {
+		calculateCollisionTime: 		calculateCollisionTime,
+		calculateProjectileVelocity: 	calculateProjectileVelocity
+	}
+}
+
+var GremlinMaths = _GremlinMaths();

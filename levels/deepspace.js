@@ -18,22 +18,10 @@
 	
 	Game.setLevelThink(
 		function() {
-			function resetPlayer() {
-				// For now we're going to exactly what we did for the original ZeroG
-				// Which is reset the player to position 0,0,0 - view 0,0,1
-				// And spawn enemies in +z
-				Game.setPlayerPosition([0,0,0]);
-				Game.setPlayerVelocity([0,0,0]);
-				Game.setPlayerRotation([0,0,0]);
-				Game.createMotes();
-			}
-			
 			// Spawning New Waves
 			// Check wave one spawned
 			if(!Game.getLevelVar("WaveOneSpawned"))	{
 				Game.setLevelVar("WaveOneSpawned", true);
-				// First Wave Spawns Immediately so no need to reset player
-				
 				// Spawn first wave of enemies at + view dir
 				ShipManager.createShip([0,0,-40],[0,2.0,0,1.0]);
 			}
@@ -45,10 +33,9 @@
 						ShipManager.createShip([-10,0,-40],[0,1.0,0,1.0]);
 						ShipManager.createShip([0,0,-40],[0,1.0,0,1.0]);
 						ShipManager.createShip([10,0,-40],[0,1.0,0,1.0]);
-						resetPlayer();
 						Game.setLevelVar("WaveTwoSpawned", true);						
 					}, 
-					5000); // This can unfortunately spawn ships when your in the main menu! 
+					5000); // This can unfortunately spawn ships when your in the main menu! TODO: Need a queuing system.
 			}
 			
 			// Checking on Old Waves and updating

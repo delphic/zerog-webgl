@@ -137,7 +137,7 @@ function _Game() {
 						var pos = vec3.create(player.position);
 						// TODO: Also this needs to be turret attach point rather than camera position
 						var aimtAt = [0,0,0];
-						aimAt = Gremlin.pickPosition(mousePos[0], mousePos[1], 500); // TODO: 500 should be replaced by distance to target
+						aimAt = Gremlin.pickPosition(mousePos[0], mousePos[1], 500); // TODO: 500 should be replaced by z-component of distance to target - if this is altered, update aimAt reticle
 						var v = [0,0,0]; 
 						vec3.subtract(aimAt, pos, v);
 						vec3.normalize(v);
@@ -532,6 +532,9 @@ function _Game() {
 	function getPlayerVelocity() {
 		return player.velocity;
 	}
+	function getPlayerProjectileSpeed() {
+		return (vec3.length(player.velocity)+player.weaponSpeed);
+	}
 	
 	// Basic Projectile System
 	// TODO: namespace
@@ -709,6 +712,9 @@ function _Game() {
 		canvas.style.width = document.width+"px";
 		canvas.style.height = window.innerHeight+"px";
 	}
+	function getCanvasSize() {
+		return [canvas.width, canvas.height];
+	}
 	
 	GremlinEventHandler.bindEvent("onblur", controller.handleWindowBlur);
 	GremlinEventHandler.bindEvent("onfocus", controller.handleWindowFocus);
@@ -747,16 +753,33 @@ function _Game() {
 		// End Reset Player 
 		
 		// Load HUD
-		healthBar = GremlinHUD.createHudBar([-0.9,-0.65],[0.04,0.3],[0.2,1,0.2,1], "Vertical");
-		shieldBar = GremlinHUD.createHudBar([0.9,-0.65],[0.04,0.3],[0.2,0.2,1,1], "Vertical");
-		energyBar = GremlinHUD.createHudBar([0,-0.9],[0.25,0.05],[1,0.3,0.1,1], "Horizontal");
+		healthBar = GremlinHUD.createBar(
+			[-0.9, -0.65],
+			[0.04, 0.3],
+			[0.1, 0.5, 0.1, 1],
+			[0.7, 1, 0.7, 1], 
+			"Vertical");
+		shieldBar = GremlinHUD.createBar(
+			[0.9,-0.65],
+			[0.04,0.3],
+			[0.1,0.1,0.5,1],
+			[0.7,0.7,1,1], 
+			"Vertical");
+		energyBar = GremlinHUD.createBar(
+			[0,-0.9],
+			[0.25,0.05],
+			[0.5,0.15,0.05,1],
+			[1,0.8,0.5,1], 
+			"Horizontal");
 		
 		gameState = "Loading";
 		loadingTargetState = targetState;
+		
 		var fileref=document.createElement('script');
 		fileref.setAttribute("type","text/javascript");
 		fileref.setAttribute("src", fileName);
 		if (typeof fileref!="undefined") document.getElementsByTagName("head")[0].appendChild(fileref);
+		
 	}
 	function unloadLevel() {
 		for(variables in levelVars)
@@ -787,11 +810,13 @@ function _Game() {
 		setLevelVar:				setLevelVar,
 		getPlayerPosition:			getPlayerPosition,
 		getPlayerVelocity:			getPlayerVelocity,
+		getPlayerProjectileSpeed:	getPlayerProjectileSpeed,
 		setPlayerPosition:          setPlayerPosition,
 		setPlayerVelocity:			setPlayerVelocity,
 		setPlayerRotation:			setPlayerRotation,	
 		spawnProjectile:			spawnProjectile,
 		applyOptions:				applyOptions,
+		getCanvasSize:				getCanvasSize,
 		pause:						pause,
 		unpause:					unpause,
 		webGLStart: 				webGLStart
@@ -810,6 +835,7 @@ var Game = _Game();
 
 function _ShipManager() {
 	
+	// Public
 	var shipList = [];
 
 	function numberOfShips() {
@@ -830,13 +856,28 @@ function _ShipManager() {
 			null, 
 			true);
 		tmpShip.setColor(color[0], color[1], color[2], color[3]);
+		
+		// Create HUD elements
+		var canvasSize = Game.getCanvasSize();
+		var separation = vec3.create();
+		vec3.subtract(position, Game.getPlayerPosition(),separation);
+		var scaleFactor = 1/vec3.length(separation);
+		var size = [scaleFactor*(canvasSize[1]/canvasSize[0]),scaleFactor];
+		tmpShip.aimAtIndex = GremlinHUD.createWireframe("Box",[0,0,0], size, [1,0,0,1]);
+
+		// Attach Ship Attributes
 		var attributes = {};
 		attributes.FiringPeriod = 600;
 		Game.attachShip(tmpShip, attributes);
+
+		// Attach AI
 		ShipAI.attachAI(tmpShip);
+
+		// Add to List
 		shipList.push(tmpShip);
 	}
 	function destroyShip(index) {
+		GremlinHUD.hideElement(shipList[index].aimAtIndex);
 		shipList.splice(index,1);
 	}
 	function destroyShips() {
@@ -848,10 +889,11 @@ function _ShipManager() {
 			for(var i = 0; i < shipList.length; i++) {	
 				// Run AI - Argueably should be in separate function
 				shipList[i].runAI(shipList[i], elapsed);
-				
+								
 				shipList[i].update(elapsed);
 				shipList[i].updateShip(elapsed);
 				shipList[i].animate(elapsed); // Argueably should be in separate function
+				_updateHudElements(shipList[i]);
 			}
 		}
 		else {
@@ -882,6 +924,51 @@ function _ShipManager() {
 			}
 		}
 		return false;
+	}
+	
+	// Private
+	function _updateHudElements(ship) {
+		
+		var separation = vec3.create();
+		vec3.subtract(ship.position, Game.getPlayerPosition(), separation);
+		var projectileVelocity = vec3.create();
+		
+		// TODO: Calculate if in field of vision
+		// if not, hide aimAt, show indicator arrow
+		// else calculate aimAt as below
+		
+		// Calculate required velocity to hit target
+		if(GremlinMaths.calculateProjectileVelocity(separation, ship.velocity, Game.getPlayerProjectileSpeed(), projectileVelocity)) {
+			// Remove Player Component, as it is removed from aiming calculation, arguably it shouldn't be
+			vec3.subtract(projectileVelocity, Game.getPlayerVelocity());
+
+			// Reverse Pick at z=-500 units (this is currenlty hardcoded in aiming) along velocity vector.
+			var aimAtPoint = vec3.create(projectileVelocity);
+			vec3.normalize(aimAtPoint);
+			var scaleFactor = 500 / aimAtPoint[2];
+			vec3.scale(aimAtPoint, scaleFactor);
+
+			// Move to Global Coordinate System
+			vec3.add(aimAtPoint, Game.getPlayerPosition());
+							
+			var coords = [0,0];
+			if(Gremlin.reversePick(aimAtPoint[0],aimAtPoint[1],aimAtPoint[2], coords)){
+				var canvasSize = Game.getCanvasSize();
+				var separation = vec3.create();
+				vec3.subtract(ship.position, Game.getPlayerPosition(),separation);
+				var scaleFactor = 1/vec3.length(separation);
+				var size = [scaleFactor*(canvasSize[1]/canvasSize[0]),scaleFactor];  // TODO: Should not have to check for screen resize here, should be a factor in HUD / GUI.
+				GremlinHUD.showElement(ship.aimAtIndex);
+				GremlinHUD.updateElement(ship.aimAtIndex, [coords[0],coords[1],-1], size); 
+			}
+			else {
+				GremlinHUD.hideElement(ship.aimAtIndex);
+			}
+		}
+		else {
+			// Player can not hit ship
+			GremlinHUD.hideElement(ship.aimAtIndex);
+		}
 	}
 		
 	return {
@@ -1122,7 +1209,7 @@ function _ShipAI() {
 					var scalingFactor = vec3.length(separation) / (20 * this.AiSkill);
 					vec3.add(separation, [ (Math.random()-0.5)*scalingFactor, (Math.random()-0.5)*scalingFactor, (Math.random()-0.5)*scalingFactor], estimatedSeparation);
 	
-					if(_calculateProjectileVelocity(estimatedSeparation, playerVel, (this.weaponSpeed+vec3.length(this.velocity)), projectileVelocity))
+					if(GremlinMaths.calculateProjectileVelocity(estimatedSeparation, playerVel, (this.weaponSpeed+vec3.length(this.velocity)), projectileVelocity))
 					{
 						// Spawn new projectile
 						Game.spawnProjectile(pos, projectileVelocity, this.color, 10, 30000, false);
@@ -1173,73 +1260,7 @@ function _ShipAI() {
 			this.AiStateTimer = 0;
 		}
 	}
-	
-	/**
-	 * Returns false if it is not possible to hit target with given projectile speed.
-	 * Else returns true and sets projectile velocity to velocity required to hit target
-	 */
-	function _calculateProjectileVelocity(separation, targetVelocity, projectileSpeed, projectileVelocity){
-		var collisionTime = _calculateCollisionTime(separation, targetVelocity, projectileSpeed);	
-		if (collisionTime != 0) {
-			var separationScaled = vec3.create();
-			vec3.scale(separation, 1/collisionTime, separationScaled);
-			vec3.add(targetVelocity, separationScaled, projectileVelocity);
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-	
-	function _calculateCollisionTime(separation, targetVelocity, projectileSpeed) {
-		// TODO: Separate Quadratic calculation into separate function?
-		
-		// Calculation the solution to a quadratic for T.
-		// a = magnitude of Relative Velocity squared - magnitude of Projectile Velocity squared
-		// b = 2 * dot product of Relative Velocity and Separaation
-		// c = magnitude of separation squared
-		var a = (targetVelocity[0]*targetVelocity[0] + targetVelocity[1]*targetVelocity[1] + targetVelocity[2]*targetVelocity[0]) - projectileSpeed*projectileSpeed;
-		var b = 2*vec3.dot(targetVelocity, separation);
-		var c = (separation[0]*separation[0] + separation[1]*separation[1] + separation[2]*separation[2]);
-		
-		var quadDet;
-		if (b*b > 4*a*c)
-		{ 
-			quadDet = Math.sqrt(b*b - 4*a*c);
-		}
-		else
-		{
-			// No Solutions
-			// Probably means target velocity > projectile velocity
-			return 0;
-		}
-		if(quadDet == 0) {
-			// Single Root - this shouldn't really happen but oh well.
-			return (-b/(2*a));
-		}
-		else {
-			// Two Solutions
-			var solution1 = (-b + quadDet)/(2*a);
-			var solution2 = (-b - quadDet)/(2*a);
-			
-			// One solution should be in the past, one should be in the future if neither or both are, then the variables we've passed in are incorrect.
-			// We are only interested in the solution for the future.
-			if(solution1 > 0 && solution2 <= 0) {
-				return solution1;
-			}
-			else if (solution1 <= 0 && solution2 > 0) {
-				return solution2;
-			}
-			else {
-				if (solution1 > 0 && solution2 > 0) {
-					throw ("Both solutions to projectile calculation positive, check arguments");
-				}
-				else {
-					throw ("Both solutions to projectile calculation negative, check arguments");
-				}
-			}
-		}
-	}	
+
 	return {
 		attachAI:				attachAI
 	}

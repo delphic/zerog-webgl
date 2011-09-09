@@ -142,10 +142,11 @@ function _HUD() {
 	
 	var hudActive = false;
 	
-	// New HUD
+	// List of HUD elements
 	var hudElements = [];
 	
 	// Note: Position is of centre of Rect to draw, where x=-1 is left side and x=+1 is right side, y = +1 is top and y=-1 is bottom.
+	//       z ~= z-index, the depth buffer takes care of what appears atop other things.
 	// Note: Size is amount of the screen to take up x=1 & y=1 will cover the screen.
 	function hudElement(position, size, color) {
 		this.position = position; 
@@ -168,7 +169,7 @@ function _HUD() {
 		this.useTextures = false;
 	}
 	
-	function createHudElement(position,size,color,textureName) {
+	function createElement(position, size, color, textureName) {
 		var element = new hudElement(position,size,color);
 		var textured;
 		
@@ -188,10 +189,36 @@ function _HUD() {
 		return hudElements.push(element)-1;
 	}
 	
-	function createHudBar(position,size,color,alignment,textureName) {
+	function createWireframe(type, position, size, color) {
+		var element = new hudElement(position,size,color);
+		
+		element.updateValue = function(value) {
+			// Updates Position
+			this.position = value;
+		}
+		
+		switch(type) {
+			case "Cross":
+				Gremlin.createCross(element);
+				break;
+			case "Brace":
+				Gremlin.createBrace(element);
+				break;
+			case "Box":
+				Gremlin.createBox(element);
+				break;
+			default:
+				throw("Unknown wireframe type "+type);
+				break;
+		}
+		
+		return hudElements.push(element)-1;
+	}
+	
+	function createBar(position, size, barColor, boxColor, alignment, textureName) {
 		// Create Bar
 		// Values passed in to stop bar element and box elements sizes becoming linked
-		var barElement = new hudElement([position[0],position[1]],[size[0],size[1]],color);
+		var barElement = new hudElement([position[0],position[1], -0.5],[size[0],size[1]],barColor);
 		
 		// Set up bar specific variables
 		if(alignment != "Horizontal" && alignment != "Vertical") {
@@ -218,6 +245,7 @@ function _HUD() {
 			this.position[index] =  this.normalOffset-(this.maxSize - this.size[index]);
 		}
 		
+		// Get on with creating the render object
 		var textured;
 				
 		if (textureName) { 
@@ -236,12 +264,12 @@ function _HUD() {
 		var result = hudElements.push(barElement)-1;
 		
 		// Containing Box
-		var boxElement = new hudElement(position,size,color);
+		var boxElement = new hudElement([position[0],position[1], -1],size,boxColor);
 
 		Gremlin.createBox(boxElement);
 		
-		hudElements.push(boxElement);
-		
+		var boxIndex = 	hudElements.push(boxElement)-1;
+			
 		return result;
 	}
 	
@@ -261,12 +289,34 @@ function _HUD() {
 		}		
 	}
 	
+	function updateElement(index, position, size) {
+		hudElements[index].position = position;
+		hudElements[index].size = size;
+	}
+	
+	// Use with caution! Invalidates existing references, if index != last element
+	function removeElement(index) {
+		hudElements.splice(index,1);
+	} 
+	
+	function showElement(index) {
+		hudElements[index].visible = true;
+	}
+	function hideElement(index) {
+		hudElements[index].visible = false;
+	}
+	
 	return {
-		createHudElement:	createHudElement,
-		createHudBar:		createHudBar,
+		createElement:		createElement,
+		createBar:			createBar,
+		createWireframe:	createWireframe,
 		clearHud:			clearHud,
 		renderHud:			renderHud,
-		updateHud:			updateHud
+		updateHud:			updateHud,
+		updateElement:		updateElement,
+		removeElement:		removeElement,
+		showElement:		showElement,
+		hideElement:		hideElement
 	}	
 }
 var GremlinHUD = _HUD(); 
