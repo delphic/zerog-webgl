@@ -932,10 +932,6 @@ function _ShipManager() {
 		vec3.subtract(ship.position, Game.getPlayerPosition(), separation);
 		var projectileVelocity = vec3.create();
 		
-		// TODO: Calculate if in field of vision
-		// if not, hide aimAt, show indicator arrow
-		// else calculate aimAt as below
-		
 		// Calculate required velocity to hit target
 		if(GremlinMaths.calculateProjectileVelocity(separation, ship.velocity, Game.getPlayerProjectileSpeed(), projectileVelocity)) {
 			// Remove Player Component, as it is removed from aiming calculation, arguably it shouldn't be
@@ -961,9 +957,10 @@ function _ShipManager() {
 				vec3.subtract(ship.position, Game.getPlayerPosition(),separation);
 				var scaleFactor = 1/vec3.length(separation);
 				GremlinHUD.showElement(ship.aimAtIndex);
-				GremlinHUD.updateElement(ship.aimAtIndex, [coords[0],coords[1],-1], [scaleFactor,scaleFactor]); 
+				GremlinHUD.updateElement(ship.aimAtIndex, [coords[0],coords[1],-1], [scaleFactor,scaleFactor]);
 			}
 			else {
+				// Aim at position not infront of player
 				GremlinHUD.hideElement(ship.aimAtIndex);
 			}
 		}

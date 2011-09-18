@@ -149,16 +149,16 @@ function _HUD() {
 	//       z ~= z-index, the depth buffer takes care of what appears atop other things.
 	// Note: Size is amount of the screen to take up x=1 & y=1 will cover the screen.
 	function hudElement(position, size, color) {
-		this.position = position; 
-		this.size = size;
-		this.color = color;
+		this.position = [position[0],position[1],position[2]]; 
+		this.size = [size[0],size[1]];
+		this.color = [color[0],color[1],color[2],color[3]];
 		
 		this.buffers = [];
 		this.texture;
 		
-		this.setPosition = function(position) { this.position = position; }
-		this.setSize = function(size) { this.size = size; }
-		this.setColor = function(color) { this.color = color; }
+		this.setPosition = function(position) { this.position = [position[0],position[1],position[2]]; }
+		this.setSize = function(size) { this.size = [size[0],size[1]]; }
+		this.setColor = function(color) { this.color = [color[0],color[1],color[2],color[3]]; }
 		this.assignBuffer = function(index) { this.buffers = index; }
 
 		// Render Flags
@@ -216,11 +216,17 @@ function _HUD() {
 	}
 	
 	function createBar(position, size, barColor, boxColor, alignment, textureName) {
+		// Create Containing Box
+		var boxElement = new hudElement([position[0],position[1], -1],[size[0]/viewPortRatio,size[1]],boxColor);
+
+		Gremlin.createBox(boxElement);
+		
+		var boxIndex = 	hudElements.push(boxElement)-1;
+		
 		// Create Bar
-		// Values passed in to stop bar element and box elements sizes becoming linked
 		var barElement = new hudElement([position[0],position[1], -0.5],[size[0]/viewPortRatio,size[1]],barColor);
 		
-		// Set up bar specific variables
+		// Set up bar specific variables and functions
 		if(alignment != "Horizontal" && alignment != "Vertical") {
 			throw("Invalid Bar Alignment");
 		}
@@ -245,6 +251,48 @@ function _HUD() {
 			this.position[index] =  this.normalOffset-(this.maxSize - this.size[index]);
 		}
 		
+		// Add link to boxIndex
+		barElement.boxIndex = boxIndex;
+		
+		// Override .setPosition, .setSize, .setColor to change both box and bar
+		barElement.setPosition = function(position) {
+			// Update Box
+			hudElements[this.boxIndex].setPosition(position);
+
+			// Update Bar
+			this.position = [position[0],position[1],this.position[2]];
+			// Update Offset
+			if (this.alignment == "Horizontal") {
+				this.normalOffset = position[0];
+			}
+			else {
+				this.normalOffset = position[1];
+			}
+			this.updateValue(this.currentValue);
+		}
+		
+		barElement.setSize = function(size) {
+			var adjsutedSize = [size[0]/viewPortRatio,size[1]];
+			// Update Box
+			hudElements[this.boxIndex].setSize(adjsutedSize);
+
+			// Update Bar
+			this.size = adjsutedSize;
+			// Update maxSize
+			if (this.alignment == "Horizontal") {
+				this.maxSize = size[0]/viewPortRatio;
+			}
+			else {
+				this.maxSize = size[1];
+			}
+			this.updateValue(this.currentValue);
+		}
+		
+		barElement.setColor = function(boxColor, barColor) {
+			hudElements[this.boxIndex].setColor(boxColor);
+			this.color = [barColor[0],barColor[1],barColor[2],barColor[3]];
+		}
+		
 		// Get on with creating the render object
 		var textured;
 				
@@ -261,16 +309,7 @@ function _HUD() {
 			barElement.texture = Gremlin.createTexture(textureName);
 		}
 				
-		var result = hudElements.push(barElement)-1;
-		
-		// Containing Box
-		var boxElement = new hudElement([position[0],position[1], -1],[size[0]/viewPortRatio,size[1]],boxColor);
-
-		Gremlin.createBox(boxElement);
-		
-		var boxIndex = 	hudElements.push(boxElement)-1;
-			
-		return result;
+		return hudElements.push(barElement)-1;;
 	}
 	
 	function renderHud() {
@@ -305,15 +344,10 @@ function _HUD() {
 	}
 	
 	function updateElement(index, position, size) {
-		hudElements[index].position = position;
-		hudElements[index].size = [size[0]/viewPortRatio, size[1]];
+		hudElements[index].setPosition(position);
+		hudElements[index].setSize([size[0]/viewPortRatio, size[1]]);	
 	}
-	
-	// Use with caution! Invalidates existing references, if index != last element
-	function removeElement(index) {
-		hudElements.splice(index,1);
-	} 
-	
+		
 	function showElement(index) {
 		hudElements[index].visible = true;
 	}
@@ -330,7 +364,6 @@ function _HUD() {
 		rescaleHud:			rescaleHud,
 		updateHud:			updateHud,
 		updateElement:		updateElement,
-		removeElement:		removeElement,
 		showElement:		showElement,
 		hideElement:		hideElement
 	}	
