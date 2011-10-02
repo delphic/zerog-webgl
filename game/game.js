@@ -863,7 +863,24 @@ function _ShipManager() {
 		vec3.subtract(position, Game.getPlayerPosition(),separation);
 		var scaleFactor = 1/vec3.length(separation);
 		tmpShip.aimAtIndex = GremlinHUD.createWireframe("Box",[0,0,0], [scaleFactor,scaleFactor], [1,0,0,1]);
-
+		tmpShip.healthBar = GremlinHUD.createBar(
+			[-0.95, 0],
+			[0.1, 0.7],
+			[0.1, 0.5, 0.1, 1],
+			[1, 1, 0.7, 1], 
+			"Vertical");
+		tmpShip.shieldBar = GremlinHUD.createBar(
+			[0.95,0],
+			[0.1,0.7],
+			[0.1,0.1,0.5,1],
+			[1,0.7,1,1], 
+			"Vertical");
+		tmpShip.targetBrace = GremlinHUD.createWireframe("Brace",[0,0,0], [0.9,0.9],[1,0,0,1]);
+		tmpShip.infoContainer = GremlinHUD.createGroup([0,0,0],[0.25,0.25]);
+		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.healthBar);
+		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.shieldBar);
+		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.targetBrace);
+		
 		// Attach Ship Attributes
 		var attributes = {};
 		attributes.FiringPeriod = 600;
@@ -873,10 +890,14 @@ function _ShipManager() {
 		ShipAI.attachAI(tmpShip);
 
 		// Add to List
-		shipList.push(tmpShip);
+		var index = shipList.push(tmpShip)-1;
+		
+		// Update HUD Element size
+		_updateHudElements(shipList[index]); // This prevents the HUD elements from taking up the entire screen for 1 frame on ship creation
 	}
 	function destroyShip(index) {
 		GremlinHUD.hideElement(shipList[index].aimAtIndex);
+		GremlinHUD.hideGroupElements(shipList[index].infoContainer);
 		shipList.splice(index,1);
 	}
 	function destroyShips() {
@@ -932,6 +953,7 @@ function _ShipManager() {
 		vec3.subtract(ship.position, Game.getPlayerPosition(), separation);
 		var projectileVelocity = vec3.create();
 		
+		// Update Aim at Element
 		// Calculate required velocity to hit target
 		if(GremlinMaths.calculateProjectileVelocity(separation, ship.velocity, Game.getPlayerProjectileSpeed(), projectileVelocity)) {
 			// Remove Player Component, as it is removed from aiming calculation, arguably it shouldn't be
@@ -952,10 +974,9 @@ function _ShipManager() {
 			var coords = [0,0];
 
 			if(Gremlin.reversePick(aimAtPoint[0],aimAtPoint[1],aimAtPoint[2], coords)) {
-				var canvasSize = Game.getCanvasSize();
 				var separation = vec3.create();
 				vec3.subtract(ship.position, Game.getPlayerPosition(),separation);
-				var scaleFactor = 1/vec3.length(separation);
+				scaleFactor = 1/vec3.length(separation);
 				GremlinHUD.showElement(ship.aimAtIndex);
 				GremlinHUD.updateElement(ship.aimAtIndex, [coords[0],coords[1],-1], [scaleFactor,scaleFactor]);
 			}
@@ -968,6 +989,27 @@ function _ShipManager() {
 			// Player can not hit ship
 			GremlinHUD.hideElement(ship.aimAtIndex);
 		}
+
+		// Update Elements Group Position
+		var shipPosition = [0,0];
+		if(Gremlin.reversePick(ship.position[0],ship.position[1],ship.position[2],shipPosition))
+		{
+			var groupScale = 5*scaleFactor;
+			if(groupScale < 0.01) { groupScale = 0.01; } 
+			GremlinHUD.showGroupElements(ship.infoContainer);
+			GremlinHUD.setGroupPosition(ship.infoContainer, [shipPosition[0],shipPosition[1],0]);
+			GremlinHUD.setGroupSize(ship.infoContainer, [groupScale,groupScale]);
+		}
+		else {
+			GremlinHUD.hideGroupElements(ship.infoContainer);
+		}
+		
+		// Update Health and Shield Bars
+		GremlinHUD.updateHud( 
+		{ 
+			health: { index: ship.healthBar, value: (ship.healthPoints/ship.healthMax) },
+			shield: { index: ship.shieldBar, value: (ship.shieldPoints/ship.shieldMax) }
+		});
 	}
 		
 	return {

@@ -12,7 +12,6 @@
 */
 
 function _GUI() {
-	// TODO: Move controller functions
 	var resolutionScale, lighting, lightingType, specularLighting;
 	
 	function startGame(val) {
@@ -39,13 +38,11 @@ function _GUI() {
 		Game.pause();
 	}
 	function resumeGame() {
-		// TODO: Unpause
 		$("#menuContainer").hide();
 		Game.updateGameState("InGame");
 		Game.unpause();
 	}
 	function pauseGame() {
-		// TODO: Pause
 		$("#menuContainer").show();
 		Game.updateGameState("InMenu");
 		Game.pause();
@@ -55,7 +52,7 @@ function _GUI() {
 		Game.unloadLevel();
 		Game.loadLevel("menu.js", "InMenu"); 
 	}
-	function applyOptions() { // TODO: Move controller functions
+	function applyOptions() {
 		resolutionScale = document.getElementById("optionsResolution").value;
 		lighting = document.getElementById("optionsLighting").value;
 		if (lighting != "false") { lightingType = lighting; lighting = true; }
@@ -72,7 +69,7 @@ function _GUI() {
 	
 	function setStyleSize() { 
 		// Adds explicit height (and width for good measure) and font size for GUI scaling
-		$("#menuContainer").css("width",window.innerWidth*1); // TODO: need factor as variable
+		$("#menuContainer").css("width",window.innerWidth*1);
 		$("#menuContainer").css("height",window.innerHeight*1);
 		$("#menuContainer").css("font-size",window.innerHeight/20);
 	}
@@ -144,6 +141,7 @@ function _HUD() {
 	
 	// List of HUD elements
 	var hudElements = [];
+	var hudGroups = [];
 	
 	// Note: Position is of centre of Rect to draw, where x=-1 is left side and x=+1 is right side, y = +1 is top and y=-1 is bottom.
 	//       z ~= z-index, the depth buffer takes care of what appears atop other things.
@@ -158,8 +156,11 @@ function _HUD() {
 		
 		this.setPosition = function(position) { this.position = [position[0],position[1],position[2]]; }
 		this.setSize = function(size) { this.size = [size[0],size[1]]; }
+		this.getPosition = function() { return [this.position[0], this.position[1], this.position[2]]; }
+		this.getSize = function() { return [this.size[0],this.size[1]]; }
 		this.setColor = function(color) { this.color = [color[0],color[1],color[2],color[3]]; }
 		this.assignBuffer = function(index) { this.buffers = index; }
+		this.setVisibility = function(value) { this.visible = value; }
 
 		// Render Flags
 		this.visible = true;
@@ -169,6 +170,94 @@ function _HUD() {
 		this.useTextures = false;
 	}
 	
+	// Groups a set of elements onto a rectangle with element position as described above now being position on the rectangle.
+	// Elements should be added as normal in master list, then attached to a group, then group can be manipulated and elements
+	// separately.
+	
+	function hudGroup(position, size) {
+		this.elements = [];
+		this.position = [position[0],position[1],position[2]];
+		this.size = [size[0],size[1]];
+		
+		this.attachElementToGroup = function(element) {
+			this.resizeElementToGroup(this.elements.push(element)-1);
+		}
+		
+		this.resizeElementToGroup = function(index) {
+			// Move and Scale the object according to group
+			var targetElement = this.elements[index];
+			var currentSize = targetElement.getSize();
+			var currentPosition = targetElement.getPosition();
+			targetElement.setSize([currentSize[0]*this.size[0], currentSize[1]*this.size[1]]);
+			targetElement.setPosition([this.position[0]+currentPosition[0]*this.size[0], this.position[1]+currentPosition[1]*this.size[1], currentPosition[2]]);
+		}
+		
+		this.unresizeElementToGroup = function(index) {
+			var targetElement = this.elements[index];
+			var currentSize = targetElement.getSize();
+			var currentPosition = targetElement.getPosition();
+			targetElement.setSize([currentSize[0]/this.size[0], currentSize[1]/this.size[1]]);
+			targetElement.setPosition([(currentPosition[0]-this.position[0])/this.size[0], (currentPosition[1]-this.position[1])/this.size[1], currentPosition[2]]);
+		}
+		// Move Group - reverse calculation of above for all elements, then resize group, then run function above for all elements
+		this.moveGroup = function(position) {
+			for(key in this.elements) {
+				this.unresizeElementToGroup(key);
+			}
+			this.position = [position[0],position[1],position[2]];
+			for(key in this.elements) {
+				this.resizeElementToGroup(key);
+			}
+		}
+		// Resize Group - same as move but for scale
+		this.resizeGroup = function(size) {
+			for(key in this.elements) {
+				this.unresizeElementToGroup(key);
+			}
+			this.size = [size[0],size[1]];
+			for(key in this.elements) {
+				this.resizeElementToGroup(key);
+			}
+		}
+		
+		this.hideElements = function() {
+			for(key in this.elements) {
+				this.elements[key].setVisibility(false);
+			}
+		}
+		
+		this.showElements = function() {
+			for(key in this.elements) {
+				this.elements[key].setVisibility(true);
+			}
+		}
+		
+	}
+	
+	function createGroup(position, size) {
+		return hudGroups.push(new hudGroup(position,size))-1;
+	}
+	
+	// Attach Element To Group
+	function attachElementToGroup(groupIndex, elementIndex){
+		hudGroups[groupIndex].attachElementToGroup(hudElements[elementIndex]);
+	}
+	// Move Group Function
+	function setGroupPosition(groupIndex, position){
+		hudGroups[groupIndex].moveGroup(position);
+	}
+	// Resize Group Function
+	function setGroupSize(groupIndex, size){
+		hudGroups[groupIndex].resizeGroup(size);
+	}
+	function hideGroupElements(groupIndex) {
+		hudGroups[groupIndex].hideElements();
+	}
+	function showGroupElements(groupIndex) {
+		hudGroups[groupIndex].showElements();
+	}
+	
+	// Element Functions
 	function createElement(position, size, color, textureName) {
 		var element = new hudElement(position,[size[0]/viewPortRatio,size[1]],color);
 		var textured;
@@ -272,7 +361,7 @@ function _HUD() {
 		}
 		
 		barElement.setSize = function(size) {
-			var adjsutedSize = [size[0]/viewPortRatio,size[1]];
+			var adjsutedSize = [size[0],size[1]];
 			// Update Box
 			hudElements[this.boxIndex].setSize(adjsutedSize);
 
@@ -280,12 +369,24 @@ function _HUD() {
 			this.size = adjsutedSize;
 			// Update maxSize
 			if (this.alignment == "Horizontal") {
-				this.maxSize = size[0]/viewPortRatio;
+				this.maxSize = size[0];
 			}
 			else {
 				this.maxSize = size[1];
 			}
 			this.updateValue(this.currentValue);
+		}
+		
+		barElement.getPosition = function() {
+			return [hudElements[this.boxIndex].position[0], hudElements[this.boxIndex].position[1], hudElements[this.boxIndex].position[2]];
+		}
+		barElement.getSize = function() {
+			return [hudElements[this.boxIndex].size[0], hudElements[this.boxIndex].size[1]];
+		}
+		
+		barElement.setVisibility = function(value) {
+			hudElements[this.boxIndex].setVisibility(value);
+			this.visible = value;
 		}
 		
 		barElement.setColor = function(boxColor, barColor) {
@@ -335,6 +436,7 @@ function _HUD() {
 	
 	function clearHud() {
 		hudElements.splice(0, hudElements.length);
+		hudGroups.splice(0, hudGroups.length);
 	}
 	
 	function updateHud(items) {
@@ -349,13 +451,20 @@ function _HUD() {
 	}
 		
 	function showElement(index) {
-		hudElements[index].visible = true;
+		hudElements[index].setVisibility(true);
 	}
+
 	function hideElement(index) {
-		hudElements[index].visible = false;
+		hudElements[index].setVisibility(false);
 	}
 	
 	return {
+		createGroup:		createGroup,
+		attachElementToGroup:	attachElementToGroup,
+		setGroupPosition:	setGroupPosition,
+		setGroupSize:		setGroupSize,
+		showGroupElements:	showGroupElements,
+		hideGroupElements:	hideGroupElements,
 		createElement:		createElement,
 		createBar:			createBar,
 		createWireframe:	createWireframe,
