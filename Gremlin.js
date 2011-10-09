@@ -2013,6 +2013,9 @@ function _GremlinInput() {
 			case "Esc":
 				map = 27;
 				break;
+			case "Space":
+				map = 32;
+				break;
 			case "PageUp":
 				map = 33;
 				break;

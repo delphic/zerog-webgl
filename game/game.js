@@ -93,6 +93,7 @@ function _Game() {
 
 				var accelRate = player.accelerationRate(elapsed);
 				dx = 0;
+				dy = 0;
 				dz = 0;
 
 				if (GremlinInput.keyDown("Left") || GremlinInput.keyDown("a")) {
@@ -113,15 +114,36 @@ function _Game() {
 					dz += accelRate;
 				}
 				
-				if(dx && dz) { // Clamp Diagonal Speed
+				if (GremlinInput.keyDown("Space")) {
+					// Move Up
+					dy += accelRate;	
+				} 
+				else if (GremlinInput.keyDown("Ctrl")) {
+					// Move Down
+					dy -= accelRate;
+				}
+				
+				// Clamp Diagonal Speeds 
+				// Physically speaking we probably shouldn't do this if we assume thruster based movement
+				if(dx && dz && !dy) { 
 					dx /= 1.41421;
 					dz /= 1.41421;
+				} else if (dx && dy && !dz) {
+					dx /= 1.41421;
+					dy /= 1.41421;					
+				} else if (dy && dz && !dx) {
+					dy /= 1.41421;
+					dz /= 1.41421;
+				} else if (dx && dy && dz) {
+					dx /= 1.73205;
+					dy /= 1.73205;
+					dz /= 1.73205;
 				}
 			
-				var dvelocity = [dx, 0, dz ];
+				var dvelocity = [dx, dy, dz ];
 				Gremlin.playerCameraReverseRotation(dvelocity);
 				
-				if (accelRate > 0 && (dx != 0 || dz != 0)) {
+				if (accelRate > 0 && (dx != 0 || dy != 0 || dz != 0)) {
 					player.updateVelocity(dvelocity[0], dvelocity[1], dvelocity[2]);
 					player.accelerate(elapsed);
 				}
