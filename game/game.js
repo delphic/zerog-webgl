@@ -62,9 +62,8 @@ function _Game() {
 						}
 						removeProjectile(i);
 					}
-				
 				}
-				
+								
 				// TODO: this should possibly also run every X frames.
 				levelThink();
 				
@@ -144,7 +143,13 @@ function _Game() {
 						vec3.scale(v,player.weaponSpeed);
 						vec3.add(v,player.velocity);
 						
-						spawnProjectile(pos, v, [5.0,0,0,1.0], 40000, 30000, true); // specification of damage of projectile should not be here
+						spawnProjectile({ 
+							"position": pos,
+							"velocity": v,
+							"color": [5.0,0,0,1.0],
+							"damage": 40000, 
+							"lifetime": 30000, 
+							"friendly": true }); // specification of damage of projectile should not be here
 						player.fire();
 					}
 				}
@@ -237,15 +242,24 @@ function _Game() {
 	var gameSpotLights = [];
 
 	// Game Object Obj
-	function gameObject(position) { 
-		this.position = [position[0],position[1],position[2]]; 
-		this.velocity = [0,0,0]; 
+	function GameObject(attributes) { 
+		if(!(this instanceof GameObject)) {
+			return new GameObject(attribues);
+		}
 		
-		this.rotation = mat4.create();
-		mat4.identity(this.rotation);
+		// Set Attributes
+		
+		// Position
+		// Velocity
+		// Rotation
+		// Scale
+		this.position = attributes.position ? vec3.create(attributes.position) : [0,0,0];
+		this.velocity = attributes.velocity ? vec3.create(attributes.velocity) : [0,0,0]; 
+		this.rotation = attributes.rotation ? mat4.create(attributes.rotation) : mat4.identity(mat4.create());
+		this.scale = attributes.scale ? vec3.create(attributes.scale) : [1, 1, 1];
 		
 		this.buffers = [];
-		this.scale = [1, 1, 1];
+		
 		// TODO: Proper Material System?
 		// TODO: Make into array for multiple texture IDs
 		this.texture;
@@ -330,7 +344,7 @@ function _Game() {
 	// Creation Objection
 	// TODO: Refactor to take an object as an argument, then the names of the object will be a guide on required values
 	function createObjectPrimitive(position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush) {
-		var object = new gameObject(position);
+		var object = new GameObject({ "position": position });
 		var textured;
 		if (textureName) { 
 			textured = true;
@@ -385,7 +399,7 @@ function _Game() {
 	}
 
 	function createObjectModel(position, modelName, textureName, scale, animation, shininess) {
-		var object = new gameObject(position);
+		var object = new GameObject({ "position": position });
 		var textured;
 		if (textureName) { 
 			textured = true;
@@ -444,6 +458,7 @@ function _Game() {
 		else {
 			object.firingPeriod = 300;	
 		}
+		// TODO: Weapon Damamge
 		object.firingTimer = 300;
 		object.firingCost = 5;
 		object.weaponSpeed = 0.1;
@@ -482,7 +497,7 @@ function _Game() {
 		}
 		object.takeDamage = function(velocity, mass, damage) { //damage = damage per unit mass 
 			
-			// TODO: extract method
+			// TODO: extract method - should not be in ship takeDamage method 
 			var relativeVelocity = vec3.create();
 			vec3.subtract(velocity, this.velocity, relativeVelocity);
 			var v = vec3.length(relativeVelocity);
@@ -510,7 +525,7 @@ function _Game() {
 		}
 	}
 	
-	var player = new gameObject([0,0,0]);
+	var player = new GameObject({ "position": [0,0,0] });
 	attachShip(player);
 	
 	// Player HUD Values
@@ -546,21 +561,35 @@ function _Game() {
 	// Basic Projectile System
 	// TODO: namespace
 	var projectiles = [];
-	var projectileObject = new gameObject([0,0,0]);
-	projectileObject.rotate(90, 1, 0, 0)
-	projectileObject.setColor(1,1,1,1);
+	var projectileObject = new GameObject({ "position": [0,0,0] });
+	projectileObject.rotate(90, 1, 0, 0); // TODO: Should create rotation matrix and hand into gameobject creator
 	projectileObject.setUseLighting(false); //TODO: Would be better with lighting true and emissive material
 	// Would also be better if when we had a particle system that it would leave a short lived trail.
 	// Also don't know if we want more than one protecile object... but we do want more than one colour.
 	
-	function projectile(position, velocity, color, dmg, lifetime, friendly) {
-		this.position = position;
-		this.velocity = velocity;
-		this.mass = 0.1; // TODO: Make argument
-		this.dmg = dmg; // Damage per unit mass
-		this.lifetime = lifetime;
-		this.friendly = friendly;
-		this.color = color;
+	function Projectile(attributes) {
+		if(!this instanceof Projectile) {
+			return new Projectile(attributes);
+		}
+		
+		// Required Attributes
+		if(!attributes.position) {
+			throw new Error("Projectile position must be specified: 'position'");
+		}
+		if(!attributes.velocity) {
+			throw new Error("Projectile velocity must be specified: 'velocity'"); 
+		}
+		if (!attributes.damage) {
+			throw new Error("Projectile damage per unit mass must be specified: 'damage'");
+		}
+		
+		this.position = vec3.create(attributes.position); 
+		this.velocity = vec3.create(attributes.velocity); 
+		this.mass = attributes.mass || 0.1; 
+		this.dmg = attributes.damage;
+		this.lifetime = attributes.lifetime || 30000;
+		this.friendly = attributes.friendly || false;
+		this.color = attributes.color || [1, 1, 1, 1] ;
 		
 		this.getColor = getColor;
 		this.getPosition = getPosition;
@@ -582,8 +611,8 @@ function _Game() {
 		}
 	}
 	
-	function spawnProjectile(position, velocity, color, damage, lifetime, friendly) {
-		var newproj = new projectile(position, velocity, color, damage, lifetime, friendly);
+	function spawnProjectile(attributes) {
+		var newproj = new Projectile(attributes);
 		projectiles.push(newproj);
 	}
 	
@@ -603,31 +632,38 @@ function _Game() {
 		dustMotes.splice(0,dustMotes.length);
 		// Add New Motes
 		for(var i = 0; i < maxMotes; i++) {
-			var obj = new gameObject([2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5), 2*randomFactor*(Math.random()-0.5)]);
+			var obj = new GameObject(
+				{ "position": 
+					[2*randomFactor*(Math.random()-0.5), 
+					2*randomFactor*(Math.random()-0.5), 
+					2*randomFactor*(Math.random()-0.5)] });
 			Gremlin.createPoint(obj);
 			obj.points = true;
 			obj.useLighting = false; // If we want the motes to be lit properly we'll have to figure out the normal to a point!
 			obj.setColor(0.8,0.8,0.8,1);
+			obj.spawnDistance = rootThree*randomFactor;
 			dustMotes.push(obj); 
 		}
 	}
  
-	function updateMotes(pos, vel) {
-		if (vec3.length(vel)) {
+	function updateMotes(position, velocity) {
+		if (vec3.length(velocity)) {
 			for(var i = 0; i < dustMotes.length; i++){
-				var boundingR;
-				var posDiff = vec3.create();
-				boundingR = vec3.length(vel) + rootThree*randomFactor;
-				vec3.subtract(pos,dustMotes[i].position, posDiff);
-				if (vec3.length(posDiff) >  boundingR) {
-					// As posDiff > bounding radius, reset to be bounding radius
-					vec3.normalize(posDiff);
-					vec3.scale(posDiff, boundingR);
+				var boundingR = dustMotes[i].spawnDistance;
+				var separation = vec3.create();
+				vec3.subtract(position,dustMotes[i].position, separation);
+				if (vec3.length(separation) >  boundingR) {
+					// As separation > bounding radius, reset to be at bounding radius for current velocity
+					vec3.normalize(separation);
+					boundingR = vec3.length(velocity) + rootThree*randomFactor;
+					vec3.scale(separation, boundingR);
+					dustMotes[i].spawnDistance = boundingR;
 					// Respawn on opposite site of sphere 
+					// adjusting for velocity difference prevents some of the flattening of position of motes, but does not account for |(separation-spawnDistance)|
 					dustMotes[i].setPosition(
-						pos[0] + posDiff[0],
-						pos[1] + posDiff[1],
-						pos[2] + posDiff[2]
+						position[0] + separation[0],
+						position[1] + separation[1],
+						position[2] + separation[2]
 					);
 				}
 			}
@@ -738,7 +774,7 @@ function _Game() {
 	}
 	var levelThink = _levelThink;
 	
-	var levelVars = new Array();
+	var levelVars = [];
 	
 	function setLevelThink(func) {
 		levelThink = func;
@@ -853,10 +889,14 @@ function _ShipManager() {
 		return shipList.length;
 	}
 	
-	function createShip(position, color) {
+	function createShip(attributes) {
+		// Check for required attributes
+		if(!attributes.position) { 
+			throw new Error("Missing required attribute for createShip: 'position'");
+		}
 		// They're all evil spinning crates for now!
 		var tmpShip = Game.createObjectPrimitive(
-			position, 
+			attributes.position, 
 			"cube", 
 			"textures/crate.gif", 
 			1.0, 
@@ -866,12 +906,13 @@ function _ShipManager() {
 			null, 
 			null, 
 			true);
-		tmpShip.setColor(color[0], color[1], color[2], color[3]);
+		var color = attributes.color ? attributes.color : [1, 1, 1, 1];
+		tmpShip.setColor(attributes.color[0], attributes.color[1], attributes.color[2], attributes.color[3]);
 		
 		// Create HUD elements
 		var canvasSize = Game.getCanvasSize();
 		var separation = vec3.create();
-		vec3.subtract(position, Game.getPlayerPosition(),separation);
+		vec3.subtract(attributes.position, Game.getPlayerPosition(), separation);
 		var scaleFactor = 1/vec3.length(separation);
 		tmpShip.aimAtIndex = GremlinHUD.createWireframe("Box",[0,0,0], [scaleFactor,scaleFactor], [1,0,0,1]);
 		tmpShip.healthBar = GremlinHUD.createBar(
@@ -1264,7 +1305,13 @@ function _ShipAI() {
 					if(GremlinMaths.calculateProjectileVelocity(estimatedSeparation, playerVel, (this.weaponSpeed+vec3.length(this.velocity)), projectileVelocity))
 					{
 						// Spawn new projectile
-						Game.spawnProjectile(pos, projectileVelocity, this.color, 20000, 30000, false);
+						Game.spawnProjectile({
+								"position": pos, 
+								"velocity": projectileVelocity, 
+								"color": this.color, 
+								"damage": 20000, 
+								"lifetime": 30000 
+						});
 						this.fire();	
 					}
 				}

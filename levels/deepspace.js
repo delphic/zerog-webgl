@@ -23,16 +23,28 @@
 			if(!Game.getLevelVar("WaveOneSpawned"))	{
 				Game.setLevelVar("WaveOneSpawned", true);
 				// Spawn first wave of enemies at + view dir
-				ShipManager.createShip([0,0,-40],[0,2.0,0,1.0]);
+				ShipManager.createShip({
+					"position": [0, 0, -40],
+					"color": [0, 2, 0, 1]
+				});
 			}
 			else if (!Game.getLevelVar("WaveTwoTriggered") && Game.getLevelVar("WaveOneDestroyed")) {
 				Game.setLevelVar("WaveTwoTriggered",true);
 				// Spawn Second Wave with 5 second delay
 				setTimeout(
 					function() {
-						ShipManager.createShip([-10,0,-40],[0,1.0,0,1.0]);
-						ShipManager.createShip([0,0,-40],[0,1.0,0,1.0]);
-						ShipManager.createShip([10,0,-40],[0,1.0,0,1.0]);
+						ShipManager.createShip({
+							"position": [-10, 0, -40],
+							"color": [0, 2, 0, 1]
+						});
+						ShipManager.createShip({
+							"position": [0, 0, -40],
+							"color": [0, 2, 0, 1]
+						});
+						ShipManager.createShip({
+							"position": [10, 0, -40],
+							"color": [0, 2, 0, 1]
+						});
 						Game.setLevelVar("WaveTwoSpawned", true);						
 					}, 
 					5000); // This can unfortunately spawn ships when your in the main menu! TODO: Need a queuing system.
