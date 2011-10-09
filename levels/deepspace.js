@@ -12,7 +12,17 @@
 	// Game Objects
 	//Game.createObjectPrimitive([-3,0,-6], "cube", "textures/crate.gif", 1.0, 0, 0, function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); });
 	//Game.createObjectPrimitive([0, 0, -5000], "sphere", "textures/earth.jpg", 500, 30, 30, function(elapsed) { this.rotate( ( (5 * elapsed) / 1000.0), 0, 1, 0); });
-	Game.createObjectPrimitive([0, 0, 0], "sphere", "textures/huge_stars.png", 10000, 30, 30, false, 0, true);
+	
+	// Attributes: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush
+	Game.createObjectPrimitive({
+		"position": [0, 0, 0],
+		"primType": "sphere", 
+		"textureName": "textures/huge_stars.png",
+		"scale": 10000, 
+		"latBands": 30, 
+		"longBands": 30, 
+		"isSkyBox": true	
+	});
 	
 	//Game.createObjectModel([0,0,-5], "Teapot.json", "textures/metal.jpg", 0.1, function(elapsed) { this.rotate( ( (30 * elapsed) / 1000.0), 0,1,0); }, 100);
 	

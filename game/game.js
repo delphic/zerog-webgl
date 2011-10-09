@@ -247,12 +247,6 @@ function _Game() {
 			return new GameObject(attribues);
 		}
 		
-		// Set Attributes
-		
-		// Position
-		// Velocity
-		// Rotation
-		// Scale
 		this.position = attributes.position ? vec3.create(attributes.position) : [0,0,0];
 		this.velocity = attributes.velocity ? vec3.create(attributes.velocity) : [0,0,0]; 
 		this.rotation = attributes.rotation ? mat4.create(attributes.rotation) : mat4.identity(mat4.create());
@@ -342,23 +336,37 @@ function _Game() {
 	}
 	
 	// Creation Objection
-	// TODO: Refactor to take an object as an argument, then the names of the object will be a guide on required values
-	function createObjectPrimitive(position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush) {
-		var object = new GameObject({ "position": position });
+	// Attributes: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush
+	function createObjectPrimitive(attributes) {
+		
+		// Required Attributes
+		if(!attributes.primType) {
+			throw new Error("Required argument missing for createObjectPrimitive: 'primType'");
+		}
+		if(!attributes.position) {
+			throw new Error("Required argument missing for createObjectPrimitive: 'position");
+		}
+		if(!attributes.scale) {
+			throw new Error("Required argument missing for createObjectPrimitive: 'scale'");
+		}
+		
+		var object = new GameObject({ "position": attributes.position });
 		var textured;
-		if (textureName) { 
+		if (attributes.textureName) { 
 			textured = true;
 		}
 		else {
 			textured = false;
 		}
-		if(scale.length) {
-			object.setScale(scale);
+		
+		if(attributes.scale.length) {
+			object.setScale(attributes.scale);
 		}
 		else {
-			object.setScale(scale,scale,scale);
+			object.setScale(attributes.scale,attributes.scale,attributes.scale);
 		}
-		switch(primType) {
+		
+		switch(attributes.primType) {
 		case "pyramid":
 			Gremlin.createPyramid(object, textured);
 			break;
@@ -366,7 +374,7 @@ function _Game() {
 			Gremlin.createCube(object, textured);
 			break;
 		case "sphere":
-			Gremlin.createSphere(object, textured, latBands, longBands);
+			Gremlin.createSphere(object, textured, attributes.latBands, attributes.longBands);
 			break;
 		case "ray":
 			Gremlin.createRay(object);
@@ -375,22 +383,22 @@ function _Game() {
 			Gremlin.createPoint(object);
 			break;
 		default:
-			alert("Invalid Prim Type: "+primType+"");
+			alert("Invalid Prim Type: "+attributes.primType+"");
 			return;
 		}
 		if(textured) {
-			object.texture = Gremlin.createTexture(textureName);
+			object.texture = Gremlin.createTexture(attributes.textureName);
 		}
-		if(shininess) {
-			object.setShininess(shininess);
+		if(attributes.shininess) {
+			object.setShininess(attributes.shininess);
 		}
-		if(isSkyBox) {
+		if(attributes.isSkyBox) {
 			object.setIsSkyBox(true);
 		}
-		if(animation) {
-			object.animate = animation;
+		if(attributes.animation) {
+			object.animate = attributes.animation;
 		}
-		if(!stopPush)
+		if(!attributes.stopPush)
 		{
 			gameObjects.push(object);
 		}
@@ -398,30 +406,41 @@ function _Game() {
 		
 	}
 
-	function createObjectModel(position, modelName, textureName, scale, animation, shininess) {
-		var object = new GameObject({ "position": position });
+	// Attributes: position, modelName, textureName, scale, animation, shininess
+	function createObjectModel(attributes) {
+		// Check for required attributes
+		if(!attributes.position) {
+			throw new Error("Required argument missing for createObjectModel: 'position'");
+		}
+		if(!attributes.modelName) {
+			throw new Error("Required argument missing for createObjectModel: 'modelName'");
+		}
+		if(!attributes.scale) {
+			throw new Error("Required argument missing for createObjectModel: 'scale'");
+		}
+		var object = new GameObject({ "position": attributes.position });
 		var textured;
-		if (textureName) { 
+		if (attributes.textureName) { 
 			textured = true;
 		}
 		else {
 			textured = false;
 		}
-		if(scale.length) {
-			object.setScale(scale);
+		if(attributes.scale.length) {
+			object.setScale(attributes.scale);
 		}
 		else {
-			object.setScale(scale,scale,scale);
+			object.setScale(attributes.scale, attributes.scale, attributes.scale);
 		}
-		Gremlin.loadModel(object, modelName);
+		Gremlin.loadModel(object, attributes.modelName);
 		if(textured) {
-			object.texture = Gremlin.createTexture(textureName);
+			object.texture = Gremlin.createTexture(attributes.textureName);
 		}
-		if(shininess) {
-			object.setShininess(shininess);
+		if(attributes.shininess) {
+			object.setShininess(attributes.shininess);
 		}
-		if(animation) {
-			object.animate = animation;
+		if(attributes.animation) {
+			object.animate = attributes.animation;
 		}
 		gameObjects.push(object);
 	}
@@ -895,17 +914,14 @@ function _ShipManager() {
 			throw new Error("Missing required attribute for createShip: 'position'");
 		}
 		// They're all evil spinning crates for now!
-		var tmpShip = Game.createObjectPrimitive(
-			attributes.position, 
-			"cube", 
-			"textures/crate.gif", 
-			1.0, 
-			0, 
-			0, 
-			function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); }, 
-			null, 
-			null, 
-			true);
+		var tmpShip = Game.createObjectPrimitive({
+			"position": attributes.position, 
+			"primType": "cube", 
+			"textureName": "textures/crate.gif", 
+			"scale": 1.0, 
+			"animation": function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); }, 
+			"stopPush": true
+		});
 		var color = attributes.color ? attributes.color : [1, 1, 1, 1];
 		tmpShip.setColor(attributes.color[0], attributes.color[1], attributes.color[2], attributes.color[3]);
 		
