@@ -49,14 +49,14 @@ function _Game() {
 				// Check for projectile - ship collision
 				for(var i = 0; i < projectiles.length; i++){
 					// Check enemy ships
-					if (projectiles[i].friendly && ShipManager.checkShipsCollision(projectiles[i].position, 0.03, projectiles[i].dmg)){
+					if (projectiles[i].friendly && ShipManager.checkShipsCollision(projectiles[i].position, projectiles[i].velocity, projectiles[i].mass, 0.03, projectiles[i].dmg)){
 						// TODO: remove hardcoded radius
 						// Remove Projectile
 						removeProjectile(i);
 					}
 					// TODO: remove hardcoded radi
 					else if(!(projectiles[i].friendly) && GremlinCollision.sphereToSphereIntersect(projectiles[i].position, 0.03, player.position, 1)) {
-						if(player.takeDamage(projectiles[i].dmg)){
+						if(player.takeDamage(projectiles[i].velocity, projectiles[i].mass, projectiles[i].dmg)){
 							// GAME OVER
 							GremlinGUI.endGame("<h2>Game Over</h2>")
 						}
@@ -144,7 +144,7 @@ function _Game() {
 						vec3.scale(v,player.weaponSpeed);
 						vec3.add(v,player.velocity);
 						
-						spawnProjectile(pos, v, [5.0,0,0,1.0], 30, 30000, true);
+						spawnProjectile(pos, v, [5.0,0,0,1.0], 40000, 30000, true); // specification of damage of projectile should not be here
 						player.fire();
 					}
 				}
@@ -480,16 +480,23 @@ function _Game() {
 		object.accelerate = function(elapsed) {
 			// Nothing Doing
 		}
-		object.takeDamage = function(damage) {
+		object.takeDamage = function(velocity, mass, damage) { //damage = damage per unit mass 
+			
+			// TODO: extract method
+			var relativeVelocity = vec3.create();
+			vec3.subtract(velocity, this.velocity, relativeVelocity);
+			var v = vec3.length(relativeVelocity);
+			var keneticAdjustedDamage = 0.5*mass*damage*v*v;  
+			
 			if(this.shieldPoints > 0) {
-				this.shieldPoints -= damage;
+				this.shieldPoints -= keneticAdjustedDamage;
 				if(this.shieldPoints < 0) {
 					this.healthPoints -= -this.shieldPoints;
 					this.shieldPoints = 0;
 				}
 			}
 			else {
-				this.healthPoints -= damage;
+				this.healthPoints -= keneticAdjustedDamage;
 			}
 			if(this.healthPoints<=0){
 				return true;
@@ -549,7 +556,8 @@ function _Game() {
 	function projectile(position, velocity, color, dmg, lifetime, friendly) {
 		this.position = position;
 		this.velocity = velocity;
-		this.dmg = dmg;
+		this.mass = 0.1; // TODO: Make argument
+		this.dmg = dmg; // Damage per unit mass
 		this.lifetime = lifetime;
 		this.friendly = friendly;
 		this.color = color;
@@ -560,6 +568,9 @@ function _Game() {
 		
 		function getPosition() {
 			return this.position;
+		}
+		function getVelocity() {
+			return this.velocity;
 		}
 		function getColor() {
 			return this.color;
@@ -927,12 +938,12 @@ function _ShipManager() {
 		}
 	}
 	
-	function checkShipsCollision(position, radius, dmg) {
+	function checkShipsCollision(position, velocity, mass, radius, dmg) {
 		for(var i = 0; i < shipList.length; i++) {
 			// TODO: Remove hardcoded ship radius - add radius method to gameobject (returns average scale)
 			if(GremlinCollision.sphereToSphereIntersect(position, radius, shipList[i].position, 1)){
 				shipList[i].takeDamageAi();
-				if (shipList[i].takeDamage(dmg))
+				if (shipList[i].takeDamage(velocity, mass, dmg))
 				{
 					this.destroyShip(i);
 					i--; 
@@ -1253,7 +1264,7 @@ function _ShipAI() {
 					if(GremlinMaths.calculateProjectileVelocity(estimatedSeparation, playerVel, (this.weaponSpeed+vec3.length(this.velocity)), projectileVelocity))
 					{
 						// Spawn new projectile
-						Game.spawnProjectile(pos, projectileVelocity, this.color, 10, 30000, false);
+						Game.spawnProjectile(pos, projectileVelocity, this.color, 20000, 30000, false);
 						this.fire();	
 					}
 				}
