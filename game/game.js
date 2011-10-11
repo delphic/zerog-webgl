@@ -38,21 +38,25 @@ function _Game() {
             var elapsed = timeNow - lastTime;
 			
 			// Animate Objects
-			for(object in gameObjects)
+			for(key in gameObjects)
 			{
-				gameObjects[object].animate(elapsed);
-				gameObjects[object].update(elapsed);
+				if(gameObjects.hasOwnProperty(key)) {
+					gameObjects[key].animate(elapsed);
+					gameObjects[key].update(elapsed);
+				}
 			}
 			
 			if(gameState == "InGame") {
-				// TODO: Collision Checks and AI (should possibly be run every X frames)
+				// Collision Checks and AI TODO: should possibly be run every X frames
 				// Check for projectile - ship collision
+				
 				for(var i = 0; i < projectiles.length; i++){
 					// Check enemy ships
 					if (projectiles[i].friendly && ShipManager.checkShipsCollision(projectiles[i].position, projectiles[i].velocity, projectiles[i].mass, 0.03, projectiles[i].dmg)){
 						// TODO: remove hardcoded radius
 						// Remove Projectile
 						removeProjectile(i);
+						i--; // Prevent skipping of next projectile after splice
 					}
 					// TODO: remove hardcoded radi
 					else if(!(projectiles[i].friendly) && GremlinCollision.sphereToSphereIntersect(projectiles[i].position, 0.03, player.position, 1)) {
@@ -61,6 +65,7 @@ function _Game() {
 							GremlinGUI.endGame("<h2>Game Over</h2>")
 						}
 						removeProjectile(i);
+						i--; // Prevent skipping of next projectile after splice
 					}
 				}
 								
@@ -74,7 +79,7 @@ function _Game() {
 				ShipManager.updateShips(elapsed);
 				
 				// Handle Game Input
-				// BUG: Keys get 'stuck down'
+				// BUG: Keys get 'stuck down' - can not be resolved without proper HTML5 User Interface API
 				var width = parseInt(canvas.style.width, 10);
 				var height = parseInt(canvas.style.height, 10);
 				var mousePos, lmbDown, rmbDown;
@@ -201,7 +206,8 @@ function _Game() {
 					projectiles[i].lifetime -= elapsed;
 					// Despawn if lifetime has expired
 					if (projectiles[i].lifetime < 0) {
-						projectiles.splice(i,1); // TODO: Use remove function
+						removeProjectile(i);
+						i--; // Prevent loop skipping next projectile in list after splice
 					}
 					else {
 						// Update Position
@@ -225,19 +231,23 @@ function _Game() {
 		
 		// Render Scene
 		Gremlin.prepareScene();
-		for(object in gameObjects)
+		for(key in gameObjects)
 		{
-			if(gameObjects[object].visible) {
-				Gremlin.renderObject(gameObjects[object]);
+			if(gameObjects.hasOwnProperty(key) && gameObjects[key].visible) {
+				Gremlin.renderObject(gameObjects[key]);
 			}
 		}
-		for(var i = 0; i < dustMotes.length; i++)
+		
+		var dustMotesMax = dustMotes.length; // This won't change in the loop so don't evaluate it each time
+		for(var i = 0; i < dustMotesMax; i++)
 		{
 			// Note: Not an efficient method of rendering particles...
 			// We can get away with this because it's only ~100 objects
 			Gremlin.renderObject(dustMotes[i]);
 		}
-		for(var n = 0; n < projectiles.length; n++)
+		
+		var projectilesMax = projectiles.length; // This won't change in the loop so don't evaluate it each time
+		for(var n = 0; n < projectilesMax; n++) 
 		{
 			var position = [0,0,0];
 			var colour = [1,1,1,1];
@@ -247,6 +257,7 @@ function _Game() {
 			projectileObject.setColor(colour[0], colour[1], colour[2], colour[3], colour[4]);
 			Gremlin.renderObject(projectileObject);
 		}
+		
 		ShipManager.renderShips();
 		
 		// WebGL HUD
@@ -268,6 +279,8 @@ function _Game() {
 		if(!(this instanceof GameObject)) {
 			return new GameObject(attribues);
 		}
+		
+		// TODO: Make properties private by using var instead of this.
 		
 		this.position = attributes.position ? vec3.create(attributes.position) : [0,0,0];
 		this.velocity = attributes.velocity ? vec3.create(attributes.velocity) : [0,0,0]; 
@@ -331,7 +344,6 @@ function _Game() {
 			this.position[2] += this.velocity[2]*elapsed;
 		}
 
-		
 		function rotate(amount, X, Y, Z) {
 			mat4.rotate(this.rotation, Gremlin.degToRad(amount), [X, Y, Z]);
 		}
@@ -870,9 +882,9 @@ function _Game() {
 		
 	}
 	function unloadLevel() {
-		for(variables in levelVars)
+		for(key in levelVars)
 		{
-			levelVars[variables] = null;
+			if(levelVars.hasOwnProperty(key)) { levelVars[key] = null; }
 		}
 		ShipManager.destroyShips();
 		setLevelThink(function() { /* Blank! */ });
@@ -996,7 +1008,8 @@ function _ShipManager() {
 
 	function updateShips(elapsed, playerPos, playerVel) {
 		if(shipList.length > 0) {
-			for(var i = 0; i < shipList.length; i++) {	
+			var shipListMax = shipList.length;
+			for(var i = 0; i < shipListMax; i++) {	
 				// Run AI - Argueably should be in separate function
 				shipList[i].runAI(shipList[i], elapsed);
 								

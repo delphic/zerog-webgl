@@ -1797,59 +1797,59 @@ function _GremlinEventHandler() {
 	var overrides = [];
 	
 	function onBlur() {
-		for(event in blur)
+		for(key in blur)
 		{
-			blur[event]();
+			if (blur.hasOwnProperty[key]) { blur[key](); }
 		}
 		if (overrides["onblur"]) { return false; }
 	}
 	function onFocus() {
-		for(event in focus)
+		for(key in focus)
 		{
-			focus[event]();
+			if (focus.hasOwnProperty(key)) { focus[key](); }
 		}
 		if (overrides["onfocus"]) { return false; }
 	}
 	function onResize() {
-		for(event in resize)
+		for(key in resize)
 		{
-			resize[event]();
+			if (resize.hasOwnProperty(key)) { resize[key](); }
 		}
 		if (overrides["onresize"]) { return false; }
 	}
 	
 	function onMouseMove(e) {
-		for(event in mousemove)
+		for(key in mousemove)
 		{
-			mousemove[event](e);
+			if (mousemove.hasOwnProperty(key)) { mousemove[key](e); }
 		}
 		if (overrides["onmousemove"]) { return false; }
 	}
 	function onMouseDown(e) {
-		for(event in mousedown)
+		for(key in mousedown)
 		{
-			mousedown[event](e);
+			if (mousedown.hasOwnProperty(key)) { mousedown[key](e); }
 		}
 		if (overrides["onmousedown"]) { return false; }
 	}
 	function onMouseUp(e) {
-		for(event in mouseup)
+		for(key in mouseup)
 		{
-			mouseup[event](e);
+			if (mouseup.hasOwnProperty(key)) { mouseup[key](e); }
 		}
 		if (overrides["onmouseup"]) { return false; }
 	}
 	function onKeyUp(e) {
-		for(event in keyup)
+		for(key in keyup)
 		{
-			keyup[event](e);
+			if (keyup.hasOwnProperty(key)) { keyup[key](e); }
 		}
 		if (overrides["onkeyup"]) { return false; }
 	}
 	function onKeyDown(e) {
-		for(event in keydown)
+		for(key in keydown)
 		{
-			keydown[event](e);
+			if (keydown.hasOwnProperty(key)) { keydown[key](e); }
 		}
 		if (overrides["onkeydown"]) { return false; }
 	}

@@ -202,33 +202,33 @@ function _HUD() {
 		// Move Group - reverse calculation of above for all elements, then resize group, then run function above for all elements
 		this.moveGroup = function(position) {
 			for(key in this.elements) {
-				this.unresizeElementToGroup(key);
+				if(this.elements.hasOwnProperty(key)) { this.unresizeElementToGroup(key); }
 			}
 			this.position = [position[0],position[1],position[2]];
 			for(key in this.elements) {
-				this.resizeElementToGroup(key);
+				if(this.elements.hasOwnProperty(key)) { this.resizeElementToGroup(key); }
 			}
 		}
 		// Resize Group - same as move but for scale
 		this.resizeGroup = function(size) {
 			for(key in this.elements) {
-				this.unresizeElementToGroup(key);
+				if(this.elements.hasOwnProperty(key)) { this.unresizeElementToGroup(key); }
 			}
 			this.size = [size[0],size[1]];
 			for(key in this.elements) {
-				this.resizeElementToGroup(key);
+				if(this.elements.hasOwnProperty(key)) { this.resizeElementToGroup(key); }
 			}
 		}
 		
 		this.hideElements = function() {
 			for(key in this.elements) {
-				this.elements[key].setVisibility(false);
+				if(this.elements.hasOwnProperty(key)) { this.elements[key].setVisibility(false); }
 			}
 		}
 		
 		this.showElements = function() {
 			for(key in this.elements) {
-				this.elements[key].setVisibility(true);
+				if(this.elements.hasOwnProperty(key)) { this.elements[key].setVisibility(true); }
 			}
 		}
 		
@@ -414,8 +414,9 @@ function _HUD() {
 	}
 	
 	function renderHud() {
-		for (element in hudElements) {
-			Gremlin.renderPlane(hudElements[element]);
+		var hudElementsMax = hudElements.length;
+		for (var i=0; i < hudElementsMax; i++) {
+			Gremlin.renderPlane(hudElements[i]);
 		}
 	}
 	
@@ -423,7 +424,8 @@ function _HUD() {
 		var canvasSize = Game.getCanvasSize();
 		var newRatio = canvasSize[0]/canvasSize[1];
 		
-		for(i in hudElements) {
+		var hudElementsMax = hudElements.length;
+		for(var i=0; i < hudElementsMax; i++) {
 			hudElements[i].size[0] *= (viewPortRatio)/(newRatio);
 			if(hudElements[i].maxSize && hudElements[i].alignment == "Horizontal") {
 				hudElements[i].maxSize *= (viewPortRatio)/(newRatio);
@@ -440,8 +442,10 @@ function _HUD() {
 	}
 	
 	function updateHud(items) {
-		for(item in items) {
-			hudElements[items[item].index].updateValue(items[item].value);
+		for(key in items) {
+			if(items.hasOwnProperty(key)) {
+				hudElements[items[key].index].updateValue(items[key].value);
+			}
 		}		
 	}
 	
