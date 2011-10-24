@@ -1225,6 +1225,14 @@ function _Gremlin() {
 		}
 	}
 	
+	function createTextureFromCanvas(canvasId) {
+		var texture = _gl.createTexture();
+		texture.image = document.getElementById('canvasId');
+		var index = textureList.push(texture)-1;
+		_handleLoadedTexture(textureList[index], 3); }
+		return index;
+	}
+	
 	// Camera Functions 
 	// TODO: These should probably not be for a specific camera!
 	// Argueably we shouldn't be storing camera in engine, and should move to game code
@@ -1697,6 +1705,7 @@ function _Gremlin() {
 		createBrace:				createBrace,
 		loadModel:					loadModel,
 		createTexture:				createTexture,
+		createTextureFromCanvas:	createTextureFromCanvas,
 		setLightEnvironment:		setLightEnvironment,
 		setLightingFlags:			setLightingFlags,
 		addPointLight:				addPointLight,
