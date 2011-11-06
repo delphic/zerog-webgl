@@ -280,7 +280,7 @@ function _Game() {
 			return new GameObject(attribues);
 		}
 		
-		// TODO: Make properties private by using var instead of this.
+		// TODO: Make properties private by using var instead of this or add to prototype.
 		
 		this.position = attributes.position ? vec3.create(attributes.position) : [0,0,0];
 		this.velocity = attributes.velocity ? vec3.create(attributes.velocity) : [0,0,0]; 
@@ -587,6 +587,7 @@ function _Game() {
 	var energyBar;// Om Nom Nom Nom
 	
 	// Player Access Functions
+	// TODO: Remove these and just use the player object
 	function setPlayerPosition(position) {
 		// TODO: Check input is vector
 		player.setPosition(position[0], position[1], position[2]);
@@ -606,6 +607,9 @@ function _Game() {
 	}
 	function getPlayerVelocity() {
 		return player.velocity;
+	}
+	function getPlayerRotation() {
+		return player.rotation;
 	}
 	function getPlayerProjectileSpeed() {
 		return (vec3.length(player.velocity)+player.weaponSpeed);
@@ -908,8 +912,9 @@ function _Game() {
 		setLevelThink:				setLevelThink,
 		getLevelVar:				getLevelVar,
 		setLevelVar:				setLevelVar,
-		getPlayerPosition:			getPlayerPosition,
+		getPlayerPosition:			getPlayerPosition, 		// Replace with reference to player object
 		getPlayerVelocity:			getPlayerVelocity,
+		getPlayerRotation:			getPlayerRotation,
 		getPlayerProjectileSpeed:	getPlayerProjectileSpeed,
 		setPlayerPosition:          setPlayerPosition,
 		setPlayerVelocity:			setPlayerVelocity,
@@ -1108,8 +1113,7 @@ function _ShipManager() {
 		}
 		
 		// Update Health and Shield Bars
-		GremlinHUD.updateHud( 
-		{ 
+		GremlinHUD.updateHud({ 
 			health: { index: ship.healthBar, value: (ship.healthPoints/ship.healthMax) },
 			shield: { index: ship.shieldBar, value: (ship.shieldPoints/ship.shieldMax) }
 		});

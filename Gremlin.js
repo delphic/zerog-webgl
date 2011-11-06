@@ -336,6 +336,11 @@ function _Gremlin() {
 		mat4.translate(mvMatrix, [object.position[0], object.position[1],object.position[2]]);
 		
 		if(object.size != [1,1]) mat4.scale(mvMatrix, [object.size[0],object.size[1],1], mvMatrix);
+		
+		// Enable Blending // TODO: Do this properly as part of the improves to the engine
+		_gl.blendFunc(_gl.SRC_ALPHA, _gl.ONE);
+		_gl.enable(_gl.BLEND);
+		_gl.disable(_gl.DEPTH_TEST);
 
         _gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexPosition);
         _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, buffersList[object.buffers].vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
@@ -395,6 +400,8 @@ function _Gremlin() {
 				_gl.drawArrays(_gl.POINTS, 0, buffersList[object.buffers].vertexPosition.numItems);
 			}
 		}
+		_gl.enable(_gl.DEPTH_TEST);
+		_gl.disable(_gl.BLEND);
 	}
 			
 	// Buffers
@@ -1226,10 +1233,11 @@ function _Gremlin() {
 	}
 	
 	function createTextureFromCanvas(canvasId) {
+		_increaseAssetsLoading();
 		var texture = _gl.createTexture();
-		texture.image = document.getElementById('canvasId');
+		texture.image = document.getElementById(canvasId);
 		var index = textureList.push(texture)-1;
-		_handleLoadedTexture(textureList[index], 3); }
+		_handleLoadedTexture(textureList[index], 3); 
 		return index;
 	}
 	
@@ -1674,9 +1682,7 @@ function _Gremlin() {
 		
 		return program;
 	}
-	
-	
-	
+		
 	function _initShaders() {
 		_shaderPrograms["Vertex"] = _createShader("vertex-shader-vs", "vertex-shader-fs");
 		_shaderPrograms["Pixel"] = _createShader("pixel-shader-vs", "pixel-shader-fs");
