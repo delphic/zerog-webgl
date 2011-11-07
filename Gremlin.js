@@ -338,7 +338,7 @@ function _Gremlin() {
 		if(object.size != [1,1]) mat4.scale(mvMatrix, [object.size[0],object.size[1],1], mvMatrix);
 		
 		// Enable Blending // TODO: Do this properly as part of the improves to the engine
-		_gl.blendFunc(_gl.SRC_ALPHA, _gl.ONE);
+		_gl.blendFunc(_gl.SRC_ALPHA, _gl.ONE_MINUS_SRC_ALPHA);
 		_gl.enable(_gl.BLEND);
 		_gl.disable(_gl.DEPTH_TEST);
 
