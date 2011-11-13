@@ -974,13 +974,13 @@ function _ShipManager() {
 			[-0.95, 0],
 			[0.1, 0.7],
 			[0.1, 0.5, 0.1, 1],
-			[1, 1, 0.7, 1], 
+			[0,0,0,0], 
 			"Vertical");
 		tmpShip.shieldBar = GremlinHUD.createBar(
 			[0.95,0],
 			[0.1,0.7],
 			[0.1,0.1,0.5,1],
-			[1,0.7,1,1], 
+			[0,0,0,0], 
 			"Vertical");
 		tmpShip.targetBrace = GremlinHUD.createWireframe("Brace",[0,0,0], [0.9,0.9],[1,0,0,1]);
 		tmpShip.infoContainer = GremlinHUD.createGroup([0,0,0],[0.25,0.25]);
