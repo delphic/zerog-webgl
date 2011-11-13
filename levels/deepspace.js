@@ -79,7 +79,7 @@
 					// You Win!
 					setTimeout(
 						function() {
-							GremlinGUI.endGame("<h1 style='colour=purple'>You Win</h1><p>Congratulations! More content coming soon I promise!</p>")
+							GremlinGUI.endGame("<h1 style='colour=purple'>You Win</h1><p>Congratulations!</p>")
 						},
 						2000);
 				}
