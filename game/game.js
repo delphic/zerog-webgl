@@ -370,7 +370,7 @@ function _Game() {
 	}
 	
 	// Creation Objection
-	// Attributes: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush
+	// Attributes: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush, color, useLighting
 	function createObjectPrimitive(attributes) {
 		
 		// Required Attributes
@@ -429,13 +429,20 @@ function _Game() {
 		if(attributes.isSkyBox) {
 			object.setIsSkyBox(true);
 		}
+		if(attributes.useLighting) {
+			object.setUseLighting(attributes.useLighting);
+		}
 		if(attributes.animation) {
 			object.animate = attributes.animation;
 		}
+		if(attributes.color) {
+			object.setColor(attributes.color[0], attributes.color[1], attributes.color[2], attributes.color[3]);
+		}		
 		if(!attributes.stopPush)
 		{
 			gameObjects.push(object);
 		}
+		
 		return object;
 		
 	}
@@ -475,6 +482,9 @@ function _Game() {
 		}
 		if(attributes.animation) {
 			object.animate = attributes.animation;
+		}
+		if(attributes.color) {
+			object.setColor(attributes.color[0], attributes.color[1], attributes.color[2], attributes.color[3]);
 		}
 		gameObjects.push(object);
 	}

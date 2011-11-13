@@ -211,7 +211,7 @@ function _Gremlin() {
 		}
 		else {
 			// TODO: This is depedant on current implementation of camera, try to decouple
-			mat4.translate(_mvMatrix, [_playerCamera.x, _playerCamera.y, _playerCamera.z]);
+			mat4.translate(_mvMatrix, [_playerCamera.x+object.position[0], _playerCamera.y+object.position[1], _playerCamera.z+object.position[2]]);
 		}
 		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
 		

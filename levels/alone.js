@@ -13,13 +13,26 @@
 		"scale": 500,
 		"latBands": 30,
 		"longBands": 30, 
-		"animation": function(elapsed) { this.rotate( ( (5 * elapsed) / 1000.0), 0, 1, 0); }
+		"animation": function(elapsed) { this.rotate( ( (0.5 * elapsed) / 1000.0), 0, 1, 0); },
+		"isSkyBox": true,
+		"useLighting": true
 	});
+	Game.createObjectPrimitive({
+		"position": [10000, 0, -5000],
+		"primType": "sphere",
+		"textureName": "textures/Sun.jpg",
+		"scale": 100,
+		"latBands": 30,
+		"longBands": 30,
+		"isSkyBox": true
+	});
+	// Whilst the scales and distances are completely wrong, as they are both in the sky box is doesn't matter
+	
 	Game.createObjectPrimitive({
 		"position": [0, 0, 0],
 		"primType": "sphere", 
 		"textureName": "textures/huge_stars.png", 
-		"scale": 10000, 
+		"scale": 15000, 
 		"latBands": 30, 
 		"longBands": 30, 
 		"isSkyBox": true
