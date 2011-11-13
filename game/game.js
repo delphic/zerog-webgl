@@ -710,13 +710,14 @@ function _Game() {
 				var separation = vec3.create();
 				vec3.subtract(position,dustMotes[i].position, separation);
 				if (vec3.length(separation) >  boundingR) {
-					// As separation > bounding radius, reset to be at bounding radius for current velocity
+					// Randomise position of modes and reset to new bounding radius
+					separation = [Math.random()*separation[0], Math.random()*separation[1], Math.random()*separation[2]];
 					vec3.normalize(separation);
 					boundingR = vec3.length(velocity) + rootThree*randomFactor;
 					vec3.scale(separation, boundingR);
+
+					// Respawn on other side of sphere with randomised position
 					dustMotes[i].spawnDistance = boundingR;
-					// Respawn on opposite site of sphere 
-					// adjusting for velocity difference prevents some of the flattening of position of motes, but does not account for |(separation-spawnDistance)|
 					dustMotes[i].setPosition(
 						position[0] + separation[0],
 						position[1] + separation[1],
