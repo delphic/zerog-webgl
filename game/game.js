@@ -123,7 +123,7 @@ function _Game() {
 					// Move Up
 					dy += accelRate;	
 				} 
-				else if (GremlinInput.keyDown("Ctrl")) {
+				else if (GremlinInput.keyDown("Shift")) {
 					// Move Down
 					dy -= accelRate;
 				}
