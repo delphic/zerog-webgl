@@ -32,6 +32,21 @@ function _Game() {
 		gameState = val;
 	}
 	
+	// Returns if a key is down for the specified binding
+	function _keyState(binding) {
+		var bind = GremlinBindings.GetBinding(binding);
+		if (bind.Enabled) {
+			return (((_isMouseButton(bind.PrimaryKey)) ? GremlinInput.mouseDown(bind.PrimaryKey) : GremlinInput.keyDown(bind.PrimaryKey)) 
+				|| ((_isMouseButton(bind.SecondaryKey)) ? GremlinInput.mouseDown(bind.SecondaryKey) : GremlinInput.keyDown(bind.SecondaryKey)));
+		} else {
+			return false;
+		}
+	}
+	
+	function _isMouseButton(key) {
+		return (key === "LeftMouseButton" || key === "RightMouseButton" || key == "MiddleMouseButton");
+	}
+	
     function animate() {
         var timeNow = new Date().getTime();
         if (lastTime != 0) {
@@ -82,48 +97,46 @@ function _Game() {
 				// BUG: Keys get 'stuck down' - can not be resolved without proper HTML5 User Interface API
 				var width = parseInt(canvas.style.width, 10);
 				var height = parseInt(canvas.style.height, 10);
-				var mousePos, lmbDown, rmbDown;
+				var mousePos;
 				mousePos = GremlinInput.getMousePos();
-				lmbDown = GremlinInput.mouseDown(0);
-				rmbDown = GremlinInput.mouseDown(2);
 				
 				var dyaw, dpitch, droll, dx, dz;
 				dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
 				dpitch = 0.05 * elapsed * ((height*0.5)-mousePos[1])/(0.5*height);
 				droll = 0;
-				if (GremlinInput.keyDown("q")) { droll += 0.1 * elapsed; }
-				if (GremlinInput.keyDown("e")) { droll -= 0.1 * elapsed; }
-				if (rmbDown) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
-				else if (GremlinInput.keyDown("q") || GremlinInput.keyDown("e")) { Gremlin.rotatePlayerCamera(0, 0, droll); }
+				if (_keyState("RollLeft")) { droll += 0.1 * elapsed; }
+				if (_keyState("RollRight")) { droll -= 0.1 * elapsed; }
+				if (_keyState("Look")) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
+				else if (_keyState("RollLeft") || _keyState("RollRight")) { Gremlin.rotatePlayerCamera(0, 0, droll); }
 
 				var accelRate = player.accelerationRate(elapsed);
 				dx = 0;
 				dy = 0;
 				dz = 0;
 
-				if (GremlinInput.keyDown("Left") || GremlinInput.keyDown("a")) {
+				if (_keyState("Left")) {
 					// Strafe Left
 					dx -= accelRate;
 				} 
-				else if (GremlinInput.keyDown("Right") || GremlinInput.keyDown("d")) {
+				else if (_keyState("Right")) {
 					// Strafe Right
 					dx += accelRate;
 				}
 
-				if (GremlinInput.keyDown("Up") || GremlinInput.keyDown("w")) {
+				if (_keyState("Forward")) {
 					// Move Forward
 					dz -= accelRate;
 				} 
-				else if (GremlinInput.keyDown("Down") || GremlinInput.keyDown("s")) {
+				else if (_keyState("Backward")) {
 					// Move Backward
 					dz += accelRate;
 				}
 				
-				if (GremlinInput.keyDown("Space")) {
+				if (_keyState("Up")) {
 					// Move Up
 					dy += accelRate;	
 				} 
-				else if (GremlinInput.keyDown("Shift")) {
+				else if (_keyState("Down")) {
 					// Move Down
 					dy -= accelRate;
 				}
@@ -158,7 +171,7 @@ function _Game() {
 				Gremlin.setPlayerCamera(player.position[0],player.position[1],player.position[2]);
 				
 				// Pew Pew
-				if(lmbDown) {
+				if(_keyState("PewPew")) {
 					if (player.canFire()) {
 						var pos = vec3.create(player.position);
 						// TODO: Also this needs to be turret attach point rather than camera position
@@ -496,6 +509,19 @@ function _Game() {
 		// TODO: Player Init
 		
 		// TODO: Projectile Init
+		
+		// Bindings
+		GremlinBindings.Bind({Name: "Forward", PrimaryKey: "w", SecondaryKey: "Up" });
+		GremlinBindings.Bind({Name: "Backward", PrimaryKey: "s", SecondaryKey: "Down"});
+		GremlinBindings.Bind({Name: "Left", PrimaryKey: "a", SecondaryKey: "Left"});
+		GremlinBindings.Bind({Name: "Right", PrimaryKey: "d", SecondaryKey: "Right"});
+		GremlinBindings.Bind({Name: "Up", PrimaryKey: "Space"});
+		GremlinBindings.Bind({Name: "Down", PrimaryKey: "Shift"});
+		GremlinBindings.Bind({Name: "RollLeft", PrimaryKey: "q"});
+		GremlinBindings.Bind({Name: "RollRight", PrimaryKey: "e"});
+		GremlinBindings.Bind({Name: "Look", PrimaryKey: "RightMouseButton"});
+		GremlinBindings.Bind({Name: "PewPew", PrimaryKey: "LeftMouseButton"});
+		
 		// Create Projectiles
 		Gremlin.createTetrahedron(projectileObject, false);
 		projectileObject.setScale(0.03,0.03,0.03);

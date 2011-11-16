@@ -1919,9 +1919,66 @@ function _GremlinInput() {
 		if (!isNaN(key) && !key.length) {
 			return currentlyPressedKeys[key];
 		}
+		else if (key) {
+			var map = descriptionToKeyCode(key);
+			return (map) ? currentlyPressedKeys[map] : false;
+		}
 		else {
-			var map;
-			switch(key) {
+			return false;
+		}
+	}
+	
+	function mouseDown(button) {
+		if (!isNaN(button) && !button.length) {
+			return mouseState[button];
+		}
+		else if (button) {
+			var map = descriptionToMouseButton(button);
+			return (!isNaN(map)) ? mouseState[map] : false;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	function descriptionToMouseButton(button) {
+		var map;
+		switch(button) {
+			case "LeftMouseButton":
+				map = 0;
+				break;
+			case "MiddleMouseButton":
+				map = 1;
+				break;
+			case "RightMouseButton":
+				map = 2;
+				break;
+			default:
+			 	map = false;
+		}
+		return map;
+	}
+	function mouseButtonToDescription(button) {
+		var map;
+		switch(button) {
+			case 0:
+				map = "LeftMouseButton";
+				break;
+			case 1:
+				map = "MiddleMouseButton";
+				break;
+			case 2:
+				map = "RightMouseButton";
+				break;
+			default:
+				map = false;
+		}
+		return map;
+	}
+	
+	function descriptionToKeyCode(key) {
+		var map;
+		switch(key) {
 			case "a":
 				map = 65;
 				break;
@@ -2131,14 +2188,226 @@ function _GremlinInput() {
 			// TODO: Add Num Pad
 			
 			default: 
-				return false;
+				map = false;
 			}
-			
-			return currentlyPressedKeys[map];
-		}
+		return map;
 	}
-	function mouseDown(button) {
-		return mouseState[button];
+	
+	function keyCodeToDescription(keyCode) {
+		var map;
+		switch(keyCode) {
+			case 65:
+				map = "a";
+				break;
+			case 66:
+				map = "b";
+				break;
+			case 67:
+				map = "c";
+				break;
+			case 68:
+				map = "d";
+				break;
+			case 69:
+				map = "e";
+				break;
+			case 70:
+				map = "f";
+				break;
+			case 71:
+				map = "g";
+				break;
+			case 72:
+				map = "h";
+				break;
+			case 73:
+				map = "i";
+				break;
+			case 74:
+				map = "j";
+				break;
+			case 75:
+				map = "k";
+				break;
+			case 76:
+				map = "l";
+				break;
+			case 77:
+				map = "m";
+				break;
+			case 78:
+				map = "n";
+				break;
+			case 79:
+				map = "o";
+				break;
+			case 80:
+				map = "p";
+				break;
+			case 81:
+				map = "q";
+				break;
+			case 82:
+				map = "r";
+				break;
+			case 83:
+				map = "s";
+				break;
+			case 84:
+				map = "t";
+				break;
+			case 85:
+				map = "u";
+				break;
+			case 86:
+				map = "v";
+				break;
+			case 87:
+				map = "w";
+				break;
+			case 88:
+				map = "x";
+				break;
+			case 89:
+				map = "y";
+				break;
+			case 90:
+				map = "z";
+				break;
+				
+			case 8:
+				map = "Backspace";
+				break;
+			case 9:
+				map = "Tab";
+				break;
+			case 13:
+				map = "Enter";
+				break;
+			case 16:
+				map = "Shift";
+				break;
+			case 17:
+				map = "Ctrl";
+				break;
+			case 18:
+				map = "Alt";
+				break;
+			case 19:
+				map = "PauseBreak";
+				break;
+			case 20:
+				map = "Caps";
+				break;
+			case 27:
+				map = "Esc";
+				break;
+			case 32:
+				map = "Space";
+				break;
+			case 33:
+				map = "PageUp";
+				break;
+			case 34:
+				map = "PageDown";
+				break;
+			case 35:
+				map = "End";
+				break;
+			case 36:
+				map = "Home";
+				break;
+			case 37:
+				map = "Left";
+				break;
+			case 38:
+				map = "Up";
+				break;
+			case 39:
+				map = "Right";
+				break;
+			case 40:
+				map = "Down";
+				break;
+			case 45:
+				map = "Insert";
+				break;
+			case 46:
+				map = "Delete";
+				break;
+			case 48:
+				map = "0";
+				break;
+			case 49:
+				map = "1";
+				break;
+			case 50:
+				map = "2";
+				break;
+			case 51:
+				map = "3";
+				break;
+			case 52:
+				map = "4";
+				break;
+			case 53:
+				map = "5";
+				break;
+			case 54:
+				map = "6";
+				break;
+			case 55:
+				map = "7";
+				break;
+			case 56:
+				map = "8";
+				break;
+			case 57:
+				map = "9";
+				break;
+			case 59:
+				map = ";";
+				break;
+			case 61:
+				map = "=";
+				break;
+			case 189:
+				map = "-";
+				break;
+			case 188:
+				map = ",";
+				break;
+			case 190:
+				map = ".";
+				break;
+			case 191:
+				map = "/";
+				break;
+			case 220:
+				map = "|";
+				break;
+			case 219:
+				map = "[";
+				break;
+			case 221:
+				map = "]";
+				break;
+			case 223:
+				map = "`";
+				break;
+			case 192:
+				map = "'";
+				break;
+			case 222:
+				map = "#";
+				break;
+				
+			// TODO: Add Num Pad
+			
+			default: 
+				map = false;
+		}
+		return map;
 	}
 	
 	//	            _            _       
@@ -2177,13 +2446,75 @@ function _GremlinInput() {
 	//	|_| |_|\__,_|_| |_|\__,_|_|\___||___/
 	
 	return {
-		getMousePos:	getMousePos,
-		keyDown:		keyDown,
-		mouseDown:		mouseDown
+		getMousePos:				getMousePos,
+		keyDown:					keyDown,
+		mouseDown:					mouseDown,
+		descriptionToKeyCode:		descriptionToKeyCode,
+		keyCodeToDescription:		keyCodeToDescription,
+		descriptionToMouseButton:	descriptionToMouseButton,
+		mouseButtonToDescription:	mouseButtonToDescription
 	}
 }
 
 var GremlinInput = _GremlinInput();
+
+function _GremlinBindings() {
+	var bindings = {};
+	
+	function Bind(attributes) {
+		if (!attributes.Name) {
+			throw new Error("No binding name provided");
+		}
+		var binding = GetBinding(attributes.Name);
+	    if(attributes.PrimaryKey) {
+	    	binding.PrimaryKey = attributes.PrimaryKey;
+	    }
+	    if(attributes.SecondaryKey) {
+	    	binding.SecondaryKey = attributes.SecondaryKey;
+	    }
+	    if(!binding.hasOwnProperty("Enabled")) {
+	    	binding.Enabled = true;
+	    }
+	    bindings[attributes.Name] = binding;
+	}
+	
+	function Unbind(name) {
+		if(bindings.hasOwnProperty(name)) {
+			delete bindings[name];
+		}
+	}
+	
+	function GetBinding(name) {
+		return (bindings.hasOwnProperty(name)) ? bindings[name] : {};
+	}
+	
+	function GetAllBindings() {
+		return bindings;
+	}
+	
+	function EnableBinding(name) {
+		if (bindings.hasOwnProperty(name)) {
+			bindings[name].Enabled = true;
+		}
+	}
+	
+	function DisableBinding(name) {
+		if (bindings.hasOwnProperty(name)) {
+			bindings[name].Enabled = false;
+		}
+	}
+	
+	return {
+		Bind:			Bind,
+		Unbind:			Unbind,
+		GetBinding:		GetBinding,
+		GetAllBindigns:	GetAllBindings,
+		EnableBinding:	EnableBinding,
+		DisableBinding:	DisableBinding
+	}
+}
+
+var GremlinBindings = _GremlinBindings();
 
 function _GremlinCollision() {
 	// TODO: Should proabably introduce bounding volumes and save those to objects and do comparisions on those, for now we'll just feed all the data in.
