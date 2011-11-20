@@ -1122,8 +1122,9 @@ function _Gremlin() {
 			if(parameters && parameters.offset) { offset = parameters.offset; }
 			var key = "cube-scale:"+scale.toString()+"-offset:"+offset.toString();
 
-			if (isNaN(buffersNameList[key])){
+			if (isNaN(buffersNameList[key]) || (parameters && parameters.jsonOut)){
 				var buffers = [];
+				var jsonOut = {};
 				
 				function adjust(value, index) { return offset[index]+(value*scale[index]); }
 				
@@ -1171,6 +1172,7 @@ function _Gremlin() {
 				cubeVertexPositionBuffer.itemSize = 3;
 				cubeVertexPositionBuffer.numItems = 24;
 				
+				if(parameters && parameters.jsonOut) { jsonOut.vertexPositions = vertices; }
 				buffers["vertexPosition"] = cubeVertexPositionBuffer;
 			
 				// Texture Buffer	
@@ -1217,7 +1219,8 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
 				cubeVertexTextureCoordBuffer.itemSize = 2;
 				cubeVertexTextureCoordBuffer.numItems = 24;
-					
+				
+				if(parameters && parameters.jsonOut) { jsonOut.vertexTextureCoords = textureCoords; }
 				buffers["textureCoords"] = cubeVertexTextureCoordBuffer;
 				
 				// Normal Buffer
@@ -1266,6 +1269,7 @@ function _Gremlin() {
 				cubeVertexNormalBuffer.itemSize = 3;
 				cubeVertexNormalBuffer.numItems = 24;
 				
+				if(parameters && parameters.jsonOut) { jsonOut.vertexNormals = vertexNormals; }
 				buffers["vertexNormals"] = cubeVertexNormalBuffer;
 				
 				// Index Buffer
@@ -1283,10 +1287,12 @@ function _Gremlin() {
 				cubeVertexIndexBuffer.itemSize = 1;
 				cubeVertexIndexBuffer.numItems = 36;
 				
+				if(parameters && parameters.jsonOut) { jsonOut.indices = cubeVertexIndices; }
 				buffers["vertexIndex"] = cubeVertexIndexBuffer;
 				buffers["useIndices"] = true;
 				
-				buffersNameList[key] = buffersList.push(buffers)-1;
+				if(isNaN(buffersList[key])) { buffersNameList[key] = buffersList.push(buffers)-1; }
+				if(parameters && parameters.jsonOut) { parameters.jsonOut = jsonOut; }
 			}
 			return buffersNameList[key];
 		}
@@ -1305,8 +1311,9 @@ function _Gremlin() {
 			
 			var key = "cube-latBands:"+latBands+"longBands:"+longBands+"-scale:"+scale.toString()+"-offset:"+offset.toString();
 			
-			if (isNaN(buffersNameList[key])) {
+			if (isNaN(buffersNameList[key]) || parameters.jsonOut) {
 				var buffers = [];
+				var jsonOut = {};
 				
 				// Method taken from Lesson 11 of learningWebGL.com
 				var latitudeBands = latBands;
@@ -1365,6 +1372,7 @@ function _Gremlin() {
 				sphereVertexPositionBuffer.itemSize = 3;
 				sphereVertexPositionBuffer.numItems = vertexPositionData.length / 3;
 				
+				if(parameters.jsonOut) { jsonOut.vertexPositions = vertexPositionData; }
 				buffers["vertexPosition"] = sphereVertexPositionBuffer;
 				
 				// Normals, WARNING: dependant on shaderProgram
@@ -1374,6 +1382,7 @@ function _Gremlin() {
 				sphereVertexNormalBuffer.itemSize = 3;
 				sphereVertexNormalBuffer.numItems = normalData.length / 3;
 				
+				if(parameters.jsonOut) { jsonOut.vertexNormals = normalData; }
 				buffers["vertexNormals"] = sphereVertexNormalBuffer;
 				
 				var sphereVertexTextureCoordBuffer = _gl.createBuffer();
@@ -1383,6 +1392,7 @@ function _Gremlin() {
 				sphereVertexTextureCoordBuffer.itemSize = 2;
 				sphereVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
 				
+				if(parameters.jsonOut) { jsonOut.vertexTextureCoords = textureCoordData; }
 				buffers["textureCoords"] = sphereVertexTextureCoordBuffer; 
 				
 				// Index Buffer
@@ -1392,10 +1402,12 @@ function _Gremlin() {
 				sphereVertexIndexBuffer.itemSize = 1;
 				sphereVertexIndexBuffer.numItems = indexData.length;
 				
+				if(parameters.jsonOut) { jsonOut.indices = indexData; }
 				buffers["vertexIndex"] = sphereVertexIndexBuffer;
 				buffers["useIndices"] = true;
-		
-				buffersNameList[key] = buffersList.push(buffers)-1;
+				
+				if(parameters.jsonOut) { parameters.jsonOut = jsonOut; }
+				if(isNaN(buffersList[key])) { buffersNameList[key] = buffersList.push(buffers)-1; }
 			}
 			return buffersNameList[key];
 		}
