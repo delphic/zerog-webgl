@@ -288,17 +288,17 @@ function _Game() {
 	var gameSpotLights = [];
 
 	// Game Object Obj
-	function GameObject(attributes) { 
+	function GameObject(parameters) { 
 		if(!(this instanceof GameObject)) {
 			return new GameObject(attribues);
 		}
 		
 		// TODO: Make properties private by using var instead of this or add to prototype.
 		
-		this.position = attributes.position ? vec3.create(attributes.position) : [0,0,0];
-		this.velocity = attributes.velocity ? vec3.create(attributes.velocity) : [0,0,0]; 
-		this.rotation = attributes.rotation ? mat4.create(attributes.rotation) : mat4.identity(mat4.create());
-		this.scale = attributes.scale ? vec3.create(attributes.scale) : [1, 1, 1];
+		this.position = parameters.position ? vec3.create(parameters.position) : [0,0,0];
+		this.velocity = parameters.velocity ? vec3.create(parameters.velocity) : [0,0,0]; 
+		this.rotation = parameters.rotation ? mat4.create(parameters.rotation) : mat4.identity(mat4.create());
+		this.scale = parameters.scale ? vec3.create(parameters.scale) : [1, 1, 1];
 		
 		this.buffers = [];
 		
@@ -383,37 +383,37 @@ function _Game() {
 	}
 	
 	// Creation Objection
-	// Attributes: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush, color, useLighting
-	function createObjectPrimitive(attributes) {
+	// parameters: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush, color, useLighting
+	function createObjectPrimitive(parameters) {
 		
-		// Required Attributes
-		if(!attributes.primType) {
+		// Required parameters
+		if(!parameters.primType) {
 			throw new Error("Required argument missing for createObjectPrimitive: 'primType'");
 		}
-		if(!attributes.position) {
+		if(!parameters.position) {
 			throw new Error("Required argument missing for createObjectPrimitive: 'position");
 		}
-		if(!attributes.scale) {
+		if(!parameters.scale) {
 			throw new Error("Required argument missing for createObjectPrimitive: 'scale'");
 		}
 		
-		var object = new GameObject({ "position": attributes.position });
+		var object = new GameObject({ "position": parameters.position });
 		var textured;
-		if (attributes.textureName) { 
+		if (parameters.textureName) { 
 			textured = true;
 		}
 		else {
 			textured = false;
 		}
 		
-		if(attributes.scale.length) {
-			object.setScale(attributes.scale);
+		if(parameters.scale.length) {
+			object.setScale(parameters.scale);
 		}
 		else {
-			object.setScale(attributes.scale,attributes.scale,attributes.scale);
+			object.setScale(parameters.scale,parameters.scale,parameters.scale);
 		}
 		
-		switch(attributes.primType) {
+		switch(parameters.primType) {
 		case "pyramid":
 			Gremlin.Primitives.createPyramid(object, textured);
 			break;
@@ -421,7 +421,7 @@ function _Game() {
 			Gremlin.Primitives.createCube(object, textured);
 			break;
 		case "sphere":
-			Gremlin.Primitives.createSphere(object, textured, attributes.latBands, attributes.longBands);
+			Gremlin.Primitives.createSphere(object, textured, parameters.latBands, parameters.longBands);
 			break;
 		case "ray":
 			Gremlin.Primitives.createRay(object);
@@ -430,28 +430,28 @@ function _Game() {
 			Gremlin.Primitives.createPoint(object);
 			break;
 		default:
-			alert("Invalid Prim Type: "+attributes.primType+"");
+			alert("Invalid Prim Type: "+parameters.primType+"");
 			return;
 		}
 		if(textured) {
-			object.texture = Gremlin.createTexture(attributes.textureName);
+			object.texture = Gremlin.createTexture(parameters.textureName);
 		}
-		if(attributes.shininess) {
-			object.setShininess(attributes.shininess);
+		if(parameters.shininess) {
+			object.setShininess(parameters.shininess);
 		}
-		if(attributes.isSkyBox) {
+		if(parameters.isSkyBox) {
 			object.setIsSkyBox(true);
 		}
-		if(attributes.useLighting) {
-			object.setUseLighting(attributes.useLighting);
+		if(parameters.useLighting) {
+			object.setUseLighting(parameters.useLighting);
 		}
-		if(attributes.animation) {
-			object.animate = attributes.animation;
+		if(parameters.animation) {
+			object.animate = parameters.animation;
 		}
-		if(attributes.color) {
-			object.setColor(attributes.color[0], attributes.color[1], attributes.color[2], attributes.color[3]);
+		if(parameters.color) {
+			object.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
 		}		
-		if(!attributes.stopPush)
+		if(!parameters.stopPush)
 		{
 			gameObjects.push(object);
 		}
@@ -460,44 +460,44 @@ function _Game() {
 		
 	}
 
-	// Attributes: position, modelName, textureName, scale, animation, shininess
-	function createObjectModel(attributes) {
-		// Check for required attributes
-		if(!attributes.position) {
+	// parameters: position, modelName, textureName, scale, animation, shininess
+	function createObjectModel(parameters) {
+		// Check for required parameters
+		if(!parameters.position) {
 			throw new Error("Required argument missing for createObjectModel: 'position'");
 		}
-		if(!attributes.modelName) {
+		if(!parameters.modelName) {
 			throw new Error("Required argument missing for createObjectModel: 'modelName'");
 		}
-		if(!attributes.scale) {
+		if(!parameters.scale) {
 			throw new Error("Required argument missing for createObjectModel: 'scale'");
 		}
-		var object = new GameObject({ "position": attributes.position });
+		var object = new GameObject({ "position": parameters.position });
 		var textured;
-		if (attributes.textureName) { 
+		if (parameters.textureName) { 
 			textured = true;
 		}
 		else {
 			textured = false;
 		}
-		if(attributes.scale.length) {
-			object.setScale(attributes.scale);
+		if(parameters.scale.length) {
+			object.setScale(parameters.scale);
 		}
 		else {
-			object.setScale(attributes.scale, attributes.scale, attributes.scale);
+			object.setScale(parameters.scale, parameters.scale, parameters.scale);
 		}
-		Gremlin.loadModel(object, attributes.modelName);
+		Gremlin.loadModel(object, parameters.modelName);
 		if(textured) {
-			object.texture = Gremlin.createTexture(attributes.textureName);
+			object.texture = Gremlin.createTexture(parameters.textureName);
 		}
-		if(attributes.shininess) {
-			object.setShininess(attributes.shininess);
+		if(parameters.shininess) {
+			object.setShininess(parameters.shininess);
 		}
-		if(attributes.animation) {
-			object.animate = attributes.animation;
+		if(parameters.animation) {
+			object.animate = parameters.animation;
 		}
-		if(attributes.color) {
-			object.setColor(attributes.color[0], attributes.color[1], attributes.color[2], attributes.color[3]);
+		if(parameters.color) {
+			object.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
 		}
 		gameObjects.push(object);
 	}
@@ -531,7 +531,7 @@ function _Game() {
 	}
 
 	// Player / Ships
-	function attachShip(object, attributes) {
+	function attachShip(object, parameters) {
 		object.mass = 10;
 		object.shieldMax = 100;
 		object.shieldPoints = 100;
@@ -541,8 +541,8 @@ function _Game() {
 		object.energyMax = 100;
 		object.energyPoints = 100;
 		object.energyRegen = 0.0125;
-		if(attributes && attributes["FiringPeriod"]) {
-			object.firingPeriod = attributes["FiringPeriod"];
+		if(parameters && parameters["FiringPeriod"]) {
+			object.firingPeriod = parameters["FiringPeriod"];
 		}
 		else {
 			object.firingPeriod = 300;	
@@ -660,29 +660,29 @@ function _Game() {
 	// Would also be better if when we had a particle system that it would leave a short lived trail.
 	// Also don't know if we want more than one protecile object... but we do want more than one colour.
 	
-	function Projectile(attributes) {
+	function Projectile(parameters) {
 		if(!this instanceof Projectile) {
-			return new Projectile(attributes);
+			return new Projectile(parameters);
 		}
 		
-		// Required Attributes
-		if(!attributes.position) {
+		// Required parameters
+		if(!parameters.position) {
 			throw new Error("Projectile position must be specified: 'position'");
 		}
-		if(!attributes.velocity) {
+		if(!parameters.velocity) {
 			throw new Error("Projectile velocity must be specified: 'velocity'"); 
 		}
-		if (!attributes.damage) {
+		if (!parameters.damage) {
 			throw new Error("Projectile damage per unit mass must be specified: 'damage'");
 		}
 		
-		this.position = vec3.create(attributes.position); 
-		this.velocity = vec3.create(attributes.velocity); 
-		this.mass = attributes.mass || 0.1; 
-		this.dmg = attributes.damage;
-		this.lifetime = attributes.lifetime || 30000;
-		this.friendly = attributes.friendly || false;
-		this.color = attributes.color || [1, 1, 1, 1] ;
+		this.position = vec3.create(parameters.position); 
+		this.velocity = vec3.create(parameters.velocity); 
+		this.mass = parameters.mass || 0.1; 
+		this.dmg = parameters.damage;
+		this.lifetime = parameters.lifetime || 30000;
+		this.friendly = parameters.friendly || false;
+		this.color = parameters.color || [1, 1, 1, 1] ;
 		
 		this.getColor = getColor;
 		this.getPosition = getPosition;
@@ -704,8 +704,8 @@ function _Game() {
 		}
 	}
 	
-	function spawnProjectile(attributes) {
-		var newproj = new Projectile(attributes);
+	function spawnProjectile(parameters) {
+		var newproj = new Projectile(parameters);
 		projectiles.push(newproj);
 	}
 	
@@ -984,27 +984,27 @@ function _ShipManager() {
 		return shipList.length;
 	}
 	
-	function createShip(attributes) {
-		// Check for required attributes
-		if(!attributes.position) { 
+	function createShip(parameters) {
+		// Check for required parameters
+		if(!parameters.position) { 
 			throw new Error("Missing required attribute for createShip: 'position'");
 		}
 		// They're all evil spinning crates for now!
 		var tmpShip = Game.createObjectPrimitive({
-			"position": attributes.position, 
+			"position": parameters.position, 
 			"primType": "cube", 
 			"textureName": "textures/crate.gif", 
 			"scale": 1.0, 
 			"animation": function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); }, 
 			"stopPush": true
 		});
-		var color = attributes.color ? attributes.color : [1, 1, 1, 1];
-		tmpShip.setColor(attributes.color[0], attributes.color[1], attributes.color[2], attributes.color[3]);
+		var color = parameters.color ? parameters.color : [1, 1, 1, 1];
+		tmpShip.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
 		
 		// Create HUD elements
 		var canvasSize = Game.getCanvasSize();
 		var separation = vec3.create();
-		vec3.subtract(attributes.position, Game.getPlayerPosition(), separation);
+		vec3.subtract(parameters.position, Game.getPlayerPosition(), separation);
 		var scaleFactor = 1/vec3.length(separation);
 		tmpShip.aimAtIndex = GremlinHUD.createWireframe("Box",[0,0,0], [scaleFactor,scaleFactor], [1,0,0,1]);
 		tmpShip.healthBar = GremlinHUD.createBar(
@@ -1025,10 +1025,10 @@ function _ShipManager() {
 		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.shieldBar);
 		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.targetBrace);
 		
-		// Attach Ship Attributes
-		var attributes = {};
-		attributes.FiringPeriod = 600;
-		Game.attachShip(tmpShip, attributes);
+		// Attach Ship parameters
+		var parameters = {};
+		parameters.FiringPeriod = 600;
+		Game.attachShip(tmpShip, parameters);
 
 		// Attach AI
 		ShipAI.attachAI(tmpShip);
@@ -1178,15 +1178,15 @@ var ShipManager = _ShipManager();
 function _ShipAI() {
 
 	// Attach Ship AI
-	function attachAI(obj, attributes) {
+	function attachAI(obj, parameters) {
 		// AI State - enum - 0, Idle; 1, Close; 2, Attack; 3, Flee; 4, Evasive; 5, Patrol
 		obj.AiState = 0;
 		obj.AiStateTimer = 0;
 		
 		// AI friendly - bool 
 		// TODO: Create enum for factions including neutral, to make for more complex interactions
-		if(attributes && attributes["Friendly"]) {
-			obj.AiFiendly = attributes["Friendly"];
+		if(parameters && parameters["Friendly"]) {
+			obj.AiFiendly = parameters["Friendly"];
 		}
 		else {
 			obj.AiFriendly = false;
@@ -1196,32 +1196,32 @@ function _ShipAI() {
 		obj.AiInCombat = false;
 		
 		// AI Skill - number - skill factor
-		if(attributes && attributes["Skill"]) {
-			obj.AiSkill = attributes["Skill"];
+		if(parameters && parameters["Skill"]) {
+			obj.AiSkill = parameters["Skill"];
 		}
 		else {
 			obj.AiSkill = 1;
 		}
 		
 		// AI Confidence - number - affects state changes
-		if(attributes && attributes["Confidence"]) {
-			obj.AiConfidence = attributes["Confidence"];
+		if(parameters && parameters["Confidence"]) {
+			obj.AiConfidence = parameters["Confidence"];
 		}
 		else {
 			obj.AiConfidence = obj.AiSkill; 
 		}
 		
 		// AI Engage Distance - number - number of units at which non-friendly AI engages.
-		if(attributes && attributes["EngageDistance"]) {
-			obj.AiEngageDistance = attributes["EngageDistance"];
+		if(parameters && parameters["EngageDistance"]) {
+			obj.AiEngageDistance = parameters["EngageDistance"];
 		}
 		else {
 			obj.AiEngageDistance = 100*obj.AiSkill; // TODO: Tweak once units have been actually figured out!
 		}
 		
 		// AI Disengage Distance - number - number of units at which AI stops pursuing.
-		if(attributes && attributes["DisengageDistance"]) {
-			obj.AiDisengageDistance = attributes["DisengageDistance"];
+		if(parameters && parameters["DisengageDistance"]) {
+			obj.AiDisengageDistance = parameters["DisengageDistance"];
 		}
 		else {
 			obj.AiDisengageDistance = 10*obj.AiEngageDistance;

@@ -5,7 +5,7 @@
 	Gremlin.setLightingFlags("lighting", true);
 		
 	// Game Objects
-	// Attributes: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush
+	// Parameters: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush
 	Game.createObjectPrimitive({
 		"position": [0, 0, -5000],
 		"primType": "sphere", 
@@ -38,7 +38,7 @@
 		"isSkyBox": true
 	});
 	
-	// Attributes: position, modelName, textureName, scale, animation, shininess
+	// Parameters: position, modelName, textureName, scale, animation, shininess
 	Game.createObjectModel({
 		"position": [0, 0, -300],
 		"modelName": "Teapot.json", 

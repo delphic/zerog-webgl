@@ -2468,21 +2468,21 @@ var GremlinInput = _GremlinInput();
 function _GremlinBindings() {
 	var bindings = {};
 	
-	function Bind(attributes) {
-		if (!attributes.Name) {
+	function Bind(parameters) {
+		if (!parameters.Name) {
 			throw new Error("No binding name provided");
 		}
-		var binding = GetBinding(attributes.Name);
-	    if(attributes.PrimaryKey) {
-	    	binding.PrimaryKey = attributes.PrimaryKey;
+		var binding = GetBinding(parameters.Name);
+	    if(parameters.PrimaryKey) {
+	    	binding.PrimaryKey = parameters.PrimaryKey;
 	    }
-	    if(attributes.SecondaryKey) {
-	    	binding.SecondaryKey = attributes.SecondaryKey;
+	    if(parameters.SecondaryKey) {
+	    	binding.SecondaryKey = parameters.SecondaryKey;
 	    }
 	    if(!binding.hasOwnProperty("Enabled")) {
 	    	binding.Enabled = true;
 	    }
-	    bindings[attributes.Name] = binding;
+	    bindings[parameters.Name] = binding;
 	}
 	
 	function Unbind(name) {
