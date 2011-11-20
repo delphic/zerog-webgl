@@ -930,32 +930,43 @@ function _Gremlin() {
     // Primitives Namespace
     function _Primitives() {
     	// Primitive Creation Functions
-		function createTetrahedron() {
-			if (isNaN(buffersNameList["tetrahedron"])) {
+    	// NOTE: scale and offset should be used with caution
+    	// it's usually better to adjust the position and scale of the object to which the buffer is attached.
+		function createTetrahedron(parameters) {
+			var scale = [1, 1, 1];
+			var offset = [0, 0, 0];
+			if(parameters && parameters.scale) { scale = parameters.scale; }
+			if(parameters && parameters.offset) { offset = parameters.offset; }
+			var key = "tetrahedron-scale:"+scale.toString()+"-offset:"+offset.toString();
+			
+			if (isNaN(buffersNameList[key])) {
 				var buffers = [];
+				
+				function adjust(value, index) { return offset[index]+(value*scale[index]); }
+								
 				// TODO: Convert to use index buffer
 				var tetrahedronVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, tetrahedronVertexPositionBuffer);
 				var vertices = [
 					// Bottom Side
-					-0.5, -0.27217, -0.28868,
-					 0.5, -0.27217, -0.28868,			
-					 0.0, -0.27217,  0.57735,
+					adjust(-0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),
+					adjust(0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),			
+					adjust(0.0, 0), adjust(-0.27217, 1), adjust(-0.57735, 2),
 					 
 					 // Rear Side
-					-0.5, -0.27217, -0.28868,
-					 0.0,  0.54433, 0,
-					 0.5, -0.27217, -0.28868,	
+					adjust(-0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),
+					adjust(0.0, 0), adjust(0.54433, 1), adjust(0.0, 2),
+					adjust(0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),	
 					 
 					// Left Side
-					 0.0, -0.27217,  0.57735,
-					 0.0,  0.54433, 0,
-					-0.5, -0.27217, -0.28868,
+					adjust(0.0, 0), adjust(-0.27217, 1), adjust(0.57735, 2),
+					adjust(0.0, 0), adjust(0.54433, 1), adjust(0.0, 2),
+					adjust(-0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),
 					
 					// Right Side
-					 0.5, -0.27217, -0.28868,	
-					 0.0,  0.54433, 0,
-					 0.0, -0.27217,  0.57735,
+					 adjust(0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),	
+					 adjust(0.0, 0), adjust(0.54433, 1), adjust(0.0, 2),
+					 adjust(0.0, 0), adjust(-0.27217, 1), adjust(0.57735, 2),
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				tetrahedronVertexPositionBuffer.itemSize = 3;
@@ -1000,44 +1011,53 @@ function _Gremlin() {
 				
 				buffers["useIndices"] = false;
 				
-				buffersNameList["tetrahedron"] = buffersList.push(buffers)-1;
+				buffersNameList[key] = buffersList.push(buffers)-1;
 			}
-			return buffersNameList["tetrahedron"];
+			return buffersNameList[key];
 		}
-		function createPyramid() {
-			if (isNaN(buffersNameList["pyramid"])) {
+		function createPyramid(parameters) {
+			var scale = [1, 1, 1];
+			var offset = [0, 0, 0];
+			if(parameters && parameters.scale) { scale = parameters.scale; }
+			if(parameters && parameters.offset) { offset = parameters.offset; }
+			var key = "pyramid-scale:"+scale.toString()+"-offset:"+offset.toString();
+
+			if (isNaN(buffersNameList[key])) {
 				var buffers = [];
+				
+				function adjust(value, index) { return offset[index]+(value*scale[index]); }
+				
 				// TODO: Convert to use index buffer
 				var pyramidVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
 				var vertices = [
 					// Front face
-					 0.0,  1.0,  0.0,
-					-1.0, -1.0,  1.0,
-					 1.0, -1.0,  1.0,
+					adjust(0.0, 0), adjust(1.0, 1), adjust(0.0, 2),
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
 		
 					// Right face
-					 0.0,  1.0,  0.0,
-					 1.0, -1.0,  1.0,
-					 1.0, -1.0, -1.0,
+					adjust(0.0, 0), adjust(1.0, 1), adjust(0.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 		
 					// Back face
-					 0.0,  1.0,  0.0,
-					 1.0, -1.0, -1.0,
-					-1.0, -1.0, -1.0,
+					adjust(0.0, 0), adjust(1.0, 1), adjust(0.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 		
 					// Left face
-					 0.0,  1.0,  0.0,
-					-1.0, -1.0, -1.0,
-					-1.0, -1.0,  1.0,
+					adjust(0.0, 0), adjust(1.0, 1), adjust(0.0, 2),
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
 					
 					// Bottom face
-					-1.0, -1.0, -1.0,
-					-1.0, -1.0, 1.0,
-					1.0, -1.0, 1.0,
-					-1.0, -1.0, -1.0,
-					1.0, -1.0, 1.0,
-					1.0, -1.0, -1.0
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
@@ -1091,52 +1111,61 @@ function _Gremlin() {
 				
 				buffers["useIndices"] = false;
 				
-				buffersNameList["pyramid"] = buffersList.push(buffers)-1;
+				buffersNameList[key] = buffersList.push(buffers)-1;
 			}
-			return buffersNameList["pyramid"];
+			return buffersNameList[key];
 		}
-		function createCube() {
-			if (isNaN(buffersNameList["cube"])){
+		function createCube(parameters) {
+			var scale = [1, 1, 1];
+			var offset = [0, 0, 0];
+			if(parameters && parameters.scale) { scale = parameters.scale; }
+			if(parameters && parameters.offset) { offset = parameters.offset; }
+			var key = "cube-scale:"+scale.toString()+"-offset:"+offset.toString();
+
+			if (isNaN(buffersNameList[key])){
 				var buffers = [];
+				
+				function adjust(value, index) { return offset[index]+(value*scale[index]); }
+				
 				// Vertex Buffer
 				var cubeVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
 				vertices = [
 					// Front face
-					-1.0, -1.0,  1.0,
-					 1.0, -1.0,  1.0,
-					 1.0,  1.0,  1.0,
-					-1.0,  1.0,  1.0,
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
+					adjust(1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
+					adjust(-1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
 		
 					// Back face
-					-1.0, -1.0, -1.0,
-					-1.0,  1.0, -1.0,
-					 1.0,  1.0, -1.0,
-					 1.0, -1.0, -1.0,
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
+					adjust(-1.0, 0), adjust(1.0, 1), adjust(-1.0, 2),
+					adjust(1.0, 0), adjust(1.0, 1), adjust(-1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 		
 					// Top face
-					-1.0,  1.0, -1.0,
-					-1.0,  1.0,  1.0,
-					 1.0,  1.0,  1.0,
-					 1.0,  1.0, -1.0,
+					adjust(-1.0, 0), adjust(1.0, 1), adjust(-1.0, 2),
+					adjust(-1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
+					adjust(1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
+					adjust(1.0, 0), adjust(1.0, 1), adjust(-1.0, 2),
 		
 					// Bottom face
-					-1.0, -1.0, -1.0,
-					 1.0, -1.0, -1.0,
-					 1.0, -1.0,  1.0,
-					-1.0, -1.0,  1.0,
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
 		
 					// Right face
-					 1.0, -1.0, -1.0,
-					 1.0,  1.0, -1.0,
-					 1.0,  1.0,  1.0,
-					 1.0, -1.0,  1.0,
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
+					adjust(1.0, 0), adjust(1.0, 1), adjust(-1.0, 2),
+					adjust(1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
 		
 					// Left face
-					-1.0, -1.0, -1.0,
-					-1.0, -1.0,  1.0,
-					-1.0,  1.0,  1.0,
-					-1.0,  1.0, -1.0
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
+					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
+					adjust(-1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
+					adjust(-1.0, 0), adjust(1.0, 1), adjust(-1.0, 2)
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				cubeVertexPositionBuffer.itemSize = 3;
@@ -1257,19 +1286,32 @@ function _Gremlin() {
 				buffers["vertexIndex"] = cubeVertexIndexBuffer;
 				buffers["useIndices"] = true;
 				
-				buffersNameList["cube"] = buffersList.push(buffers)-1;
+				buffersNameList[key] = buffersList.push(buffers)-1;
 			}
-			return buffersNameList["cube"];
+			return buffersNameList[key];
 		}
-		function createSphere(latBands, longBands) {
-			if (isNaN(buffersNameList["sphere"+latBands+longBands+""])) {
+		function createSphere(parameters) {
+			var latBands, longBands;
+			var scale = [1, 1, 1];
+			var offset = [0, 0, 0];
+			
+			if(!parameters) { throw new Error("latBands and longBands must be provided;"); }
+			if(parameters.scale) { scale = parameters.scale; }
+			if(parameters.offset) { offset = parameters.offset; }
+			if(parameters.latBands) { latBands = parameters.latBands; }
+			else { throw new Error("latBands must be provided"); }
+			if (parameters.longBands) { longBands = parameters.longBands; }
+			else { throw new Error("longBands must be provided"); }
+			
+			var key = "cube-latBands:"+latBands+"longBands:"+longBands+"-scale:"+scale.toString()+"-offset:"+offset.toString();
+			
+			if (isNaN(buffersNameList[key])) {
 				var buffers = [];
 				
 				// Method taken from Lesson 11 of learningWebGL.com
 				var latitudeBands = latBands;
 				var longitudeBands = longBands;
-				var radius = 1.0;
-		
+						
 				var vertexPositionData = [];
 				var normalData = [];
 				var textureCoordData = [];
@@ -1295,9 +1337,9 @@ function _Gremlin() {
 						normalData.push(z);
 						textureCoordData.push(u);
 						textureCoordData.push(v);
-						vertexPositionData.push(radius * x);
-						vertexPositionData.push(radius * y);
-						vertexPositionData.push(radius * z);
+						vertexPositionData.push(offset[0] + (scale[0] * x));
+						vertexPositionData.push(offset[1] + (scale[1] * y));
+						vertexPositionData.push(offset[2] + (scale[2] * z));
 					}
 				}
 		
@@ -1353,9 +1395,9 @@ function _Gremlin() {
 				buffers["vertexIndex"] = sphereVertexIndexBuffer;
 				buffers["useIndices"] = true;
 		
-				buffersNameList["sphere"+latBands+longBands+""] = buffersList.push(buffers)-1;
+				buffersNameList[key] = buffersList.push(buffers)-1;
 			}
-			return buffersNameList["sphere"+latBands+longBands+""];
+			return buffersNameList[key];
 		}
 		function createRay() {
 			if (isNaN(buffersNameList["ray"])) {

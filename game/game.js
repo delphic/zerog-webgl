@@ -418,7 +418,7 @@ function _Game() {
 			object.assignBuffer(Gremlin.Primitives.createCube());
 			break;
 		case "sphere":
-			object.assignBuffer(Gremlin.Primitives.createSphere(parameters.latBands, parameters.longBands));
+			object.assignBuffer(Gremlin.Primitives.createSphere({ latBands: parameters.latBands, longBands: parameters.longBands }));
 			break;
 		case "ray":
 			object.assignBuffer(Gremlin.Primitives.createRay());
