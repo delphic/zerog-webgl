@@ -146,12 +146,16 @@ function _HUD() {
 	// Note: Position is of centre of Rect to draw, where x=-1 is left side and x=+1 is right side, y = +1 is top and y=-1 is bottom.
 	//       z ~= z-index, the depth buffer takes care of what appears atop other things.
 	// Note: Size is amount of the screen to take up x=1 & y=1 will cover the screen.
-	function hudElement(position, size, color) {
+	function HudElement(position, size, color) {
+		if(!(this instanceof HudElement)) {
+			return new HudElement(position, size, color);
+		}
+		
 		this.position = [position[0],position[1],position[2]]; 
 		this.size = [size[0],size[1]];
 		this.color = [color[0],color[1],color[2],color[3]];
 		
-		this.buffers = [];
+		this.buffers;
 		this.texture;
 		
 		this.setPosition = function(position) { this.position = [position[0],position[1],position[2]]; }
@@ -164,8 +168,6 @@ function _HUD() {
 
 		// Render Flags
 		this.visible = true;
-		this.wireframe = false;
-		this.points = false; // TODO: Combine this and wireframe into a render type (triangles / lines / points etc)
 		this.useIndices = false;
 		this.useTextures = false;
 	}
@@ -174,7 +176,11 @@ function _HUD() {
 	// Elements should be added as normal in master list, then attached to a group, then group can be manipulated and elements
 	// separately.
 	
-	function hudGroup(position, size) {
+	function HudGroup(position, size) {
+		if(!(this instanceof HudGroup)) {
+			return new HudGroup(position, size);
+		}
+		
 		this.elements = [];
 		this.position = [position[0],position[1],position[2]];
 		this.size = [size[0],size[1]];
@@ -235,7 +241,7 @@ function _HUD() {
 	}
 	
 	function createGroup(position, size) {
-		return hudGroups.push(new hudGroup(position,size))-1;
+		return hudGroups.push(new HudGroup(position,size))-1;
 	}
 	
 	// Attach Element To Group
@@ -259,19 +265,18 @@ function _HUD() {
 	
 	// Element Functions
 	function createElement(position, size, color, textureName) {
-		var element = new hudElement(position,[size[0]/viewPortRatio,size[1]],color);
-		var textured;
+		var element = new HudElement(position,[size[0]/viewPortRatio,size[1]],color);
 		
 		if (textureName) { 
-			textured = true;
+			element.useTextures = true;
 		}
 		else {
-			textured = false;
+			element.useTextures = false;
 		}
 		
-		Gremlin.Primitives.createSquare(element, textured);
+		element.assignBuffer(Gremlin.Primitives.createSquare());
 		
-		if(textured) {
+		if(textureName) {
 			element.texture = Gremlin.createTexture(textureName);
 		}
 				
@@ -297,15 +302,16 @@ function _HUD() {
 		var canvasSize = Game.getCanvasSize();
 		size = [2*size[0]/canvasSize[0], 2*size[1]/canvasSize[1]];
 		
-		var element = new hudElement(position, size, [1,1,1,1]);
-		Gremlin.Primitives.createSquare(element, true);
+		var element = new HudElement(position, size, [1,1,1,1]);
+		element.assignBuffer(Gremlin.Primitives.createSquare());
+		element.useTextures = true;
 		element.texture = textureId;
 		
 		return hudElements.push(element)-1;			
 	}
 	
 	function createWireframe(type, position, size, color) {
-		var element = new hudElement(position,[size[0]/viewPortRatio,size[1]],color);
+		var element = new HudElement(position,[size[0]/viewPortRatio,size[1]],color);
 		
 		element.updateValue = function(value) {
 			// Updates Position
@@ -314,13 +320,13 @@ function _HUD() {
 		
 		switch(type) {
 			case "Cross":
-				Gremlin.Primitives.createCross(element);
+				element.assignBuffer(Gremlin.Primitives.createCross());
 				break;
 			case "Brace":
-				Gremlin.Primitives.createBrace(element);
+				element.assignBuffer(Gremlin.Primitives.createBrace());
 				break;
 			case "Box":
-				Gremlin.Primitives.createBox(element);
+				element.assignBuffer(Gremlin.Primitives.createBox());
 				break;
 			default:
 				throw("Unknown wireframe type "+type);
@@ -332,14 +338,14 @@ function _HUD() {
 	
 	function createBar(position, size, barColor, boxColor, alignment, textureName) {
 		// Create Containing Box
-		var boxElement = new hudElement([position[0],position[1], -1],[size[0]/viewPortRatio,size[1]],boxColor);
+		var boxElement = new HudElement([position[0],position[1], -1],[size[0]/viewPortRatio,size[1]],boxColor);
 
-		Gremlin.Primitives.createBox(boxElement);
+		boxElement.assignBuffer(Gremlin.Primitives.createBox());
 		
 		var boxIndex = 	hudElements.push(boxElement)-1;
 		
 		// Create Bar
-		var barElement = new hudElement([position[0],position[1], -0.5],[size[0]/viewPortRatio,size[1]],barColor);
+		var barElement = new HudElement([position[0],position[1], -0.5],[size[0]/viewPortRatio,size[1]],barColor);
 		
 		// Set up bar specific variables and functions
 		if(alignment != "Horizontal" && alignment != "Vertical") {
@@ -421,18 +427,16 @@ function _HUD() {
 		}
 		
 		// Get on with creating the render object
-		var textured;
-				
 		if (textureName) { 
-			textured = true;
+			barElement.useTextures = true;
 		}
 		else {
-			textured = false;
+			barElement.useTextures = false;
 		}
 		
-		Gremlin.Primitives.createSquare(barElement, textured);
+		barElement.assignBuffer(Gremlin.Primitives.createSquare());
 		
-		if(textured) {
+		if(textureName) {
 			barElement.texture = Gremlin.createTexture(textureName);
 		}
 				

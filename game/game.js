@@ -290,7 +290,7 @@ function _Game() {
 	// Game Object Obj
 	function GameObject(parameters) { 
 		if(!(this instanceof GameObject)) {
-			return new GameObject(attribues);
+			return new GameObject(parameters);
 		}
 		
 		// TODO: Make properties private by using var instead of this or add to prototype.
@@ -330,8 +330,6 @@ function _Game() {
 		// Render Flags
 		// Consider: Moving to Renderer except visible
 		this.visible = true;
-		this.wireframe = false;
-		this.points = false; // TODO: Combine this and wireframe into a render type (triangles / lines / points etc)
 		this.useIndices = false;
 		this.useTextures = false;
 		
@@ -398,12 +396,11 @@ function _Game() {
 		}
 		
 		var object = new GameObject({ "position": parameters.position });
-		var textured;
 		if (parameters.textureName) { 
-			textured = true;
+			object.useTextures = true;
 		}
 		else {
-			textured = false;
+			object.useTextures = false;
 		}
 		
 		if(parameters.scale.length) {
@@ -415,25 +412,25 @@ function _Game() {
 		
 		switch(parameters.primType) {
 		case "pyramid":
-			Gremlin.Primitives.createPyramid(object, textured);
+			object.assignBuffer(Gremlin.Primitives.createPyramid());
 			break;
 		case "cube": 
-			Gremlin.Primitives.createCube(object, textured);
+			object.assignBuffer(Gremlin.Primitives.createCube());
 			break;
 		case "sphere":
-			Gremlin.Primitives.createSphere(object, textured, parameters.latBands, parameters.longBands);
+			object.assignBuffer(Gremlin.Primitives.createSphere(parameters.latBands, parameters.longBands));
 			break;
 		case "ray":
-			Gremlin.Primitives.createRay(object);
+			object.assignBuffer(Gremlin.Primitives.createRay());
 			break;
 		case "point":
-			Gremlin.Primitives.createPoint(object);
+			object.assignBuffer(Gremlin.Primitives.createPoint());
 			break;
 		default:
 			alert("Invalid Prim Type: "+parameters.primType+"");
 			return;
 		}
-		if(textured) {
+		if(parameters.textureName) {
 			object.texture = Gremlin.createTexture(parameters.textureName);
 		}
 		if(parameters.shininess) {
@@ -473,12 +470,11 @@ function _Game() {
 			throw new Error("Required argument missing for createObjectModel: 'scale'");
 		}
 		var object = new GameObject({ "position": parameters.position });
-		var textured;
 		if (parameters.textureName) { 
-			textured = true;
+			object.useTextures = true;
 		}
 		else {
-			textured = false;
+			object.useTextures = false;
 		}
 		if(parameters.scale.length) {
 			object.setScale(parameters.scale);
@@ -486,8 +482,10 @@ function _Game() {
 		else {
 			object.setScale(parameters.scale, parameters.scale, parameters.scale);
 		}
-		Gremlin.loadModel(object, parameters.modelName);
-		if(textured) {
+		
+		Gremlin.loadModel(object, parameters.modelName); // TODO: do not pass object, use callback
+		
+		if(parameters.textureName) {
 			object.texture = Gremlin.createTexture(parameters.textureName);
 		}
 		if(parameters.shininess) {
@@ -523,7 +521,7 @@ function _Game() {
 		GremlinBindings.Bind({Name: "PewPew", PrimaryKey: "LeftMouseButton"});
 		
 		// Create Projectiles
-		Gremlin.Primitives.createTetrahedron(projectileObject, false);
+		projectileObject.assignBuffer(Gremlin.Primitives.createTetrahedron());
 		projectileObject.setScale(0.03,0.03,0.03);
 		projectileObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); }
 		
@@ -730,7 +728,7 @@ function _Game() {
 					[2*randomFactor*(Math.random()-0.5), 
 					2*randomFactor*(Math.random()-0.5), 
 					2*randomFactor*(Math.random()-0.5)] });
-			Gremlin.Primitives.createPoint(obj);
+			obj.assignBuffer(Gremlin.Primitives.createPoint());
 			obj.points = true;
 			obj.useLighting = false; // If we want the motes to be lit properly we'll have to figure out the normal to a point!
 			obj.setColor(0.8,0.8,0.8,1);
