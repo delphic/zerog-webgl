@@ -269,7 +269,7 @@ function _HUD() {
 			textured = false;
 		}
 		
-		Gremlin.createSquare(element, textured);
+		Gremlin.Primitives.createSquare(element, textured);
 		
 		if(textured) {
 			element.texture = Gremlin.createTexture(textureName);
@@ -298,7 +298,7 @@ function _HUD() {
 		size = [2*size[0]/canvasSize[0], 2*size[1]/canvasSize[1]];
 		
 		var element = new hudElement(position, size, [1,1,1,1]);
-		Gremlin.createSquare(element, true);
+		Gremlin.Primitives.createSquare(element, true);
 		element.texture = textureId;
 		
 		return hudElements.push(element)-1;			
@@ -314,13 +314,13 @@ function _HUD() {
 		
 		switch(type) {
 			case "Cross":
-				Gremlin.createCross(element);
+				Gremlin.Primitives.createCross(element);
 				break;
 			case "Brace":
-				Gremlin.createBrace(element);
+				Gremlin.Primitives.createBrace(element);
 				break;
 			case "Box":
-				Gremlin.createBox(element);
+				Gremlin.Primitives.createBox(element);
 				break;
 			default:
 				throw("Unknown wireframe type "+type);
@@ -334,7 +334,7 @@ function _HUD() {
 		// Create Containing Box
 		var boxElement = new hudElement([position[0],position[1], -1],[size[0]/viewPortRatio,size[1]],boxColor);
 
-		Gremlin.createBox(boxElement);
+		Gremlin.Primitives.createBox(boxElement);
 		
 		var boxIndex = 	hudElements.push(boxElement)-1;
 		
@@ -430,7 +430,7 @@ function _HUD() {
 			textured = false;
 		}
 		
-		Gremlin.createSquare(barElement, textured);
+		Gremlin.Primitives.createSquare(barElement, textured);
 		
 		if(textured) {
 			barElement.texture = Gremlin.createTexture(textureName);

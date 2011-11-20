@@ -415,19 +415,19 @@ function _Game() {
 		
 		switch(attributes.primType) {
 		case "pyramid":
-			Gremlin.createPyramid(object, textured);
+			Gremlin.Primitives.createPyramid(object, textured);
 			break;
 		case "cube": 
-			Gremlin.createCube(object, textured);
+			Gremlin.Primitives.createCube(object, textured);
 			break;
 		case "sphere":
-			Gremlin.createSphere(object, textured, attributes.latBands, attributes.longBands);
+			Gremlin.Primitives.createSphere(object, textured, attributes.latBands, attributes.longBands);
 			break;
 		case "ray":
-			Gremlin.createRay(object);
+			Gremlin.Primitives.createRay(object);
 			break;
 		case "point":
-			Gremlin.createPoint(object);
+			Gremlin.Primitives.createPoint(object);
 			break;
 		default:
 			alert("Invalid Prim Type: "+attributes.primType+"");
@@ -523,7 +523,7 @@ function _Game() {
 		GremlinBindings.Bind({Name: "PewPew", PrimaryKey: "LeftMouseButton"});
 		
 		// Create Projectiles
-		Gremlin.createTetrahedron(projectileObject, false);
+		Gremlin.Primitives.createTetrahedron(projectileObject, false);
 		projectileObject.setScale(0.03,0.03,0.03);
 		projectileObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); }
 		
@@ -730,7 +730,7 @@ function _Game() {
 					[2*randomFactor*(Math.random()-0.5), 
 					2*randomFactor*(Math.random()-0.5), 
 					2*randomFactor*(Math.random()-0.5)] });
-			Gremlin.createPoint(obj);
+			Gremlin.Primitives.createPoint(obj);
 			obj.points = true;
 			obj.useLighting = false; // If we want the motes to be lit properly we'll have to figure out the normal to a point!
 			obj.setColor(0.8,0.8,0.8,1);
