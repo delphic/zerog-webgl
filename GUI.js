@@ -611,10 +611,12 @@ function _TextWriter() {
 		
 		ctx.textBaseline = 'middle'; // top, middle, bottom
 		ctx.font = textHeight+"px "+fontFamily;
-		
+
+        var offset = (canvasY - textHeight*(text.length+1)) * 0.5;
+
 		for(var i = 0; i < text.length; i++) {
 			if(text.length > 1) {
-				textY = (i+1)*textHeight;
+				textY = (i+1)*textHeight + offset;
 			}
 			ctx.fillText(text[i], textX,  textY);
 		}
