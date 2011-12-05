@@ -515,14 +515,13 @@ function _HUD() {
 var GremlinHUD = _HUD(); 
 
 function _TextWriter() {
-	function _nextPowerOfTwo(value, pow) {
-		pow = pow || 1;
-		this.result = pow;
-		if(pow<value) {
-			_nextPowerOfTwo(value, 2*pow);
-		}
-		return result;
-	}
+	function _getPowerOfTwo(value, pow) {
+        var pow = pow || 1;
+        while(pow<value) {
+            pow *= 2;
+        }
+        return pow;
+    }
 	
 	function _measureText(ctx, textToMeasure) {
 		return ctx.measureText(textToMeasure).width;
@@ -580,12 +579,12 @@ function _TextWriter() {
 		ctx.font = textHeight+"px "+fontFamily;
 		if (maxWidth && _measureText(ctx, textToWrite) > maxWidth ) {
 			maxWidth = _createMultilineText(ctx, textToWrite, maxWidth, text);
-			canvasX = _nextPowerOfTwo(maxWidth);
+			canvasX = _getPowerOfTwo(maxWidth);
 		} else {
 			text.push(textToWrite);
-			canvasX = _nextPowerOfTwo(ctx.measureText(textToWrite).width);
+			canvasX = _getPowerOfTwo(ctx.measureText(textToWrite).width);
 		}
-		canvasY = _nextPowerOfTwo(textHeight*(text.length+1)); 
+		canvasY = _getPowerOfTwo(textHeight*(text.length+1));
 		
 		canvas.width = canvasX;
 		canvas.height = canvasY;
