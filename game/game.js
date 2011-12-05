@@ -31,7 +31,7 @@ function _Game() {
 	function updateGameState(val) {
 		gameState = val;
 	}
-	
+
 	// Returns if a key is down for the specified binding
 	function _keyState(binding) {
 		var bind = GremlinBindings.GetBinding(binding);

@@ -966,7 +966,7 @@ function _Gremlin() {
 					// Right Side
 					 adjust(0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),	
 					 adjust(0.0, 0), adjust(0.54433, 1), adjust(0.0, 2),
-					 adjust(0.0, 0), adjust(-0.27217, 1), adjust(0.57735, 2),
+					 adjust(0.0, 0), adjust(-0.27217, 1), adjust(0.57735, 2)
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				tetrahedronVertexPositionBuffer.itemSize = 3;
@@ -1001,7 +1001,7 @@ function _Gremlin() {
 					// Right Side
 					0.5, 0.81650, 0.28868,
 					0.5, 0.81650, 0.28868,
-					0.5, 0.81650, 0.28868,
+					0.5, 0.81650, 0.28868
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
 				tetrahedronVertexNormalBuffer.itemSize = 3;
@@ -1057,7 +1057,7 @@ function _Gremlin() {
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
-					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
+					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2)
 					
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
@@ -1214,7 +1214,7 @@ function _Gremlin() {
 				  0.0, 0.0,
 				  1.0, 0.0,
 				  1.0, 1.0,
-				  0.0, 1.0,
+				  0.0, 1.0
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
 				cubeVertexTextureCoordBuffer.itemSize = 2;
@@ -1263,7 +1263,7 @@ function _Gremlin() {
 				  -1.0,  0.0,  0.0,
 				  -1.0,  0.0,  0.0,
 				  -1.0,  0.0,  0.0,
-				  -1.0,  0.0,  0.0,
+				  -1.0,  0.0,  0.0
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
 				cubeVertexNormalBuffer.itemSize = 3;
@@ -1421,7 +1421,7 @@ function _Gremlin() {
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, rayVertexPositionBuffer);
 				var vertices = [
 					 0.0,  0.0,  0,
-					 0.0, 0.0,  1.0,				
+					 0.0, 0.0,  1.0
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				rayVertexPositionBuffer.itemSize = 3;
@@ -1571,7 +1571,7 @@ function _Gremlin() {
 				_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, squareVertexIndexBuffer);
 				var squareVertexIndices = [
 					0, 1,   2, 1,
-					2, 3,   3, 0,
+					2, 3,   3, 0
 				];
 				_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareVertexIndices), _gl.STATIC_DRAW);
 				squareVertexIndexBuffer.itemSize = 1;

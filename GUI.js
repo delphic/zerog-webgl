@@ -624,7 +624,7 @@ function _TextWriter() {
 	}
 
 	return {
-		drawText: 		drawText,
+		drawText: 		drawText
 	}
 }
 var GremlinTextWriter = _TextWriter();
