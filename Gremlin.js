@@ -813,39 +813,32 @@ function _Gremlin() {
 	var _shaderProgram;	
 	var _shaderPrograms = [];
 	
-	function _getShader(gl, id) {
-        var shaderScript = document.getElementById(id);
-        if (!shaderScript) {
-            return null;
-        }
+	function _getShader(gl, fileName) {
+       var request = new XMLHttpRequest();
+		request.open("GET", fileName, false);
+		request.send();
+		return _handleLoadedShader(gl, JSON.parse(request.responseText));
+    }
 
-        var str = "";
-        var k = shaderScript.firstChild;
-        while (k) {
-            if (k.nodeType == 3) {
-                str += k.textContent;
-            }
-            k = k.nextSibling;
-        }
-
+    function _handleLoadedShader(gl, shaderScript) {
         var shader;
-        if (shaderScript.type == "x-shader/x-fragment") {
-            shader = gl.createShader(gl.FRAGMENT_SHADER);
-        } else if (shaderScript.type == "x-shader/x-vertex") {
-            shader = gl.createShader(gl.VERTEX_SHADER);
-        } else {
-            return null;
-        }
+		if (shaderScript.type == "x-shader/x-fragment") {
+			shader = gl.createShader(gl.FRAGMENT_SHADER);
+		} else if (shaderScript.type == "x-shader/x-vertex") {
+			shader = gl.createShader(gl.VERTEX_SHADER);
+		} else {
+			return null;
+		}
 
-        gl.shaderSource(shader, str);
-        gl.compileShader(shader);
+		gl.shaderSource(shader, shaderScript.script);
+		gl.compileShader(shader);
 
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert(gl.getShaderInfoLog(shader));
-            return null;
-        }
+		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+			alert(gl.getShaderInfoLog(shader));
+			return null;
+		}
 
-        return shader;
+		return shader;
     }
 
 	function _createShader(vertexShaderID, fragmentShaderID) {
@@ -921,8 +914,8 @@ function _Gremlin() {
 	}
 		
 	function _initShaders() {
-		_shaderPrograms["Vertex"] = _createShader("vertex-shader-vs", "vertex-shader-fs");
-		_shaderPrograms["Pixel"] = _createShader("pixel-shader-vs", "pixel-shader-fs");
+		_shaderPrograms.Vertex = _createShader("shaders/vertex-shader-vs.json", "shaders/vertex-shader-fs.json");
+		_shaderPrograms.Pixel = _createShader("shaders/pixel-shader-vs.json", "shaders/pixel-shader-fs.json");
 		_shaderProgram = _shaderPrograms.Pixel;
 		_gl.useProgram(_shaderProgram);
     }

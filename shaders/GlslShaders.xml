@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<GlslShaders xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xsi:schemaLocation="/ GlslShaders.xsd" >
+	<Shader>
+		<Name>vertex-shader-fs</Name>
+    <Type>x-shader/x-fragment</Type>
+		<FileName>vertex-shader-fs.glsl</FileName>
+	</Shader>
+  <Shader>
+    <Name>vertex-shader-vs</Name>
+    <Type>x-shader/x-vertex</Type>
+    <FileName>vertex-shader-vs.glsl</FileName>
+  </Shader>
+  <Shader>
+    <Name>pixel-shader-fs</Name>
+    <Type>x-shader/x-fragment</Type>
+    <FileName>pixel-shader-fs.glsl</FileName>
+  </Shader>
+  <Shader>
+    <Name>pixel-shader-vs</Name>
+    <Type>x-shader/x-vertex</Type>
+    <FileName>pixel-shader-vs.glsl</FileName>
+  </Shader>
+</GlslShaders>
