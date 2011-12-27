@@ -142,8 +142,8 @@ function _HUD() {
 	// List of HUD elements
 	var hudElements = [];
 	var hudGroups = [];
-	
-	// Note: Position is of centre of Rect to draw, where x=-1 is left side and x=+1 is right side, y = +1 is top and y=-1 is bottom.
+
+   	// Note: Position is of centre of Rect to draw, where x=-1 is left side and x=+1 is right side, y = +1 is top and y=-1 is bottom.
 	//       z ~= z-index, the depth buffer takes care of what appears atop other things.
 	// Note: Size is amount of the screen to take up x=1 & y=1 will cover the screen.
 	function HudElement(position, size, color) {
@@ -279,10 +279,10 @@ function _HUD() {
 		if(textureName) {
 			element.texture = Gremlin.createTexture(textureName);
 		}
-				
+
 		return hudElements.push(element)-1;
 	}
-	
+
 	function createTextElement(position, text, textSize, colour, alignment, font, maxWidth) {
 		maxWidth = maxWidth || 0;
 		var textureCanvas = "textureCanvas";
@@ -307,7 +307,7 @@ function _HUD() {
 		element.useTextures = true;
 		element.texture = textureId;
 		
-		return hudElements.push(element)-1;			
+		return hudElements.push(element)-1;
 	}
 	
 	function createWireframe(type, position, size, color) {
@@ -440,13 +440,18 @@ function _HUD() {
 			barElement.texture = Gremlin.createTexture(textureName);
 		}
 				
-		return hudElements.push(barElement)-1;;
+		return hudElements.push(barElement)-1;
 	}
 	
 	function renderHud() {
 		var hudElementsMax = hudElements.length;
+
+        // TODO: Move this to the engine.
+        var renderQueue = hudElements.slice(0); // Copy hudElements Array
+        renderQueue.sort(function(a,b){ return b.position[2] - a.position[2]; }); // Render deepest first
+
 		for (var i=0; i < hudElementsMax; i++) {
-			Gremlin.renderPlane(hudElements[i]);
+			Gremlin.renderPlane(renderQueue[i]);
 		}
 	}
 	
