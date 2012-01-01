@@ -13,7 +13,12 @@
 
 function _GUI() {
 	var resolutionScale, lighting, lightingType, specularLighting;
-	
+    // Functions to be called on hover / click of links and buttons
+	var onHover = function() { /*Blank*/ }
+    var onClick = function() { /*Blank*/ }
+    function setOnHover(func) { onHover = func; }
+    function setOnClick(func) { onClick = func; }
+
 	function startGame(val) {
 		$("#menuContainer").hide();
 		Game.unloadLevel();
@@ -86,14 +91,22 @@ function _GUI() {
 			$(this).click(function() { 
 				$(this).parents('[gui-role="menu"]').hide();
 				$('[gui-role="menu"][gui-id="'+$(this).attr("gui-target")+'"]').show();
+                onClick();
 			});
+            $(this).mouseover(function(){
+                onHover();
+            });
 		});
 		
 		$('[gui-role*="navButton"]').each(function() {
 			$(this).click(function() {
 				$(this).parents('[gui-role="menu"]').hide();
 				$('[gui-role="menu"][gui-id="'+$(this).attr("gui-target")+'"]').show();
+                onClick();
 			});
+            $(this).mouseover(function(){
+                onHover();
+            });
 		});
 		
 		$('[gui-role*="resumeGame"]').each(function() {
@@ -118,7 +131,7 @@ function _GUI() {
 			});
 		});
 		
-		// Value Visulater for Resolution Slider
+		// Value Visualiser for Resolution Slider
 		$('#optionsResolution').change(function() { 
 			var factor = parseFloat($(this).val(),10);
 			$('#optionsResolutionOutput').html(factor.toFixed(1)); 
@@ -129,6 +142,8 @@ function _GUI() {
 	
 	return { 
 		setStyleSize: 	setStyleSize,
+        setOnClick:     setOnClick,
+        setOnHover:     setOnHover,
 		pause: 			pause,
 		endGame:		endGame
 	}

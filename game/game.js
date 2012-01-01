@@ -75,7 +75,8 @@ function _Game() {
 					}
 					// TODO: remove hardcoded radi
 					else if(!(projectiles[i].friendly) && GremlinCollision.sphereToSphereIntersect(projectiles[i].position, 0.03, player.position, 1)) {
-						if(player.takeDamage(projectiles[i].velocity, projectiles[i].mass, projectiles[i].dmg)){
+						getSound("impact").play();
+                        if(player.takeDamage(projectiles[i].velocity, projectiles[i].mass, projectiles[i].dmg)){
 							// GAME OVER
 							GremlinGUI.endGame("<h2>Game Over</h2>")
 						}
@@ -187,9 +188,10 @@ function _Game() {
 							"position": pos,
 							"velocity": v,
 							"color": [5.0,0,0,1.0],
-							"damage": 40000, 
+							"damage": 40000,
 							"lifetime": 30000, 
 							"friendly": true }); // specification of damage of projectile should not be here
+                        getSound("fire").play();
 						player.fire();
 					}
 				}
@@ -228,6 +230,11 @@ function _Game() {
 					}
 				}
 			}
+            else {
+                // This is useful for menus etc too!
+                // TODO: Should probably run every X frames
+                levelThink();
+            }
 			
         }
         lastTime = timeNow;
@@ -524,8 +531,13 @@ function _Game() {
 		projectileObject.assignBuffer(Gremlin.Primitives.createTetrahedron());
 		projectileObject.setScale(0.03,0.03,0.03);
 		projectileObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); }
-		
-		loadLevel("menu.js", "InMenu");
+
+        loadLevel("menu.js", "InMenu");
+        
+        // Preload Some Sounds
+        setSound("space-ambient", GremlinAudio.load("sounds/space-ambient.ogg")).setVolume(0.2);
+        setSound("fire", GremlinAudio.load("sounds/neutron-disruptor.wav"));
+        setSound("impact", GremlinAudio.load("sounds/impact.ogg"));
 	}
 
 	// Player / Ships
@@ -611,10 +623,19 @@ function _Game() {
 			this.weaponSpeed = speed;
 		}
 	}
-	
 	var player = new GameObject({ "position": [0,0,0] });
 	attachShip(player);
-	
+
+    var sounds = [];
+
+    function getSound(name) {
+        return sounds[name];
+    }
+    function setSound(name, sound) {
+        sounds[name] = sound;
+        return sounds[name];
+    }
+
 	// Player HUD Values
 	var healthBar;
 	var shieldBar;
@@ -771,6 +792,7 @@ function _Game() {
 		
 		// Initialise
 		Gremlin.init();
+        GremlinAudio.init(); // TODO: move this and any other inits into Gremlin's
 		gameInit();
 		
 		// Start Game Loop
@@ -861,17 +883,16 @@ function _Game() {
 	GremlinEventHandler.bindEvent("onresize", Gremlin.resize);
 	
 	// Level Functions - Own namespace?
-	function _levelThink() { 
-		// Default function blank
-	}
-	var levelThink = _levelThink;
-	
+	var levelThink = function() { /* Blank! */ };
+	var levelCleanUp = function() { /* Blank! */ };
 	var levelVars = [];
 	
 	function setLevelThink(func) {
 		levelThink = func;
 	}
-	
+	function setLevelCleanUp(func) {
+        levelCleanUp = func;
+    }
 	function getLevelVar(key) {
 		return levelVars[key];
 	}
@@ -921,12 +942,14 @@ function _Game() {
 		
 	}
 	function unloadLevel() {
+        levelCleanUp()
 		for(key in levelVars)
 		{
 			if(levelVars.hasOwnProperty(key)) { levelVars[key] = null; }
 		}
 		ShipManager.destroyShips();
 		setLevelThink(function() { /* Blank! */ });
+        setLevelCleanUp(function() { /* Blank! */});
 		gameObjects.splice(0, gameObjects.length);
 		projectiles.splice(0, projectiles.length);
 		dustMotes.splice(0, dustMotes.length); // Looks like we need a level manager! ;D
@@ -945,6 +968,7 @@ function _Game() {
 		loadLevel: 					loadLevel,
 		unloadLevel:				unloadLevel,
 		setLevelThink:				setLevelThink,
+        setLevelCleanUp:            setLevelCleanUp,
 		getLevelVar:				getLevelVar,
 		setLevelVar:				setLevelVar,
 		getPlayerPosition:			getPlayerPosition, 		// Replace with reference to player object
@@ -953,7 +977,9 @@ function _Game() {
 		getPlayerProjectileSpeed:	getPlayerProjectileSpeed,
 		setPlayerPosition:          setPlayerPosition,
 		setPlayerVelocity:			setPlayerVelocity,
-		setPlayerRotation:			setPlayerRotation,	
+		setPlayerRotation:			setPlayerRotation,
+        getSound:                   getSound,
+        setSound:                   setSound,
 		spawnProjectile:			spawnProjectile,
 		applyOptions:				applyOptions,
 		getCanvasSize:				getCanvasSize,

@@ -1,3 +1,10 @@
+        var onClick = GremlinAudio.load("sounds/buttonclick.wav");
+        var onHover = GremlinAudio.load("sounds/buttonrollover.wav");
+		var bgMusic = GremlinAudio.load("sounds/menu1.mp3", true);
+
+        GremlinGUI.setOnClick(function(){ onClick.play(); });
+        GremlinGUI.setOnHover(function(){ onHover.play(); });
+        
 		// Lighting
 		Gremlin.setLightEnvironment(0.05,0.05,0.05,0.75,0.75,0.6,-1.0,0.0,0.0);
 		Gremlin.setLightingFlags("lighting", true);
@@ -22,4 +29,15 @@
 			"latBands": 30, 
 			"isSkyBox": true
 		});
-		
+
+        bgMusic.setVolume(0.1);
+
+        Game.setLevelThink(function(){
+            if(!Game.getLevelVar("loaded") && !bgMusic.isLoading){
+                bgMusic.play(0, true);
+                Game.setLevelVar("loaded", true);
+            }
+        });
+
+        
+        Game.setLevelCleanUp(function() { bgMusic.stop(); });

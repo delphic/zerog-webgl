@@ -47,6 +47,18 @@
 		"animation": function(elapsed) { this.rotate( ( (30 * elapsed) / 1000.0), 0,1,0); }, 
 		"shininess": 100
 	});
+
+    Game.setLevelThink(
+		function() {
+            // Play Ambient Noise
+            if(!Game.getLevelVar("loaded") && !Game.getSound("space-ambient").isLoading){
+                Game.getSound("space-ambient").play(0, true);
+                Game.setLevelVar("loaded", true);
+            }
+        }
+    );
+
+    Game.setLevelCleanUp(function() { Game.getSound("space-ambient").stop(); });
 	
 	Game.createMotes();
 	
