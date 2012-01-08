@@ -23,13 +23,13 @@ function _Gremlin() {
 		_initShaders();
 
 		_gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        _gl.enable(_gl.DEPTH_TEST);
+		_gl.enable(_gl.DEPTH_TEST);
 	}
-	
+
 	function resize() {
 		var canvas = document.getElementById("gremlinCanvas");
 		_gl.viewportWidth = canvas.width;
-        _gl.viewportHeight = canvas.height;
+		_gl.viewportHeight = canvas.height;
 	}
 	// Lighting 
 	// Possibly should have it's own namespace
@@ -49,12 +49,12 @@ function _Gremlin() {
 		pointLight.g = g;
 		pointLight.b = b;
 		pointLight.on = true;
-		// TODO: TO add check that we've not reached the max number of lights
+		// TODO: add check that we've not reached the max number of lights
 		pointLights.push(pointLight);
-		
+
 		return (pointLights.length-1);
 	}
-	
+
 	function setPointLight(i,x,y,z,r,g,b) {
 		var pointLight = [];
 		pointLight.x = x;
@@ -65,7 +65,7 @@ function _Gremlin() {
 		pointLight.b = b;
 		pointLights[i] = pointLight;
 	}
-	
+
 	function updatePointLight(i,dx,dy,dz,dr,dg,db) {
 		pointLights[i].x += dx;
 		pointLights[i].y += dy;
@@ -74,7 +74,7 @@ function _Gremlin() {
 		pointLights[i].g += dg;
 		pointLights[i].b += db;
 	}
-	
+
 	function addSpotLight(x,y,z,dirX,dirY,dirZ,r,g,b,theta,thi,falloff) {
 		var spotLight = [];
 		spotLight.x = x;
@@ -91,10 +91,10 @@ function _Gremlin() {
 		spotLight.falloff = falloff;
 		spotLight.on = true;
 		spotLights.push(spotLight);
-		
+
 		return (spotLights.length-1);
 	}
-	
+
 	function setSpotLight(i,x,y,z,dirX,dirY,dirZ,r,g,b,theta,thi,falloff) {
 		var spotLight = [];
 		spotLight.x = x;
@@ -111,7 +111,7 @@ function _Gremlin() {
 		spotLight.falloff = falloff;
 		spotLights[i] = spotLight;
 	}
-	
+
 	function updateSpotLight(i,dx,dy,dz,ddirX,ddirY,ddirZ,dr,dg,db,dtheta,dthi,dfalloff) {
 		spotLights[i].x += dx;
 		spotLights[i].y += dy;
@@ -126,12 +126,12 @@ function _Gremlin() {
 		spotLights[i].thi += degToRad(dthi);
 		spotLights[i].falloff += dfalloff;
 	}
-	
+
 	function setLight(val, type) {
 		if(type==="Spot") { spotLights[i].on = val; }
 		else if (type==="Point") { pointLights[i].on = val; }
 	}
-	
+
 	function setLightEnvironment(ambientR, ambientG, ambientB, directionalR, directionalG, directionalB, directionalX, directionalY, directionalZ) {
 		ambientLight.r = ambientR;
 		ambientLight.g = ambientG;
@@ -143,11 +143,11 @@ function _Gremlin() {
 		directionalLight.y = directionalY;
 		directionalLight.z = directionalZ;
 	}
-	
+
 	function setLightingFlags(name, val) {
 		lightingFlags[name] = val;
 	}
-	
+
 	function removeLight(index, type) {
 		switch(type) {
 		case "Ambient":
@@ -166,14 +166,14 @@ function _Gremlin() {
 			return;
 		}
 	}
-	
+
 	function removeLights() {
 		ambientLight.r = ambientLight.g = ambientLight.b = null;
 		directionalLight.r = directionalLight.g = directionalLight.b = directionalLight.x =  directionalLight.y = directionalLight.z = null;
 		pointLights.splice(0,pointLights.length);
 		spotLights.splice(0,spotLights.length);
 	}
-	
+
 	function setShader(type) {
 		if (type==="Pixel") {
 			_shaderProgram = _shaderPrograms.Pixel; 
@@ -183,14 +183,14 @@ function _Gremlin() {
 		}
 		_gl.useProgram(_shaderProgram);
 	}
-	
+
 	// Prepare Scene - Clears View, and sets perspective and camera 
 	// TODO: Should separate this into several functions
-    function prepareScene() {
-        _gl.viewport(0, 0, _gl.viewportWidth, _gl.viewportHeight);
-        _gl.clear(_gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT);
+	function prepareScene() {
+		_gl.viewport(0, 0, _gl.viewportWidth, _gl.viewportHeight);
+		_gl.clear(_gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT);
 
-        mat4.perspective(45, _gl.viewportWidth / _gl.viewportHeight, 0.1, 20000.0, _pMatrix);
+		mat4.perspective(45, _gl.viewportWidth / _gl.viewportHeight, 0.1, 20000.0, _pMatrix);
 
 		// Set Camera View
 		// This transforms the model view matrix to use the camera coordinate system
@@ -198,12 +198,12 @@ function _Gremlin() {
 		// calculated mvMatrix, will also need to be transformed
 		mat4.identity(_mvMatrix);
 		mat4.multiply(_mvMatrix, _playerCamera.rotationMatrix);
-        mat4.translate(_mvMatrix, [-_playerCamera.x, -_playerCamera.y, -_playerCamera.z]);
-    }
-	
+		mat4.translate(_mvMatrix, [-_playerCamera.x, -_playerCamera.y, -_playerCamera.z]);
+	}
+
 	// Render Game Object
 	function renderObject(object) {
-		
+
 		if (!object.visible) return;
 		_mvPushMatrix();
 		if (!object.isSkyBox) {
@@ -214,18 +214,18 @@ function _Gremlin() {
 			mat4.translate(_mvMatrix, [_playerCamera.x+object.position[0], _playerCamera.y+object.position[1], _playerCamera.z+object.position[2]]);
 		}
 		mat4.multiply(_mvMatrix, object.rotation, _mvMatrix);
-		
+
 		if(object.scale != [1,1,1]) mat4.scale(_mvMatrix, object.scale, _mvMatrix);
 
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexPosition);
-        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, buffersList[object.buffers].vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexPosition);
+		_gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, buffersList[object.buffers].vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
 
 		if (buffersList[object.buffers].useIndices) {
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, buffersList[object.buffers].vertexIndex);
 		}
-		
+
 		_gl.uniform4fv(_shaderProgram.colorUniform, object.color);
-		
+
 		if (object.useTextures) {
 			_gl.uniform1i(_shaderProgram.useTexturesUniform, true);
 			_gl.enableVertexAttribArray(_shaderProgram.textureCoordAttribute);
@@ -243,12 +243,12 @@ function _Gremlin() {
 			_gl.disableVertexAttribArray(_shaderProgram.textureCoordAttribute);
 			_gl.uniform1i(_shaderProgram.useTexturesUniform, false);
 		}
-		
-				
+
+
 		// Setting Lights 
 		if(lightingFlags.lighting && object.useLighting) {
 			// TODO: Move the non-object dependant lights out of the object renderer?
-				// We might want to feed in different lights depedant on value...
+			// We might want to feed in different lights dependant on value...
 			_gl.uniform1i(_shaderProgram.useLightingUniform, true);
 			if (lightingFlags.specularLighting && object.shininess > 0) {
 				_gl.uniform1i(_shaderProgram.useSpecularUniform, true); 
@@ -260,10 +260,10 @@ function _Gremlin() {
 			_gl.enableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
 			_gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexNormals); 
 			_gl.vertexAttribPointer(_shaderProgram.vertexNormalAttribute, buffersList[object.buffers].vertexNormals.itemSize, _gl.FLOAT, false, 0, 0);
-			
+
 			// Ambient Light
 			_gl.uniform3f(_shaderProgram.ambientColorUniform, ambientLight.r, ambientLight.g, ambientLight.b);
-			
+
 			// Directional Light
 			var lightingDirection = [ directionalLight.x, directionalLight.y, directionalLight.z];
 			var adjustedLD = vec3.create();
@@ -273,21 +273,21 @@ function _Gremlin() {
 			_gl.uniform3fv(_shaderProgram.lightingDirectionUniform, adjustedLD);
 			// Directional Light Colour
 			_gl.uniform3f(_shaderProgram.directionalColorUniform,directionalLight.r,directionalLight.g,directionalLight.b);
-			
+
 			// Point Lights
 			_gl.uniform1i(_shaderProgram.pointLightingNumberUniform, pointLights.length);
 			for(var i=0; i<pointLights.length; i++){
 				if (i > 8) break; // 8 is max number of points lights
 				_setPointLight(i, _playerCamera);
 			}
-			
+
 			// Spot Lights
 			_gl.uniform1i(_shaderProgram.spotLightingNumberUniform, spotLights.length); 
 			for(var i=0; i<spotLights.length; i++){
 				if (i > 8) break; // 8 is max number of points lights
 				_setSpotLight(i, _playerCamera);
 			}
-			
+
 			// Material / Specular
 			_gl.uniform1f(_shaderProgram.materialShininessUniform, object.shininess);
 		}
@@ -295,9 +295,9 @@ function _Gremlin() {
 			_gl.uniform1i(_shaderProgram.useLightingUniform, false);
 			_gl.disableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
 		}
-		
-        _setMatrixUniforms(_pMatrix, _mvMatrix);
-		
+
+		_setMatrixUniforms(_pMatrix, _mvMatrix);
+
 		if (!(object.wireframe || buffersList[object.buffers].renderMode === "wireframe") && !(object.points || buffersList[object.buffers].renderMode === "points")) {
 			if(buffersList[object.buffers].useIndices) {
 				_gl.drawElements(_gl.TRIANGLES, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
@@ -322,35 +322,35 @@ function _Gremlin() {
 				_gl.drawArrays(_gl.POINTS, 0, buffersList[object.buffers].vertexPosition.numItems);
 			}
 		}
-        _mvPopMatrix();
+		_mvPopMatrix();
 	}
-	
+
 	function renderPlane(object) {
 		if (!object.visible) return;
 		var mvMatrix = mat4.create();
 		var pMatrix = mat4.create();
-		
+
 		mat4.identity(pMatrix);
 		mat4.identity(mvMatrix);
-		
+
 		mat4.translate(mvMatrix, [object.position[0], object.position[1],object.position[2]]);
-		
+
 		if(object.size != [1,1]) mat4.scale(mvMatrix, [object.size[0],object.size[1],1], mvMatrix);
-		
+
 		// Enable Blending // TODO: Do this properly as part of the improves to the engine
 		_gl.blendFunc(_gl.SRC_ALPHA, _gl.ONE_MINUS_SRC_ALPHA);
 		_gl.enable(_gl.BLEND);
 		_gl.disable(_gl.DEPTH_TEST);
 
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexPosition);
-        _gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, buffersList[object.buffers].vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, buffersList[object.buffers].vertexPosition);
+		_gl.vertexAttribPointer(_shaderProgram.vertexPositionAttribute, buffersList[object.buffers].vertexPosition.itemSize, _gl.FLOAT, false, 0, 0);
 
 		if (buffersList[object.buffers].useIndices) {
 			_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, buffersList[object.buffers].vertexIndex);
 		}
-		
+
 		_gl.uniform4fv(_shaderProgram.colorUniform, object.color);
-		
+
 		if (object.useTextures) {
 			_gl.uniform1i(_shaderProgram.useTexturesUniform, true);
 			_gl.enableVertexAttribArray(_shaderProgram.textureCoordAttribute);
@@ -368,14 +368,14 @@ function _Gremlin() {
 			_gl.disableVertexAttribArray(_shaderProgram.textureCoordAttribute);
 			_gl.uniform1i(_shaderProgram.useTexturesUniform, false);
 		}
-		
-				
+
+
 		// Disable Lights 
 		_gl.uniform1i(_shaderProgram.useLightingUniform, false);
 		_gl.disableVertexAttribArray(_shaderProgram.vertexNormalAttribute);
-		
+
 		_setMatrixUniforms(pMatrix, mvMatrix);
-		
+
 		if (!(object.wireframe || buffersList[object.buffers].renderMode === "wireframe") && !(object.points || buffersList[object.buffers].renderMode === "points")) {
 			if(buffersList[object.buffers].useIndices) {
 				_gl.drawElements(_gl.TRIANGLES, buffersList[object.buffers].vertexIndex.numItems, _gl.UNSIGNED_SHORT, 0);
@@ -403,14 +403,14 @@ function _Gremlin() {
 		_gl.enable(_gl.DEPTH_TEST);
 		_gl.disable(_gl.BLEND);
 	}
-			
+
 	// Buffers
 	buffersList = []; 			// Stores the Buffers
 	buffersNameList = []; 		// Stores what buffers have already been created
 	modelLoadingInfo = [];		// An array to store what objects have requested what models and their callbacks
-	
+
 	var Primitives = _Primitives(); // Primitive creation
-	
+
 	function loadModel(object, fileName){
 		// Object loading
 		object.visible = false;
@@ -427,7 +427,7 @@ function _Gremlin() {
 			object.visible = true;
 			return;
 		}
-		
+
 		// Model now loading
 		_increaseAssetsLoading();
 		buffersNameList[fileName] = -1;
@@ -437,21 +437,21 @@ function _Gremlin() {
 		// Assign first object in array
 		modelLoadingInfo[fileName].objectsLoading.push(object);
 		//modelLoadingInfo[fileName].callsbacks.push(callback);
-		
+
 		var request = new XMLHttpRequest();
-        request.open("GET", fileName);
-        request.onreadystatechange = function () {
-            if (request.readyState == 4) {
-                _handleLoadedModel(fileName, JSON.parse(request.responseText));
-            }
-        }
-        request.send();
+		request.open("GET", fileName);
+		request.onreadystatechange = function () {
+			if (request.readyState == 4) {
+				_handleLoadedModel(fileName, JSON.parse(request.responseText));
+			}
+		}
+		request.send();
 	}
-	
+
 	// Textures
 	var textureList = [];			// Stores the textures
 	var textureFileList = [];		// Stores which textures have already been loaded
-	
+
 	function createTexture(fileName) {
 		if (!isNaN(textureFileList[fileName])) {
 			return textureFileList[fileName];
@@ -468,7 +468,7 @@ function _Gremlin() {
 			return index;
 		}
 	}
-	
+
 	function createTextureFromCanvas(canvasId) {
 		_increaseAssetsLoading();
 		var texture = _gl.createTexture();
@@ -477,7 +477,7 @@ function _Gremlin() {
 		_handleLoadedTexture(textureList[index], 3); 
 		return index;
 	}
-	
+
 	// Camera Functions 
 	// TODO: These should probably not be for a specific camera!
 	// Argueably we shouldn't be storing camera in engine, and should move to game code
@@ -515,61 +515,61 @@ function _Gremlin() {
 	}
 	function pickPosition(x,y,d) {
 		// d is the distance at which x & y coords is calculated
-		
+
 		var pickPos = vec3.create();
 		pickPos[0] = (_gl.viewportWidth/_gl.viewportHeight)*((x - _gl.viewportWidth*0.5)/_gl.viewportWidth)*2*d*Math.tan(degToRad(45*0.5)); 
 		pickPos[1] = -((y - _gl.viewportHeight*0.5)/_gl.viewportHeight)*2*d*Math.tan(degToRad(45*0.5));
 		pickPos[2] = -d;
 		// We now have pick coords in Camera Coord System - Need to Transform to Globals
 		_playerCamera.reverseTransform(pickPos);
-		
+
 		return pickPos;
 	}
 	function reversePick(x,y,z, coords) {
 		var position = [x,y,z];
 		// We have coords in Globals, convert to Camera Coordinates
 		_playerCamera.transform(position);
-		
+
 		if(position[2] > 0) {
 			// Object is behind camera.
 			return false;
 		}
-		
+
 		// Now find x and y position - note finds in ortho coords not pixels.
 		coords[0] = -(_gl.viewportHeight/_gl.viewportWidth)*position[0]/(position[2]*Math.tan(degToRad(45*0.5)));
 		coords[1] = -position[1]/(position[2]*Math.tan(degToRad(45*0.5)));
-		
+
 		return true;		
 	}
 	// Maths Functions
-    function degToRad(degrees) {
-        return degrees * Math.PI / 180;
-    }
+	function degToRad(degrees) {
+		return degrees * Math.PI / 180;
+	}
 
-	
+
 	//              _            _       
 	//   _ __  _ __(_)_   ____ _| |_ ___ 
 	//  | '_ \| '__| \ \ / / _` | __/ _ \
 	//  | |_) | |  | |\ V / (_| | ||  __/
 	//  | .__/|_|  |_| \_/ \__,_|\__\___|
 	//  |_| 
-	
+
 	// WebGL Obj
 	var _gl;
-	
+
 	// View Matrix
-    var _mvMatrix = mat4.create();
-    var _mvMatrixStack = [];
-    // Perspective Matrix
+	var _mvMatrix = mat4.create();
+	var _mvMatrixStack = [];
+	// Perspective Matrix
 	var _pMatrix = mat4.create();
-	
+
 	// Basic Camera Obj
 	// TODO: May need an attach to camera function useable from the game code
 	function camera(x,y,z, yaw, pitch, roll) {
 		this.x = x;
 		this.y = y; 
 		this.z = z;
-		
+
 		// Create Rotation Matrix
 		rotMatrix = mat4.create();
 		mat4.identity(rotMatrix);
@@ -577,7 +577,7 @@ function _Gremlin() {
 		mat4.rotate(rotMatrix, -degToRad(yaw), [0, 1, 0]);
 		mat4.rotate(rotMatrix, -degToRad(roll), [0, 0, 1]);
 		this.rotationMatrix = rotMatrix;
-		
+
 		this.setRotation= setRotation; 
 		this.rotateCamera = rotateCamera;
 		this.moveCamera = moveCamera;
@@ -587,7 +587,7 @@ function _Gremlin() {
 		this.transform = transform;
 		this.reverseRotation = reverseRotation;
 		this.reverseTransform = reverseTransform;
-		
+
 		function setRotation(yaw, pitch, roll) {
 			// Sets Rotation Matrix in Global Y P R
 			mat4.identity(this.rotationMatrix);
@@ -651,9 +651,9 @@ function _Gremlin() {
 			mat4.multiplyVec3(cameraTransform, vector, vector);
 		}
 	}
-	
+
 	var _playerCamera = new camera(0,0,0, 0, 0, 0);
-	
+
 	// Lighting Functions
 	function _setPointLight(i, camera){
 		if(pointLights[i].on) {
@@ -664,16 +664,16 @@ function _Gremlin() {
 			_gl.uniform3f(_shaderProgram.pointLightingColorUniform[i], pointLights[i].r, pointLights[i].g, pointLights[i].b);
 		}
 	}
-	
+
 	function _setSpotLight(i, camera){
 		if(spotLights[i].on) {
 			var spotLightLocation = [spotLights[i].x,spotLights[i].y,spotLights[i].z];
 			var spotLightDirection = [spotLights[i].dirX,spotLights[i].dirY,spotLights[i].dirZ];
 			var spotLightColor = [spotLights[i].r,spotLights[i].g,spotLights[i].b];
-				
+
 			camera.rotation(spotLightDirection);
 			camera.transform(spotLightLocation);
-					
+
 			_gl.uniform3fv(_shaderProgram.spotLightingLocationUniform[i], spotLightLocation);
 			_gl.uniform3fv(_shaderProgram.spotLightingDirectionUniform[i], spotLightDirection);
 			_gl.uniform3fv(_shaderProgram.spotLightingColorUniform[i], spotLightColor);
@@ -683,18 +683,18 @@ function _Gremlin() {
 		}
 	}
 	// Init functions
-    function _initGL(canvas) {
-        try {
-            _gl = canvas.getContext("experimental-webgl");
-            _gl.viewportWidth = canvas.width;
-            _gl.viewportHeight = canvas.height;
-        } catch (e) {
-        }
-        if (!_gl) {
-            alert("Could not initialise WebGL");
-        }
-    }
-	
+	function _initGL(canvas) {
+		try {
+			_gl = canvas.getContext("experimental-webgl");
+			_gl.viewportWidth = canvas.width;
+			_gl.viewportHeight = canvas.height;
+		} catch (e) {
+		}
+		if (!_gl) {
+			alert("Could not initialise WebGL");
+		}
+	}
+
 	// Assets (Buffers, Models, Textures)
 	var assetsLoading = 0; 
 	function _increaseAssetsLoading() {
@@ -705,7 +705,7 @@ function _Gremlin() {
 		if(assetsLoading) { assetsLoading--; }
 		if(!assetsLoading) { Game.setLoading(false); }
 	}
-	
+
 	// Textures
 	function _handleLoadedTexture(texture, quality) {
 		// Quality
@@ -729,47 +729,47 @@ function _Gremlin() {
 		_gl.bindTexture(_gl.TEXTURE_2D, null);
 		_decreaseAssetsLoading();
 	}
-	
+
 	// Model Functions
 	function _handleLoadedModel(fileName, modelData) {
 		var buffers = [];
-		
+
 		var modelVertexNormalBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexNormalBuffer);
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexNormals), _gl.STATIC_DRAW);
-        modelVertexNormalBuffer.itemSize = 3;
-        modelVertexNormalBuffer.numItems = modelData.vertexNormals.length / 3;
-		
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexNormalBuffer);
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexNormals), _gl.STATIC_DRAW);
+		modelVertexNormalBuffer.itemSize = 3;
+		modelVertexNormalBuffer.numItems = modelData.vertexNormals.length / 3;
+
 		buffers["vertexNormals"] = modelVertexNormalBuffer;
 
-        var modelVertexTextureCoordBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexTextureCoordBuffer);
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexTextureCoords), _gl.STATIC_DRAW);
-        modelVertexTextureCoordBuffer.itemSize = 2;
-        modelVertexTextureCoordBuffer.numItems = modelData.vertexTextureCoords.length / 2;
-		
+		var modelVertexTextureCoordBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexTextureCoordBuffer);
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexTextureCoords), _gl.STATIC_DRAW);
+		modelVertexTextureCoordBuffer.itemSize = 2;
+		modelVertexTextureCoordBuffer.numItems = modelData.vertexTextureCoords.length / 2;
+
 		buffers["textureCoords"] = modelVertexTextureCoordBuffer;
-		
-        var modelVertexPositionBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexPositionBuffer);
-        _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexPositions), _gl.STATIC_DRAW);
-        modelVertexPositionBuffer.itemSize = 3;
-        modelVertexPositionBuffer.numItems = modelData.vertexPositions.length / 3;
-		
+
+		var modelVertexPositionBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ARRAY_BUFFER, modelVertexPositionBuffer);
+		_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(modelData.vertexPositions), _gl.STATIC_DRAW);
+		modelVertexPositionBuffer.itemSize = 3;
+		modelVertexPositionBuffer.numItems = modelData.vertexPositions.length / 3;
+
 		buffers["vertexPosition"] = modelVertexPositionBuffer;
-		
-        var modelVertexIndexBuffer = _gl.createBuffer();
-        _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer);
-        _gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(modelData.indices), _gl.STATIC_DRAW);
-        modelVertexIndexBuffer.itemSize = 1;
-        modelVertexIndexBuffer.numItems = modelData.indices.length;
+
+		var modelVertexIndexBuffer = _gl.createBuffer();
+		_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer);
+		_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(modelData.indices), _gl.STATIC_DRAW);
+		modelVertexIndexBuffer.itemSize = 1;
+		modelVertexIndexBuffer.numItems = modelData.indices.length;
 
 		buffers["vertexIndex"] = modelVertexIndexBuffer;
 		buffers["useIndices"] = true;
-		
+
 		var index = buffersList.push(buffers)-1;
 		buffersNameList[fileName] = index;
-		
+
 		for(var i = 0; i < modelLoadingInfo[fileName].objectsLoading.length; i++) {
 			modelLoadingInfo[fileName].objectsLoading[i].assignBuffer(index);
 			modelLoadingInfo[fileName].objectsLoading[i].useTextures = true; // TODO: check that there were some tex-coords
@@ -779,49 +779,49 @@ function _Gremlin() {
 		modelLoadingInfo[fileName].objectsLoading.splice(0,modelLoadingInfo[fileName].objectsLoading.length);
 		_decreaseAssetsLoading();
 	}
-	
-				
+
+
 	// Matrix Functions - Stack functions and Set Shader Uniforms
 	function _mvPushMatrix() {
-        var copy = mat4.create();
-        mat4.set(_mvMatrix, copy);
-        _mvMatrixStack.push(copy);
-    }
+		var copy = mat4.create();
+		mat4.set(_mvMatrix, copy);
+		_mvMatrixStack.push(copy);
+	}
 
-    function _mvPopMatrix() {
-        if (_mvMatrixStack.length == 0) {
-            throw "Invalid popMatrix!";
-        }
-        _mvMatrix = _mvMatrixStack.pop();
-    }
+	function _mvPopMatrix() {
+		if (_mvMatrixStack.length == 0) {
+			throw "Invalid popMatrix!";
+		}
+		_mvMatrix = _mvMatrixStack.pop();
+	}
 
 	// This should be grouped with the appropriate rendering code
-    function _setMatrixUniforms(pMatrix, mvMatrix) {
-        _gl.uniformMatrix4fv(_shaderProgram.pMatrixUniform, false, pMatrix);
-        _gl.uniformMatrix4fv(_shaderProgram.mvMatrixUniform, false, mvMatrix);
-		
+	function _setMatrixUniforms(pMatrix, mvMatrix) {
+		_gl.uniformMatrix4fv(_shaderProgram.pMatrixUniform, false, pMatrix);
+		_gl.uniformMatrix4fv(_shaderProgram.mvMatrixUniform, false, mvMatrix);
+
 		// TODO: Lighting Shader Only
 		var normalMatrix = mat3.create();
 		mat4.toInverseMat3(mvMatrix, normalMatrix);
 		mat3.transpose(normalMatrix);
 		_gl.uniformMatrix3fv(_shaderProgram.nMatrixUniform, false, normalMatrix);
-    }
-	
+	}
+
 	// Shader Code
 	// TODO: Move programs to a manager in render
 	// TODO: Move shader specific stuff to it's own namespace
 	var _shaderProgram;	
 	var _shaderPrograms = [];
-	
+
 	function _getShader(gl, fileName) {
-       var request = new XMLHttpRequest();
+	   var request = new XMLHttpRequest();
 		request.open("GET", fileName, false);
 		request.send();
 		return _handleLoadedShader(gl, JSON.parse(request.responseText));
-    }
+	}
 
-    function _handleLoadedShader(gl, shaderScript) {
-        var shader;
+	function _handleLoadedShader(gl, shaderScript) {
+		var shader;
 		if (shaderScript.type == "x-shader/x-fragment") {
 			shader = gl.createShader(gl.FRAGMENT_SHADER);
 		} else if (shaderScript.type == "x-shader/x-vertex") {
@@ -839,47 +839,47 @@ function _Gremlin() {
 		}
 
 		return shader;
-    }
+	}
 
 	function _createShader(vertexShaderID, fragmentShaderID) {
 		var fragmentShader = _getShader(_gl, vertexShaderID);
-        var vertexShader = _getShader(_gl, fragmentShaderID);
+		var vertexShader = _getShader(_gl, fragmentShaderID);
 
-        var program = _gl.createProgram();
-        _gl.attachShader(program, vertexShader);
-        _gl.attachShader(program, fragmentShader);
-        _gl.linkProgram(program);
+		var program = _gl.createProgram();
+		_gl.attachShader(program, vertexShader);
+		_gl.attachShader(program, fragmentShader);
+		_gl.linkProgram(program);
 
-        if (!_gl.getProgramParameter(program, _gl.LINK_STATUS)) {
-            alert("Could not initialise shaders");
-        }
+		if (!_gl.getProgramParameter(program, _gl.LINK_STATUS)) {
+			alert("Could not initialise shaders");
+		}
 
-        program.vertexPositionAttribute = _gl.getAttribLocation(program, "aVertexPosition");
-        _gl.enableVertexAttribArray(program.vertexPositionAttribute);
-		
+		program.vertexPositionAttribute = _gl.getAttribLocation(program, "aVertexPosition");
+		_gl.enableVertexAttribArray(program.vertexPositionAttribute);
+
 		// Textures
 		program.colorUniform = _gl.getUniformLocation(program, "uColor");
 		program.textureCoordAttribute = _gl.getAttribLocation(program, "aTextureCoord");
 		_gl.enableVertexAttribArray(program.textureCoordAttribute);
 		program.useTexturesUniform = _gl.getUniformLocation(program, "uUseTextures");
-			
+
 		// Normals
 		program.vertexNormalAttribute = _gl.getAttribLocation(program, "aVertexNormal");
 		_gl.enableVertexAttribArray(program.vertexNormalAttribute);
-		
-        program.pMatrixUniform = _gl.getUniformLocation(program, "uPMatrix");
-        program.mvMatrixUniform = _gl.getUniformLocation(program, "uMVMatrix");
-		
+
+		program.pMatrixUniform = _gl.getUniformLocation(program, "uPMatrix");
+		program.mvMatrixUniform = _gl.getUniformLocation(program, "uMVMatrix");
+
 		// Lighting Uniforms
 		// TODO: Generalise
 		program.nMatrixUniform = _gl.getUniformLocation(program, "uNMatrix");
-        program.samplerUniform = _gl.getUniformLocation(program, "uSampler");
+		program.samplerUniform = _gl.getUniformLocation(program, "uSampler");
 		// Lighting Flag
-        program.useLightingUniform = _gl.getUniformLocation(program, "uUseLighting");
+		program.useLightingUniform = _gl.getUniformLocation(program, "uUseLighting");
 		// Environmental Light (Ambient + Directional)
-        program.ambientColorUniform = _gl.getUniformLocation(program, "uAmbientColor");
-        program.lightingDirectionUniform = _gl.getUniformLocation(program, "uLightingDirection");
-        program.directionalColorUniform = _gl.getUniformLocation(program, "uDirectionalColor");
+		program.ambientColorUniform = _gl.getUniformLocation(program, "uAmbientColor");
+		program.lightingDirectionUniform = _gl.getUniformLocation(program, "uLightingDirection");
+		program.directionalColorUniform = _gl.getUniformLocation(program, "uDirectionalColor");
 		// Point Lights
 		program.pointLightingLocationUniform = new Array();
 		program.pointLightingColorUniform = new Array();
@@ -904,39 +904,39 @@ function _Gremlin() {
 			program.spotLightingThiUniform[i] = _gl.getUniformLocation(program, "uSpotLightThi["+i+"]");
 			program.spotLightingFalloffUniform[i] = _gl.getUniformLocation(program, "uSpotLightFalloff["+i+"]");
 		}
-		
+
 		// Specular Lighting
 		// TODO: if we want separate specular colours will have to add an array of uniforms for colour
 		program.useSpecularUniform = _gl.getUniformLocation(program, "uUseSpecular");
 		program.materialShininessUniform = _gl.getUniformLocation(program, "uMaterialShininess");
-		
+
 		return program;
 	}
-		
+
 	function _initShaders() {
 		_shaderPrograms.Vertex = _createShader("shaders/vertex-shader-vs.json", "shaders/vertex-shader-fs.json");
 		_shaderPrograms.Pixel = _createShader("shaders/pixel-shader-vs.json", "shaders/pixel-shader-fs.json");
 		_shaderProgram = _shaderPrograms.Pixel;
 		_gl.useProgram(_shaderProgram);
-    }
-    
-    // Primitives Namespace
-    function _Primitives() {
-    	// Primitive Creation Functions
-    	// NOTE: scale and offset should be used with caution
-    	// it's usually better to adjust the position and scale of the object to which the buffer is attached.
+	}
+
+	// Primitives Namespace
+	function _Primitives() {
+		// Primitive Creation Functions
+		// NOTE: scale and offset should be used with caution
+		// it's usually better to adjust the position and scale of the object to which the buffer is attached.
 		function createTetrahedron(parameters) {
 			var scale = [1, 1, 1];
 			var offset = [0, 0, 0];
 			if(parameters && parameters.scale) { scale = parameters.scale; }
 			if(parameters && parameters.offset) { offset = parameters.offset; }
 			var key = "tetrahedron-scale:"+scale.toString()+"-offset:"+offset.toString();
-			
+
 			if (isNaN(buffersNameList[key])) {
 				var buffers = [];
-				
+
 				function adjust(value, index) { return offset[index]+(value*scale[index]); }
-								
+
 				// TODO: Convert to use index buffer
 				var tetrahedronVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, tetrahedronVertexPositionBuffer);
@@ -945,17 +945,17 @@ function _Gremlin() {
 					adjust(-0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),
 					adjust(0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),			
 					adjust(0.0, 0), adjust(-0.27217, 1), adjust(-0.57735, 2),
-					 
+
 					 // Rear Side
 					adjust(-0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),
 					adjust(0.0, 0), adjust(0.54433, 1), adjust(0.0, 2),
 					adjust(0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),	
-					 
+
 					// Left Side
 					adjust(0.0, 0), adjust(-0.27217, 1), adjust(0.57735, 2),
 					adjust(0.0, 0), adjust(0.54433, 1), adjust(0.0, 2),
 					adjust(-0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),
-					
+
 					// Right Side
 					 adjust(0.5, 0), adjust(-0.27217, 1), adjust(-0.28868, 2),	
 					 adjust(0.0, 0), adjust(0.54433, 1), adjust(0.0, 2),
@@ -964,11 +964,11 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				tetrahedronVertexPositionBuffer.itemSize = 3;
 				tetrahedronVertexPositionBuffer.numItems = 12;
-				
+
 				buffers["vertexPosition"] = tetrahedronVertexPositionBuffer;
-				
+
 				// TODO: Texture Buffer!
-				
+
 				// Normal Buffer
 				// WARNING: This is dependant on shader program should make this more robust
 				var tetrahedronVertexNormalBuffer;
@@ -980,17 +980,17 @@ function _Gremlin() {
 					0, -1, 0,
 					0, -1, 0,
 					0, -1, 0,
-					
+
 					// Rear Side
 					0, 0.57735, -0.81650,
 					0, 0.57735, -0.81650,
 					0, 0.57735, -0.81650,
-					
+
 					// Left Side
 					-0.5, 0.81650, 0.28868,
 					-0.5, 0.81650, 0.28868,
 					-0.5, 0.81650, 0.28868,
-					
+
 					// Right Side
 					0.5, 0.81650, 0.28868,
 					0.5, 0.81650, 0.28868,
@@ -999,11 +999,11 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
 				tetrahedronVertexNormalBuffer.itemSize = 3;
 				tetrahedronVertexNormalBuffer.numItems = 12;
-				
+
 				buffers["vertexNormals"] = tetrahedronVertexNormalBuffer;
-				
+
 				buffers["useIndices"] = false;
-				
+
 				buffersNameList[key] = buffersList.push(buffers)-1;
 			}
 			return buffersNameList[key];
@@ -1017,9 +1017,9 @@ function _Gremlin() {
 
 			if (isNaN(buffersNameList[key])) {
 				var buffers = [];
-				
+
 				function adjust(value, index) { return offset[index]+(value*scale[index]); }
-				
+
 				// TODO: Convert to use index buffer
 				var pyramidVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
@@ -1028,22 +1028,22 @@ function _Gremlin() {
 					adjust(0.0, 0), adjust(1.0, 1), adjust(0.0, 2),
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
-		
+
 					// Right face
 					adjust(0.0, 0), adjust(1.0, 1), adjust(0.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
-		
+
 					// Back face
 					adjust(0.0, 0), adjust(1.0, 1), adjust(0.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
-		
+
 					// Left face
 					adjust(0.0, 0), adjust(1.0, 1), adjust(0.0, 2),
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
-					
+
 					// Bottom face
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
@@ -1051,16 +1051,16 @@ function _Gremlin() {
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2)
-					
+
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				pyramidVertexPositionBuffer.itemSize = 3;
 				pyramidVertexPositionBuffer.numItems = 18;
-				
+
 				buffers["vertexPosition"] = pyramidVertexPositionBuffer;
-				
+
 				// TODO: Texture Buffer
-				
+
 				// Normal Buffer
 				// WARNING: This is dependant on shader program should make this more robust
 				var pyramidVertexNormalBuffer;
@@ -1071,22 +1071,22 @@ function _Gremlin() {
 					 0.0, 0.447214,  0.89443,
 					 0.0, 0.447214,  0.89443,
 					 0.0, 0.447214,  0.89443,
-		
+
 					// Right face
 					 0.89443, 0.447214,  0.0,
 					 0.89443, 0.447214,  0.0,
 					 0.89443, 0.447214,  0.0,
-		
+
 					// Back face
 					 0.0, 0.447214, -0.89443,
 					 0.0, 0.447214, -0.89443,
 					 0.0, 0.447214, -0.89443,
-		
+
 					// Left face
 					 -0.89443, 0.447214,  0.0,
 					 -0.89443, 0.447214,  0.0,
 					 -0.89443, 0.447214,  0.0,
-					
+
 					// Bottom face
 					0.0, -1, 0.0,
 					0.0, -1, 0.0,
@@ -1094,16 +1094,16 @@ function _Gremlin() {
 					0.0, -1, 0.0,
 					0.0, -1, 0.0,
 					0.0, -1, 0.0
-					
+
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
 				pyramidVertexNormalBuffer.itemSize = 3;
 				pyramidVertexNormalBuffer.numItems = 18;
-				
+
 				buffers["vertexNormals"] = pyramidVertexNormalBuffer;
-				
+
 				buffers["useIndices"] = false;
-				
+
 				buffersNameList[key] = buffersList.push(buffers)-1;
 			}
 			return buffersNameList[key];
@@ -1118,9 +1118,9 @@ function _Gremlin() {
 			if (isNaN(buffersNameList[key]) || (parameters && parameters.jsonOut)){
 				var buffers = [];
 				var jsonOut = {};
-				
+
 				function adjust(value, index) { return offset[index]+(value*scale[index]); }
-				
+
 				// Vertex Buffer
 				var cubeVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
@@ -1130,31 +1130,31 @@ function _Gremlin() {
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
 					adjust(1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
 					adjust(-1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
-		
+
 					// Back face
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					adjust(-1.0, 0), adjust(1.0, 1), adjust(-1.0, 2),
 					adjust(1.0, 0), adjust(1.0, 1), adjust(-1.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
-		
+
 					// Top face
 					adjust(-1.0, 0), adjust(1.0, 1), adjust(-1.0, 2),
 					adjust(-1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
 					adjust(1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
 					adjust(1.0, 0), adjust(1.0, 1), adjust(-1.0, 2),
-		
+
 					// Bottom face
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
-		
+
 					// Right face
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					adjust(1.0, 0), adjust(1.0, 1), adjust(-1.0, 2),
 					adjust(1.0, 0), adjust(1.0, 1), adjust(1.0, 2),
 					adjust(1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
-		
+
 					// Left face
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(-1.0, 2),
 					adjust(-1.0, 0), adjust(-1.0, 1), adjust(1.0, 2),
@@ -1164,58 +1164,104 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				cubeVertexPositionBuffer.itemSize = 3;
 				cubeVertexPositionBuffer.numItems = 24;
-				
+
 				if(parameters && parameters.jsonOut) { jsonOut.vertexPositions = vertices; }
 				buffers["vertexPosition"] = cubeVertexPositionBuffer;
-			
+
 				// Texture Buffer	
 				var cubeVertexTextureCoordBuffer;
 				cubeVertexTextureCoordBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-				var textureCoords = [
-				  // Front face
-				  0.0, 0.0,
-				  1.0, 0.0,
-				  1.0, 1.0,
-				  0.0, 1.0,
-		
-				  // Back face
-				  1.0, 0.0,
-				  1.0, 1.0,
-				  0.0, 1.0,
-				  0.0, 0.0,
-		
-				  // Top face
-				  0.0, 1.0,
-				  0.0, 0.0,
-				  1.0, 0.0,
-				  1.0, 1.0,
-		
-				  // Bottom face
-				  1.0, 1.0,
-				  0.0, 1.0,
-				  0.0, 0.0,
-				  1.0, 0.0,
-		
-				  // Right face
-				  1.0, 0.0,
-				  1.0, 1.0,
-				  0.0, 1.0,
-				  0.0, 0.0,
-		
-				  // Left face
-				  0.0, 0.0,
-				  1.0, 0.0,
-				  1.0, 1.0,
-				  0.0, 1.0
-				];
+
+				var textureCoords = [];
+				if (!parameters.multiSide) {
+					textureCords = [
+					  // Front face
+					  0.0, 0.0,
+					  1.0, 0.0,
+					  1.0, 1.0,
+					  0.0, 1.0,
+
+					  // Back face
+					  1.0, 0.0,
+					  1.0, 1.0,
+					  0.0, 1.0,
+					  0.0, 0.0,
+
+					  // Top face
+					  0.0, 1.0,
+					  0.0, 0.0,
+					  1.0, 0.0,
+					  1.0, 1.0,
+
+					  // Bottom face
+					  1.0, 1.0,
+					  0.0, 1.0,
+					  0.0, 0.0,
+					  1.0, 0.0,
+
+					  // Right face
+					  1.0, 0.0,
+					  1.0, 1.0,
+					  0.0, 1.0,
+					  0.0, 0.0,
+
+					  // Left face
+					  0.0, 0.0,
+					  1.0, 0.0,
+					  1.0, 1.0,
+					  0.0, 1.0
+					];
+				}
+				else {
+					// 6 sides in a texture
+					// Top row: Forward, Up, Left
+					// Bottom row: Back, Down, Right
+					textureCords = [
+						// Front face
+						0.0, 0.0,
+						0.0, 0.5,
+						0.333333, 0.0,
+						0.333333, 0.5,
+
+						// Back face
+						0.0, 0.5,
+						0.0, 1.0,
+						0.333333, 0.5,
+						0.333333, 1.0,
+
+						// Top face
+						0.333334, 0.0,
+						0.333334, 0.5,
+						0.666666, 0.0,
+						0.666666, 0.5,
+
+						// Bottom face
+						0.333334, 0.5,
+						0.333334, 1.0,
+						0.666666, 0.5,
+						0.666666, 1.0,
+
+						// Right face
+						0.666667, 0.5,
+						0.666667, 1.0,
+						1.0, 0.5,
+						1.0, 1.0,
+
+						// Left face
+						0.666667, 0.0,
+						0.666667, 0.5,
+						1.0, 0.0,
+						1.0, 0.5
+					];
+				}
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
 				cubeVertexTextureCoordBuffer.itemSize = 2;
 				cubeVertexTextureCoordBuffer.numItems = 24;
-				
+
 				if(parameters && parameters.jsonOut) { jsonOut.vertexTextureCoords = textureCoords; }
 				buffers["textureCoords"] = cubeVertexTextureCoordBuffer;
-				
+
 				// Normal Buffer
 				// WARNING: This is dependant on shader program should make this more robust
 				var cubeVertexNormalBuffer;
@@ -1227,31 +1273,31 @@ function _Gremlin() {
 				   0.0,  0.0,  1.0,
 				   0.0,  0.0,  1.0,
 				   0.0,  0.0,  1.0,
-		
+
 				  // Back face
 				   0.0,  0.0, -1.0,
 				   0.0,  0.0, -1.0,
 				   0.0,  0.0, -1.0,
 				   0.0,  0.0, -1.0,
-		
+
 				  // Top face
 				   0.0,  1.0,  0.0,
 				   0.0,  1.0,  0.0,
 				   0.0,  1.0,  0.0,
 				   0.0,  1.0,  0.0,
-		
+
 				  // Bottom face
 				   0.0, -1.0,  0.0,
 				   0.0, -1.0,  0.0,
 				   0.0, -1.0,  0.0,
 				   0.0, -1.0,  0.0,
-		
+
 				  // Right face
 				   1.0,  0.0,  0.0,
 				   1.0,  0.0,  0.0,
 				   1.0,  0.0,  0.0,
 				   1.0,  0.0,  0.0,
-		
+
 				  // Left face
 				  -1.0,  0.0,  0.0,
 				  -1.0,  0.0,  0.0,
@@ -1261,10 +1307,10 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
 				cubeVertexNormalBuffer.itemSize = 3;
 				cubeVertexNormalBuffer.numItems = 24;
-				
+
 				if(parameters && parameters.jsonOut) { jsonOut.vertexNormals = vertexNormals; }
 				buffers["vertexNormals"] = cubeVertexNormalBuffer;
-				
+
 				// Index Buffer
 				var cubeVertexIndexBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
@@ -1279,11 +1325,11 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), _gl.STATIC_DRAW);
 				cubeVertexIndexBuffer.itemSize = 1;
 				cubeVertexIndexBuffer.numItems = 36;
-				
+
 				if(parameters && parameters.jsonOut) { jsonOut.indices = cubeVertexIndices; }
 				buffers["vertexIndex"] = cubeVertexIndexBuffer;
 				buffers["useIndices"] = true;
-				
+
 				if(isNaN(buffersList[key])) { buffersNameList[key] = buffersList.push(buffers)-1; }
 				if(parameters && parameters.jsonOut) { parameters.jsonOut = jsonOut; }
 			}
@@ -1293,7 +1339,7 @@ function _Gremlin() {
 			var latBands, longBands;
 			var scale = [1, 1, 1];
 			var offset = [0, 0, 0];
-			
+
 			if(!parameters) { throw new Error("latBands and longBands must be provided;"); }
 			if(parameters.scale) { scale = parameters.scale; }
 			if(parameters.offset) { offset = parameters.offset; }
@@ -1301,17 +1347,17 @@ function _Gremlin() {
 			else { throw new Error("latBands must be provided"); }
 			if (parameters.longBands) { longBands = parameters.longBands; }
 			else { throw new Error("longBands must be provided"); }
-			
-			var key = "cube-latBands:"+latBands+"longBands:"+longBands+"-scale:"+scale.toString()+"-offset:"+offset.toString();
-			
+
+			var key = "sphere-latBands:"+latBands+"-longBands:"+longBands+"-scale:"+scale.toString()+"-offset:"+offset.toString();
+
 			if (isNaN(buffersNameList[key]) || parameters.jsonOut) {
 				var buffers = [];
 				var jsonOut = {};
-				
+
 				// Method taken from Lesson 11 of learningWebGL.com
 				var latitudeBands = latBands;
 				var longitudeBands = longBands;
-						
+
 				var vertexPositionData = [];
 				var normalData = [];
 				var textureCoordData = [];
@@ -1319,19 +1365,19 @@ function _Gremlin() {
 					var theta = latNumber * Math.PI / latitudeBands;
 					var sinTheta = Math.sin(theta);
 					var cosTheta = Math.cos(theta);
-		
+
 					// Generate Values
 					for (var longNumber=0; longNumber <= longitudeBands; longNumber++) {
 						var phi = longNumber * 2 * Math.PI / longitudeBands;
 						var sinPhi = Math.sin(phi);
 						var cosPhi = Math.cos(phi);
-		
+
 						var x = cosPhi * sinTheta;
 						var y = cosTheta;
 						var z = sinPhi * sinTheta;
 						var u = 1 - (longNumber / longitudeBands);
 						var v = 1 - (latNumber / latitudeBands);
-		
+
 						normalData.push(x);
 						normalData.push(y);
 						normalData.push(z);
@@ -1342,7 +1388,7 @@ function _Gremlin() {
 						vertexPositionData.push(offset[2] + (scale[2] * z));
 					}
 				}
-		
+
 				var indexData = [];
 				for (var latNumber=0; latNumber < latitudeBands; latNumber++) {
 					for (var longNumber=0; longNumber < longitudeBands; longNumber++) {
@@ -1351,65 +1397,247 @@ function _Gremlin() {
 						indexData.push(first);
 						indexData.push(second);
 						indexData.push(first + 1);
-		
+
 						indexData.push(second);
 						indexData.push(second + 1);
 						indexData.push(first + 1);
 					}
 				}
-		
+
 				// Vertex Buffer
 				var sphereVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexPositionBuffer);
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexPositionData), _gl.STATIC_DRAW);
 				sphereVertexPositionBuffer.itemSize = 3;
 				sphereVertexPositionBuffer.numItems = vertexPositionData.length / 3;
-				
+
 				if(parameters.jsonOut) { jsonOut.vertexPositions = vertexPositionData; }
 				buffers["vertexPosition"] = sphereVertexPositionBuffer;
-				
+
 				// Normals, WARNING: dependant on shaderProgram
 				var sphereVertexNormalBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexNormalBuffer);
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(normalData), _gl.STATIC_DRAW);
 				sphereVertexNormalBuffer.itemSize = 3;
 				sphereVertexNormalBuffer.numItems = normalData.length / 3;
-				
+
 				if(parameters.jsonOut) { jsonOut.vertexNormals = normalData; }
 				buffers["vertexNormals"] = sphereVertexNormalBuffer;
-				
+
 				var sphereVertexTextureCoordBuffer = _gl.createBuffer();
-					
+
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, sphereVertexTextureCoordBuffer);
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordData), _gl.STATIC_DRAW);
 				sphereVertexTextureCoordBuffer.itemSize = 2;
 				sphereVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
-				
+
 				if(parameters.jsonOut) { jsonOut.vertexTextureCoords = textureCoordData; }
 				buffers["textureCoords"] = sphereVertexTextureCoordBuffer; 
-				
+
 				// Index Buffer
 				var sphereVertexIndexBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer);
 				_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), _gl.STATIC_DRAW);
 				sphereVertexIndexBuffer.itemSize = 1;
 				sphereVertexIndexBuffer.numItems = indexData.length;
-				
+
 				if(parameters.jsonOut) { jsonOut.indices = indexData; }
 				buffers["vertexIndex"] = sphereVertexIndexBuffer;
 				buffers["useIndices"] = true;
-				
+
 				if(parameters.jsonOut) { parameters.jsonOut = jsonOut; }
 				if(isNaN(buffersList[key])) { buffersNameList[key] = buffersList.push(buffers)-1; }
 			}
 			return buffersNameList[key];
 		}
+		function createRing(parameters) {
+			var innerRadius, outerRadius, thickness, sides;
+			var scale = [1, 1, 1];
+			var offset = [0, 0, 0];
+
+			if(!parameters) { throw new Error("innerRadius, outRadius, thickness and numberOfSides must be provided."); }
+			if(parameters.scale) { scale = parameters.scale; }
+			if(parameters.offset) { offset = parameters.offset; }
+			if(parameters.innerRadius) { innerRadius = parameters.innerRadius; }
+			else { throw new Error("innerRadius must be provided"); }
+			if(parameters.outerRadius) { outerRadius = parameters.outerRadius; }
+			else { throw new Error("outerRadius must be provided"); }
+			if(parameters.thickness) { thickness = parameters.thickness; }
+			else { throw new Error("thickness must be provided"); }
+			if(parameters.numberOfSides) { sides = parameters.numberOfSides; }
+			else { throw new Error("numberOfSides must be provided"); }
+
+			var key = "ring-innerRadius:"+innerRadius+"-outerRadius:"+outerRadius+"-thickness:"+thickness+"-sides:"+sides+"-scale:"+scale.toString()+"-offset:"+offset.toString();
+
+			if (isNaN(buffersNameList[key]) || parameters.jsonOut) {
+				var buffers = [];
+				var jsonOut = {};
+
+				var vertexPositionData = [];
+				var normalData = [];
+				var textureCoordData = [];
+				var offset = thickness / 2;
+				var i, j;
+				// Create vertex, normal, textureCoord data, for each ring of vertices
+				for(i = 0; i <= sides; i++) {
+					var theta = (i/sides)*2*Math.PI;
+					var sinTheta = Math.sin(theta);
+					var cosTheta = Math.cos(theta);
+
+					var x, y, z, nx, ny, nz, u, v;
+					function pushVertices() { vertexPositionData.push(x); vertexPositionData.push(y); vertexPositionData.push(z); }
+					function pushNormals() { normalData.push(nx); normalData.push(ny); normalData.push(nz); }
+					function pushTextureCoords() { textureCoordData.push(u); textureCoordData.push(v); }
+
+					// Outer Back
+					x = outerRadius*sinTheta;
+					y = outerRadius*cosTheta;
+					z = -offset;
+					pushVertices();
+					nx = sinTheta;
+					ny = cosTheta;
+					nz = 0;
+					pushNormals();
+					u = 0;
+					v = i/(2*sides);
+					pushTextureCoords();
+
+					// Outer Front
+					z = +offset;
+					pushVertices();
+					pushNormals();
+					u = 0.5;
+					pushTextureCoords();
+
+					// Front Outer
+					pushVertices();
+					nx = 0;
+					ny = 0;
+					nz = 1;
+					pushNormals();
+					u = 0.25*sinTheta+ 0.75;
+					v = 0.25*cosTheta + 0.25;
+					pushTextureCoords();
+
+					// Front Inner
+					x = innerRadius*sinTheta;
+					y = innerRadius*cosTheta;
+					pushVertices();
+					pushNormals();
+					u = 0.25*(innerRadius/outerRadius)*sinTheta + 0.75;
+					v = 0.25*(innerRadius/outerRadius)*cosTheta + 0.25;
+					pushTextureCoords();
+
+					// Inner Front
+					pushVertices();
+					nx = -sinTheta;
+					ny = -cosTheta;
+					nz = 0;
+					pushNormals();
+					u = 0;
+					v = 0.5 + i/(2*sides);
+					pushTextureCoords();
+
+					// Inner Back
+					z = -offset;
+					pushVertices();
+					pushNormals();
+					u = 0.5;
+					pushTextureCoords();
+
+					// Back Inner
+					pushVertices();
+					nx = 0;
+					ny = 0;
+					nz = -1;
+					pushNormals();
+					u = 0.25*sinTheta + 0.75;
+					v = 0.25*cosTheta + 0.75;
+					pushTextureCoords();
+
+					// Back Outer
+					x = outerRadius*sinTheta;
+					y = outerRadius*cosTheta;
+					z = -offset;
+					pushVertices();
+					pushNormals();
+					u = 0.25*(innerRadius/outerRadius)*sinTheta + 0.75;
+					v = 0.25*(innerRadius/outerRadius)*cosTheta + 0.75;
+					pushTextureCoords();
+				}
+
+				var indexData = [];
+				// Create index buffer
+				for(i = 1; i <= sides; i++) {
+					// Push each quad
+					for(j = -8; j < 0; j+=2)
+					{
+						// First Triangle
+						indexData.push(8*i+j);
+						indexData.push(8*i+(j+1));
+						indexData.push(8*i+(j+8));
+						// Second Triangle
+						indexData.push(8*i+(j+8));
+						indexData.push(8*i+(j+1));
+						indexData.push(8*i+(j+9));
+					}
+				}
+
+				// Bind Buffers
+				// Vertex Buffer
+				var ringVertexPositionBuffer = _gl.createBuffer();
+				_gl.bindBuffer(_gl.ARRAY_BUFFER, ringVertexPositionBuffer);
+				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexPositionData), _gl.STATIC_DRAW);
+				ringVertexPositionBuffer.itemSize = 3;
+				ringVertexPositionBuffer.numItems = vertexPositionData.length / 3;
+
+				if(parameters.jsonOut) { jsonOut.vertexPositions = vertexPositionData; }
+				buffers["vertexPosition"] = ringVertexPositionBuffer;
+
+				// Normals, WARNING: dependant on shaderProgram
+				var ringVertexNormalBuffer = _gl.createBuffer();
+				_gl.bindBuffer(_gl.ARRAY_BUFFER, ringVertexNormalBuffer);
+				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(normalData), _gl.STATIC_DRAW);
+				ringVertexNormalBuffer.itemSize = 3;
+				ringVertexNormalBuffer.numItems = normalData.length / 3;
+
+				if(parameters.jsonOut) { jsonOut.vertexNormals = normalData; }
+				buffers["vertexNormals"] = ringVertexNormalBuffer;
+
+				var ringVertexTextureCoordBuffer = _gl.createBuffer();
+
+				_gl.bindBuffer(_gl.ARRAY_BUFFER, ringVertexTextureCoordBuffer);
+				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoordData), _gl.STATIC_DRAW);
+				ringVertexTextureCoordBuffer.itemSize = 2;
+				ringVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
+
+				if(parameters.jsonOut) { jsonOut.vertexTextureCoords = textureCoordData; }
+				buffers["textureCoords"] = ringVertexTextureCoordBuffer;
+
+				// Index Buffer
+				var ringVertexIndexBuffer = _gl.createBuffer();
+				_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, ringVertexIndexBuffer);
+				_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), _gl.STATIC_DRAW);
+				ringVertexIndexBuffer.itemSize = 1;
+				ringVertexIndexBuffer.numItems = indexData.length;
+
+				if(parameters.jsonOut) { jsonOut.indices = indexData; }
+				buffers["vertexIndex"] = ringVertexIndexBuffer;
+				buffers["useIndices"] = true;
+
+				if(parameters.jsonOut) { parameters.jsonOut = jsonOut; }
+				if(isNaN(buffersList[key])) { buffersNameList[key] = buffersList.push(buffers)-1; }
+			}
+
+			return buffersNameList[key];
+		}
+
 		function createRay() {
 			if (isNaN(buffersNameList["ray"])) {
 				var buffers = [];
-				
+
 				buffers.renderMode = "wireframe";
-				
+
 				var rayVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, rayVertexPositionBuffer);
 				var vertices = [
@@ -1419,36 +1647,36 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				rayVertexPositionBuffer.itemSize = 3;
 				rayVertexPositionBuffer.numItems = 2;
-				
+
 				buffers["vertexPosition"] = rayVertexPositionBuffer;
 				buffers["useIndices"] = false;
-				
+
 				buffersNameList["ray"] = buffersList.push(buffers)-1;
 			}
 			return buffersNameList["ray"];
 		}
-	    function createPoint() {
+		function createPoint() {
 			if (isNaN(buffersNameList["point"])) {
 				var buffers = [];
-				
+
 				buffers.renderMode = "points"; 
-					
+
 				var pointVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, pointVertexPositionBuffer);
 				var vertices = [0.0, 0.0, 0.0];
-				
+
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				pointVertexPositionBuffer.itemSize = 3;
 				pointVertexPositionBuffer.numItems = 1;
-				
+
 				buffers["vertexPosition"] = pointVertexPositionBuffer;
 				buffers["useIndices"] = false;
-				
+
 				buffersNameList["point"] = buffersList.push(buffers)-1;
 			}
 			return buffersNameList["point"];
 		}
-	
+
 		// GUI objects
 		function createSquare() {
 			if (isNaN(buffersNameList["square"])){
@@ -1462,13 +1690,13 @@ function _Gremlin() {
 					  1.0,  1.0,  0.0,
 					 -1.0,  1.0,  0.0
 				];
-				
+
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				squareVertexPositionBuffer.itemSize = 3;
 				squareVertexPositionBuffer.numItems = 4;
-				
+
 				buffers["vertexPosition"] = squareVertexPositionBuffer;
-			
+
 				// Texture Buffer
 				var squareVertexTextureCoordBuffer;
 				squareVertexTextureCoordBuffer = _gl.createBuffer();
@@ -1482,9 +1710,9 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
 				squareVertexTextureCoordBuffer.itemSize = 2;
 				squareVertexTextureCoordBuffer.numItems = 4;
-				
+
 				buffers["textureCoords"] = squareVertexTextureCoordBuffer;
-				
+
 				// Normal Buffer
 				// WARNING: This is dependant on shader program should make this more robust
 				var squareVertexNormalBuffer;
@@ -1499,9 +1727,9 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
 				squareVertexNormalBuffer.itemSize = 3;
 				squareVertexNormalBuffer.numItems = 4;
-				
+
 				buffers["vertexNormals"] = squareVertexNormalBuffer;
-				
+
 				// Index Buffer
 				var squareVertexIndexBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, squareVertexIndexBuffer);
@@ -1511,10 +1739,10 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareVertexIndices), _gl.STATIC_DRAW);
 				squareVertexIndexBuffer.itemSize = 1;
 				squareVertexIndexBuffer.numItems = 6;
-				
+
 				buffers["vertexIndex"] = squareVertexIndexBuffer;
 				buffers["useIndices"] = true;
-				
+
 				buffersNameList["square"] = buffersList.push(buffers)-1;
 			}			
 			return buffersNameList["square"];
@@ -1523,9 +1751,9 @@ function _Gremlin() {
 		function createBox() {
 				if (isNaN(buffersNameList["box"])){
 				var buffers = [];
-				
+
 				buffers.renderMode = "wireframe";
-								
+
 				// Vertex Buffer
 				var squareVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, squareVertexPositionBuffer);
@@ -1535,13 +1763,13 @@ function _Gremlin() {
 					  1.0,  1.0,  0.0,
 					 -1.0,  1.0,  0.0
 				];
-				
+
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				squareVertexPositionBuffer.itemSize = 3;
 				squareVertexPositionBuffer.numItems = 4;
-				
+
 				buffers["vertexPosition"] = squareVertexPositionBuffer;
-			
+
 				// Normal Buffer
 				// WARNING: This is dependant on shader program should make this more robust
 				var squareVertexNormalBuffer;
@@ -1556,9 +1784,9 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
 				squareVertexNormalBuffer.itemSize = 3;
 				squareVertexNormalBuffer.numItems = 4;
-				
+
 				buffers["vertexNormals"] = squareVertexNormalBuffer;
-				
+
 				// Index Buffer
 				var squareVertexIndexBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, squareVertexIndexBuffer);
@@ -1569,10 +1797,10 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(squareVertexIndices), _gl.STATIC_DRAW);
 				squareVertexIndexBuffer.itemSize = 1;
 				squareVertexIndexBuffer.numItems = 8;
-				
+
 				buffers["vertexIndex"] = squareVertexIndexBuffer;
 				buffers["useIndices"] = true;
-				
+
 				buffersNameList["box"] = buffersList.push(buffers)-1;
 			}
 			return buffersNameList["box"];
@@ -1580,9 +1808,9 @@ function _Gremlin() {
 		function createCross() {
 			if (isNaN(buffersNameList["cross"])){
 				var buffers = [];
-				
+
 				buffers.renderMode  = "wireframe";
-				
+
 				// Vertex Buffer
 				var crossVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, crossVertexPositionBuffer);
@@ -1592,13 +1820,13 @@ function _Gremlin() {
 					  0.5,  0.0,  0.0,
 					  0.0,  0.5,  0.0
 				];
-				
+
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				crossVertexPositionBuffer.itemSize = 3;
 				crossVertexPositionBuffer.numItems = 4;
-				
+
 				buffers["vertexPosition"] = crossVertexPositionBuffer;
-			
+
 				// Normal Buffer
 				// WARNING: This is dependant on shader program should make this more robust
 				var crossVertexNormalBuffer;
@@ -1613,9 +1841,9 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
 				crossVertexNormalBuffer.itemSize = 3;
 				crossVertexNormalBuffer.numItems = 4;
-				
+
 				buffers["vertexNormals"] = crossVertexNormalBuffer;
-				
+
 				// Index Buffer
 				var crossVertexIndexBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, crossVertexIndexBuffer);
@@ -1625,10 +1853,10 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexIndices), _gl.STATIC_DRAW);
 				crossVertexIndexBuffer.itemSize = 1;
 				crossVertexIndexBuffer.numItems = 4;
-				
+
 				buffers["vertexIndex"] = crossVertexIndexBuffer;
 				buffers["useIndices"] = true;
-				
+
 				buffersNameList["cross"] = buffersList.push(buffers)-1;
 			}
 			return buffersNameList["cross"];
@@ -1636,9 +1864,9 @@ function _Gremlin() {
 		function createBrace() {
 			if (isNaN(buffersNameList["brace"])){
 				var buffers = [];
-	
+
 				buffers.renderMode = "wireframe";
-				
+
 				// Vertex Buffer
 				var braceVertexPositionBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, braceVertexPositionBuffer);
@@ -1652,13 +1880,13 @@ function _Gremlin() {
 					 -0.9,  1.0, 0.0,
 					 -1.0,  1.0, 0.0
 				];
-				
+
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertices), _gl.STATIC_DRAW);
 				braceVertexPositionBuffer.itemSize = 3;
 				braceVertexPositionBuffer.numItems = 8;
-				
+
 				buffers["vertexPosition"] = braceVertexPositionBuffer;
-			
+
 				// Normal Buffer
 				// WARNING: This is dependant on shader program should make this more robust
 				var braceVertexNormalBuffer;
@@ -1677,9 +1905,9 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(vertexNormals), _gl.STATIC_DRAW);
 				braceVertexNormalBuffer.itemSize = 3;
 				braceVertexNormalBuffer.numItems = 8;
-				
+
 				buffers["vertexNormals"] = braceVertexNormalBuffer;
-				
+
 				// Index Buffer
 				var braceVertexIndexBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, braceVertexIndexBuffer);
@@ -1691,10 +1919,10 @@ function _Gremlin() {
 				_gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexIndices), _gl.STATIC_DRAW);
 				braceVertexIndexBuffer.itemSize = 1;
 				braceVertexIndexBuffer.numItems = 12;
-				
+
 				buffers["vertexIndex"] = braceVertexIndexBuffer;
 				buffers["useIndices"] = true;
-				
+
 				buffersNameList["brace"]= buffersList.push(buffers)-1;
 			}
 			return buffersNameList["brace"];
@@ -1705,6 +1933,7 @@ function _Gremlin() {
 			createPyramid:				createPyramid,
 			createCube:					createCube,
 			createSphere:				createSphere,
+			createRing:                 createRing,
 			createRay:					createRay,
 			createPoint:				createPoint,
 			createSquare:				createSquare,
@@ -1712,8 +1941,8 @@ function _Gremlin() {
 			createCross:				createCross,
 			createBrace:				createBrace
 		}
-    }
-	
+	}
+
 	//	 _                     _ _           
 	//	| |__   __ _ _ __   __| | | ___  ___ 
 	//	| '_ \ / _` | '_ \ / _` | |/ _ \/ __|
@@ -1761,14 +1990,14 @@ function _Gremlin() {
 var Gremlin = _Gremlin();
 
 function _GremlinEventHandler() {
-	
+
 	//               _     _ _      
 	//	 _ __  _   _| |__ | (_) ___ 
 	//	| '_ \| | | | '_ \| | |/ __|
 	//	| |_) | |_| | |_) | | | (__ 
 	//	| .__/ \__,_|_.__/|_|_|\___|
 	//	|_| 
-	
+
 	function bindEvent(eventName, func, override) {
 		// This can almost certainly be replaced with addEventListener
 		switch(eventName){
@@ -1803,27 +2032,27 @@ function _GremlinEventHandler() {
 			overrides[eventName] = true;
 		}
 	}
-	
+
 	//	            _            _       
 	//	 _ __  _ __(_)_   ____ _| |_ ___ 
 	//	| '_ \| '__| \ \ / / _` | __/ _ \
 	//	| |_) | |  | |\ V / (_| | ||  __/
 	//	| .__/|_|  |_| \_/ \__,_|\__\___|
 	//	|_| 
-	
+
 	// Events
 	var blur = [];
 	var focus = []
 	var resize = [];
-	
+
 	var mousemove = [];
 	var mousedown = [];
 	var mouseup = [];
 	var keyup = [];
 	var keydown = [];
-	
+
 	var overrides = [];
-	
+
 	function onBlur() {
 		for(key in blur)
 		{
@@ -1845,7 +2074,7 @@ function _GremlinEventHandler() {
 		}
 		if (overrides["onresize"]) { return false; }
 	}
-	
+
 	function onMouseMove(e) {
 		for(key in mousemove)
 		{
@@ -1885,22 +2114,22 @@ function _GremlinEventHandler() {
 	// Bind Arrays
 	document.onkeydown = function(event) { onKeyDown(event); }
 	document.onkeyup = function(event) { onKeyUp(event); }
-	
+
 	// May want to move this to canvas
 	document.onmousemove = function(event) { onMouseMove(event); }
 	document.onmousedown = function(event) { onMouseDown(event); }
 	document.onmouseup = function(event) { onMouseUp(event); }
-	
+
 	window.onresize = function() { onResize(); }
 	window.onblur = function() { onBlur(); }
 	window.onfocus = function() { onFocus(); }
-	
+
 	//	 _                     _ _           
 	//	| |__   __ _ _ __   __| | | ___  ___ 
 	//	| '_ \ / _` | '_ \ / _` | |/ _ \/ __|
 	//	| | | | (_| | | | | (_| | |  __/\__ \
 	//	|_| |_|\__,_|_| |_|\__,_|_|\___||___/
-	
+
 	return {
 		bindEvent: bindEvent
 	}
@@ -1916,14 +2145,14 @@ function _GremlinInput() {
 	GremlinEventHandler.bindEvent("onmouseup", handleMouseUp);
 	GremlinEventHandler.bindEvent("onkeyup", handleKeyUp);
 	GremlinEventHandler.bindEvent("onkeydown", handleKeyDown);
-	
+
 	//	             _     _ _      
 	//	 _ __  _   _| |__ | (_) ___ 
 	//	| '_ \| | | | '_ \| | |/ __|
 	//	| |_) | |_| | |_) | | | (__ 
 	//	| .__/ \__,_|_.__/|_|_|\___|
 	//	|_| 
-	
+
 	// Key State Queries
 	function getMousePos() {
 		return [xPos, yPos];
@@ -1940,7 +2169,7 @@ function _GremlinInput() {
 			return false;
 		}
 	}
-	
+
 	function mouseDown(button) {
 		if (!isNaN(button) && !button.length) {
 			return mouseState[button];
@@ -1953,7 +2182,7 @@ function _GremlinInput() {
 			return false;
 		}
 	}
-	
+
 	function descriptionToMouseButton(button) {
 		var map;
 		switch(button) {
@@ -1967,7 +2196,7 @@ function _GremlinInput() {
 				map = 2;
 				break;
 			default:
-			 	map = false;
+				map = false;
 		}
 		return map;
 	}
@@ -1988,7 +2217,7 @@ function _GremlinInput() {
 		}
 		return map;
 	}
-	
+
 	function descriptionToKeyCode(key) {
 		var map;
 		switch(key) {
@@ -2070,7 +2299,7 @@ function _GremlinInput() {
 			case "z":
 				map = 90;
 				break;
-				
+
 			case "Backspace":
 				map = 8;
 				break;
@@ -2197,15 +2426,15 @@ function _GremlinInput() {
 			case "#":
 				map = 222;
 				break;
-				
+
 			// TODO: Add Num Pad
-			
+
 			default: 
 				map = false;
 			}
 		return map;
 	}
-	
+
 	function keyCodeToDescription(keyCode) {
 		var map;
 		switch(keyCode) {
@@ -2287,7 +2516,7 @@ function _GremlinInput() {
 			case 90:
 				map = "z";
 				break;
-				
+
 			case 8:
 				map = "Backspace";
 				break;
@@ -2414,29 +2643,29 @@ function _GremlinInput() {
 			case 222:
 				map = "#";
 				break;
-				
+
 			// TODO: Add Num Pad
-			
+
 			default: 
 				map = false;
 		}
 		return map;
 	}
-	
+
 	//	            _            _       
 	//	 _ __  _ __(_)_   ____ _| |_ ___ 
 	//	| '_ \| '__| \ \ / / _` | __/ _ \
 	//	| |_) | |  | |\ V / (_| | ||  __/
 	//	| .__/|_|  |_| \_/ \__,_|\__\___|
 	//	|_| 
-	
+
 	var xPos, yPos;
 	var currentlyPressedKeys = [];
 	var mouseState = [false,false,false];
 	// TODO: Add keyUp and mouseUp data (will either need a poll in game tick, or will need to bind a function).
-	
+
 	function handleKeyDown(event) {
-        currentlyPressedKeys[event.keyCode] = true;
+		currentlyPressedKeys[event.keyCode] = true;
 	}
 	function handleKeyUp(event) {
 		currentlyPressedKeys[event.keyCode] = false;
@@ -2451,13 +2680,13 @@ function _GremlinInput() {
 	function handleMouseUp(event) {
 		mouseState[event.button] = false;
 	}
-	
+
 	//	 _                     _ _           
 	//	| |__   __ _ _ __   __| | | ___  ___ 
 	//	| '_ \ / _` | '_ \ / _` | |/ _ \/ __|
 	//	| | | | (_| | | | | (_| | |  __/\__ \
 	//	|_| |_|\__,_|_| |_|\__,_|_|\___||___/
-	
+
 	return {
 		getMousePos:				getMousePos,
 		keyDown:					keyDown,
@@ -2473,50 +2702,50 @@ var GremlinInput = _GremlinInput();
 
 function _GremlinBindings() {
 	var bindings = {};
-	
+
 	function Bind(parameters) {
 		if (!parameters.Name) {
 			throw new Error("No binding name provided");
 		}
 		var binding = GetBinding(parameters.Name);
-	    if(parameters.PrimaryKey) {
-	    	binding.PrimaryKey = parameters.PrimaryKey;
-	    }
-	    if(parameters.SecondaryKey) {
-	    	binding.SecondaryKey = parameters.SecondaryKey;
-	    }
-	    if(!binding.hasOwnProperty("Enabled")) {
-	    	binding.Enabled = true;
-	    }
-	    bindings[parameters.Name] = binding;
+		if(parameters.PrimaryKey) {
+			binding.PrimaryKey = parameters.PrimaryKey;
+		}
+		if(parameters.SecondaryKey) {
+			binding.SecondaryKey = parameters.SecondaryKey;
+		}
+		if(!binding.hasOwnProperty("Enabled")) {
+			binding.Enabled = true;
+		}
+		bindings[parameters.Name] = binding;
 	}
-	
+
 	function Unbind(name) {
 		if(bindings.hasOwnProperty(name)) {
 			delete bindings[name];
 		}
 	}
-	
+
 	function GetBinding(name) {
 		return (bindings.hasOwnProperty(name)) ? bindings[name] : {};
 	}
-	
+
 	function GetAllBindings() {
 		return bindings;
 	}
-	
+
 	function EnableBinding(name) {
 		if (bindings.hasOwnProperty(name)) {
 			bindings[name].Enabled = true;
 		}
 	}
-	
+
 	function DisableBinding(name) {
 		if (bindings.hasOwnProperty(name)) {
 			bindings[name].Enabled = false;
 		}
 	}
-	
+
 	return {
 		Bind:			Bind,
 		Unbind:			Unbind,
@@ -2546,9 +2775,9 @@ function _GremlinCollision() {
 		return false;
 	}
 	// TODO: Bounding Boxes
-	
+
 	// TODO: High Speed Collisions (check between previous positions and current position)
-	
+
 	return {
 		isPointInsideSphere: 			isPointInsideSphere,
 		sphereToSphereIntersect:		sphereToSphereIntersect
@@ -2559,7 +2788,7 @@ var GremlinCollision = _GremlinCollision();
 
 // GremlinMaths
 function _GremlinMaths() {
-	
+
 	// Calculates the time at which two objects will collide for a known separation
 	// one object has known velocity other has known velocity magnitude.
 	function calculateCollisionTime(separation, targetVelocity, projectileSpeed) {
@@ -2570,9 +2799,9 @@ function _GremlinMaths() {
 		var a = (targetVelocity[0]*targetVelocity[0] + targetVelocity[1]*targetVelocity[1] + targetVelocity[2]*targetVelocity[0]) - projectileSpeed*projectileSpeed;
 		var b = 2*vec3.dot(targetVelocity, separation);
 		var c = (separation[0]*separation[0] + separation[1]*separation[1] + separation[2]*separation[2]);
-		
+
 		var results = _solveQuadratic(a,b,c);
-		
+
 		if (results) {			
 			if (results.length == 1) {
 				// Single Root
@@ -2603,7 +2832,7 @@ function _GremlinMaths() {
 			return 0;
 		}
 	}
-	
+
 	/**
 	 * Returns false if it is not possible to hit target with given projectile speed.
 	 * Else returns true and sets projectile velocity to velocity required to hit target
@@ -2620,13 +2849,13 @@ function _GremlinMaths() {
 			return false;
 		}
 	}
-	
+
 	// Returns false if no real roots
 	// Returns array with single or multiple roots
 	function _solveQuadratic(a,b,c) {
 		var results = [];
 		var quadDet;
-		
+
 		if (b*b > 4*a*c) { 
 			quadDet = Math.sqrt(b*b - 4*a*c);
 		}
@@ -2643,10 +2872,10 @@ function _GremlinMaths() {
 			results[0] = (-b + quadDet)/(2*a);
 			results[1] = (-b - quadDet)/(2*a);
 		}
-		
+
 		return results;
 	}
-	
+
 	return {
 		calculateCollisionTime: 		calculateCollisionTime,
 		calculateProjectileVelocity: 	calculateProjectileVelocity
@@ -2658,189 +2887,189 @@ var GremlinMaths = _GremlinMaths();
 
 function _GremlinAudio() {
 
-    var _audioContext;
-    var _buffers = [];
-    var _masterGain = 0.25;
-    var _fxGain = 1.0;
-    var _musicGain = 1.0;
-    var _distanceFactor = 1.0;
+	var _audioContext;
+	var _buffers = [];
+	var _masterGain = 0.25;
+	var _fxGain = 1.0;
+	var _musicGain = 1.0;
+	var _distanceFactor = 1.0;
 
-    function init() {
-        try {
-		    _audioContext = new webkitAudioContext();
-        }
-        catch(e) {
-            alert('Web Audio API is not supported in this browser');
-        }
-    }
+	function init() {
+		try {
+			_audioContext = new webkitAudioContext();
+		}
+		catch(e) {
+			alert('Web Audio API is not supported in this browser');
+		}
+	}
 
-    function Sound(url) {
-        if(!(this instanceof Sound)) {
-            return new Sound(url);
-        }
+	function Sound(url) {
+		if(!(this instanceof Sound)) {
+			return new Sound(url);
+		}
 
-        this.url = url;
-        this.volume = 1.0;
-        this.isLoading = false;
-        this.enqueued = false;
-        this.music = false;
-        this.instance;
-        this.position;
-        this.velocity;
+		this.url = url;
+		this.volume = 1.0;
+		this.isLoading = false;
+		this.enqueued = false;
+		this.music = false;
+		this.instance;
+		this.position;
+		this.velocity;
 
-        this.onLoad = function(request, callback) {
-            // This is a little bit nasty
-            var that = this;
-            function metaCallback(buffer) {
-                callback(buffer);
-                that.isLoading = false;
-            }
-            _audioContext.decodeAudioData(request.response, metaCallback, null); // Takes time to decode data, hence the extra callback
-        }
-        // Perhaps Music should be set as a property in onLoad?
-        this.play = function(time, loop) {
-            var time = time || 0;
-            var loop = loop || false;
+		this.onLoad = function(request, callback) {
+			// This is a little bit nasty
+			var that = this;
+			function metaCallback(buffer) {
+				callback(buffer);
+				that.isLoading = false;
+			}
+			_audioContext.decodeAudioData(request.response, metaCallback, null); // Takes time to decode data, hence the extra callback
+		}
+		// Perhaps Music should be set as a property in onLoad?
+		this.play = function(time, loop) {
+			var time = time || 0;
+			var loop = loop || false;
 
-            if(this.isLoading) {
-                return false;
-            }
+			if(this.isLoading) {
+				return false;
+			}
 
-            if(loop && this.instance) {
-                this.instance.stop(0);
-            }
+			if(loop && this.instance) {
+				this.instance.stop(0);
+			}
 
-            this.instance = new SoundInstance(this.url, this.music, this.volume, this.position, this.velocity);
-            this.instance.play(time, loop);
-            return true;
-        }
-        
-        this.stop = function(time) {
-            this.instance.stop(time);
-        }
+			this.instance = new SoundInstance(this.url, this.music, this.volume, this.position, this.velocity);
+			this.instance.play(time, loop);
+			return true;
+		}
 
-        this.setVolume = function(value) {
-            if(this.instance) {
-                this.instance.setVolume(value);
-            }
-            this.volume = value;
-            return this;
-        }
-        this.setPosition = function(value) {
-            if(this.instance) { this.instance.setPosition(value); }
-            this.position = value;
-            return this;
-        }
-        this.setVelocity = function(value) {
-            if(this.instance) { this.instance.setVelocity(value); }
-            this.velocity = value;
-            return this;
-        }
-        this.setMusic = function(value) {
-            this.music = (value)? true : false;
-            return this;
-        }
-    }
+		this.stop = function(time) {
+			this.instance.stop(time);
+		}
 
-    function SoundInstance(bufferId, music, volume, position, velocity) {
-        // TODO: Convert to use internal vars
-        // Check new instance
-        if(!(this instanceof SoundInstance)) {
+		this.setVolume = function(value) {
+			if(this.instance) {
+				this.instance.setVolume(value);
+			}
+			this.volume = value;
+			return this;
+		}
+		this.setPosition = function(value) {
+			if(this.instance) { this.instance.setPosition(value); }
+			this.position = value;
+			return this;
+		}
+		this.setVelocity = function(value) {
+			if(this.instance) { this.instance.setVelocity(value); }
+			this.velocity = value;
+			return this;
+		}
+		this.setMusic = function(value) {
+			this.music = (value)? true : false;
+			return this;
+		}
+	}
+
+	function SoundInstance(bufferId, music, volume, position, velocity) {
+		// TODO: Convert to use internal vars
+		// Check new instance
+		if(!(this instanceof SoundInstance)) {
 			return new SoundInstance(bufferId, music, volume, position, velocity);
 		}
-        // Check Parameters
-        this.is3D = (position || velocity);
-        this.startTime = this.endTime = -1;
+		// Check Parameters
+		this.is3D = (position || velocity);
+		this.startTime = this.endTime = -1;
 
-        // Create Source
-        this.source = _audioContext.createBufferSource();
-        this.source.buffer = _buffers[bufferId];
-        this.source.gain.value = volume;
+		// Create Source
+		this.source = _audioContext.createBufferSource();
+		this.source.buffer = _buffers[bufferId];
+		this.source.gain.value = volume;
 
-        // Create, Set and connect gain nodes
-        this.masterGain = _audioContext.createGainNode();
-        this.masterGain.gain.value = _masterGain;
-        this.source.connect(this.masterGain);
-        this.gainNode = _audioContext.createGainNode();
-        this.gainNode.gain.value = (music) ? _musicGain : _fxGain;
-        this.masterGain.connect(this.gainNode);
+		// Create, Set and connect gain nodes
+		this.masterGain = _audioContext.createGainNode();
+		this.masterGain.gain.value = _masterGain;
+		this.source.connect(this.masterGain);
+		this.gainNode = _audioContext.createGainNode();
+		this.gainNode.gain.value = (music) ? _musicGain : _fxGain;
+		this.masterGain.connect(this.gainNode);
 
-        if(this.is3D) {
-            // Set up 3D Values
-            this.panner = _audioContext.createPanner();
-            this.panner.setPosition((position)
-                ? [_distanceFactor*position[0], _distanceFactor*position[1], _distanceFactor*position[2]]
-                : [0,0,0]);
-            this.panner.setVelocity((velocity)
-                ? [_distanceFactor*velocity[0], _distanceFactor*velocity[1],_distanceFactor*velocity[2]]
-                : [0,0,0]);
-            // Connect to destination
-            this.gainNode.connect(this.panner);
-            this.panner.connect(_audioContext.destination);
-        } else {
-            // Connect to destination
-            this.gainNode.connect(_audioContext.destination);
-        }
+		if(this.is3D) {
+			// Set up 3D Values
+			this.panner = _audioContext.createPanner();
+			this.panner.setPosition((position)
+				? [_distanceFactor*position[0], _distanceFactor*position[1], _distanceFactor*position[2]]
+				: [0,0,0]);
+			this.panner.setVelocity((velocity)
+				? [_distanceFactor*velocity[0], _distanceFactor*velocity[1],_distanceFactor*velocity[2]]
+				: [0,0,0]);
+			// Connect to destination
+			this.gainNode.connect(this.panner);
+			this.panner.connect(_audioContext.destination);
+		} else {
+			// Connect to destination
+			this.gainNode.connect(_audioContext.destination);
+		}
 
-        // TODO: Move to prototype
-        this.setPosition = function(s) {
-            if(this.is3D) {
-                this.panner.setPosition([_distanceFactor*s[0], _distanceFactor*s[1], _distanceFactor*s[2]]);
-            }
-            return this;
-        }
-        this.setVelocity = function(v) {
-            if(this.is3D) {
-                this.panner.setVelocity([_distanceFactor*v[0], _distanceFactor*v[1], _distanceFactor*v[2]]);
-            }
-            return this;
-        }
-        this.play = function(time, loop) {
-            this.source.loop = loop || false;
+		// TODO: Move to prototype
+		this.setPosition = function(s) {
+			if(this.is3D) {
+				this.panner.setPosition([_distanceFactor*s[0], _distanceFactor*s[1], _distanceFactor*s[2]]);
+			}
+			return this;
+		}
+		this.setVelocity = function(v) {
+			if(this.is3D) {
+				this.panner.setVelocity([_distanceFactor*v[0], _distanceFactor*v[1], _distanceFactor*v[2]]);
+			}
+			return this;
+		}
+		this.play = function(time, loop) {
+			this.source.loop = loop || false;
 
-            this.startTime = _audioContext.currentTime + (time || 0);
-            this.endTime = this.startTime + this.source.duration;
+			this.startTime = _audioContext.currentTime + (time || 0);
+			this.endTime = this.startTime + this.source.duration;
 
-            this.source.noteOn((time || 0));
-        }
-        this.stop = function(time) {
-            this.source.noteOff((time || 0));
-        }
+			this.source.noteOn((time || 0));
+		}
+		this.stop = function(time) {
+			this.source.noteOff((time || 0));
+		}
 
-        // TODO: Add loop function with cross-fade option
-        // TODO: Add fadeIn and fadeOut options
-        
-        this.isPlaying = function() { return (_audioContext.currentTime > this.startTime && _audioContext.currentTime < this.endTime); }
-        this.setVolume = function(value) { this.source.gain.value = value; }
-    }
+		// TODO: Add loop function with cross-fade option
+		// TODO: Add fadeIn and fadeOut options
 
-    function load(url, music) {
-        var sound = new Sound(url);
-        sound.setMusic(music);
+		this.isPlaying = function() { return (_audioContext.currentTime > this.startTime && _audioContext.currentTime < this.endTime); }
+		this.setVolume = function(value) { this.source.gain.value = value; }
+	}
 
-        if(_buffers[url]) {
-            return sound;
-        }
+	function load(url, music) {
+		var sound = new Sound(url);
+		sound.setMusic(music);
 
-        sound.isLoading = true;
-        function callback(buffer) {
-            _buffers[url] = buffer;
-        }
+		if(_buffers[url]) {
+			return sound;
+		}
 
-        // TODO: Use Gremlin Assets Loading
-        var request = new XMLHttpRequest();
-        request.open('GET', url);
-        request.responseType = 'arraybuffer';
-        request.onreadystatechange = function () { if (request.readyState == 4) { sound.onLoad(request, callback); } }
-        request.send();
+		sound.isLoading = true;
+		function callback(buffer) {
+			_buffers[url] = buffer;
+		}
 
-        return sound;
-    }
+		// TODO: Use Gremlin Assets Loading
+		var request = new XMLHttpRequest();
+		request.open('GET', url);
+		request.responseType = 'arraybuffer';
+		request.onreadystatechange = function () { if (request.readyState == 4) { sound.onLoad(request, callback); } }
+		request.send();
 
-    return {
-        init:       init,
-        load:       load
-    }
+		return sound;
+	}
+
+	return {
+		init:       init,
+		load:       load
+	}
 }
 
 var GremlinAudio = _GremlinAudio();

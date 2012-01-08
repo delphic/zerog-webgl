@@ -3,7 +3,7 @@
 //  \// / / _ \ '__/ _ \ / /_\/  / /_\/ _` | '_ ` _ \ / _ \
 //   / //\  __/ | | (_) / /_\\  / /_\\ (_| | | | | | |  __/
 //  /____/\___|_|  \___/\____/  \____/\__,_|_| |_| |_|\___|
-                                                       
+
 //    __                   __           _       _   
 //    \ \  __ ___   ____ _/ _\ ___ _ __(_)_ __ | |_ 
 //     \ \/ _` \ \ / / _` \ \ / __| '__| | '_ \| __|
@@ -15,12 +15,12 @@ function _Game() {
 	// TODO: Change naming to public / private functions...
 	// TODO: Extract all things that should be in their own namespace (e.g. projectiles, gameobjects etc)
 	// TODO: add /** comments to functions to make their use clearer. 
-	
+
 	var canvas;
 	var	resolutionScale;
 	var lastTime = 0;
 	var gameState;
-	
+
 	var loadingTargetState;
 	var assetsLoading = false; 
 	function setLoading(val) {
@@ -42,16 +42,16 @@ function _Game() {
 			return false;
 		}
 	}
-	
+
 	function _isMouseButton(key) {
 		return (key === "LeftMouseButton" || key === "RightMouseButton" || key == "MiddleMouseButton");
 	}
-	
-    function animate() {
-        var timeNow = new Date().getTime();
-        if (lastTime != 0) {
-            var elapsed = timeNow - lastTime;
-			
+
+	function animate() {
+		var timeNow = new Date().getTime();
+		if (lastTime != 0) {
+			var elapsed = timeNow - lastTime;
+
 			// Animate Objects
 			for(key in gameObjects)
 			{
@@ -60,11 +60,11 @@ function _Game() {
 					gameObjects[key].update(elapsed);
 				}
 			}
-			
+
 			if(gameState == "InGame") {
 				// Collision Checks and AI TODO: should possibly be run every X frames
 				// Check for projectile - ship collision
-				
+
 				for(var i = 0; i < projectiles.length; i++){
 					// Check enemy ships
 					if (projectiles[i].friendly && ShipManager.checkShipsCollision(projectiles[i].position, projectiles[i].velocity, projectiles[i].mass, 0.03, projectiles[i].dmg)){
@@ -76,7 +76,7 @@ function _Game() {
 					// TODO: remove hardcoded radi
 					else if(!(projectiles[i].friendly) && GremlinCollision.sphereToSphereIntersect(projectiles[i].position, 0.03, player.position, 1)) {
 						getSound("impact").play();
-                        if(player.takeDamage(projectiles[i].velocity, projectiles[i].mass, projectiles[i].dmg)){
+						if(player.takeDamage(projectiles[i].velocity, projectiles[i].mass, projectiles[i].dmg)){
 							// GAME OVER
 							GremlinGUI.endGame("<h2>Game Over</h2>")
 						}
@@ -84,23 +84,23 @@ function _Game() {
 						i--; // Prevent skipping of next projectile after splice
 					}
 				}
-								
+
 				// TODO: this should possibly also run every X frames.
 				levelThink();
-				
+
 				// Update Player ship
 				player.updateShip(elapsed);	
-			
+
 				// Update Enemy ships
 				ShipManager.updateShips(elapsed);
-				
+
 				// Handle Game Input
 				// BUG: Keys get 'stuck down' - can not be resolved without proper HTML5 User Interface API
 				var width = parseInt(canvas.style.width, 10);
 				var height = parseInt(canvas.style.height, 10);
 				var mousePos;
 				mousePos = GremlinInput.getMousePos();
-				
+
 				var dyaw, dpitch, droll, dx, dz;
 				dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
 				dpitch = 0.05 * elapsed * ((height*0.5)-mousePos[1])/(0.5*height);
@@ -132,7 +132,7 @@ function _Game() {
 					// Move Backward
 					dz += accelRate;
 				}
-				
+
 				if (_keyState("Up")) {
 					// Move Up
 					dy += accelRate;	
@@ -141,7 +141,7 @@ function _Game() {
 					// Move Down
 					dy -= accelRate;
 				}
-				
+
 				// Clamp Diagonal Speeds 
 				// Physically speaking we probably shouldn't do this if we assume thruster based movement
 				if(dx && dz && !dy) { 
@@ -158,19 +158,19 @@ function _Game() {
 					dy /= 1.73205;
 					dz /= 1.73205;
 				}
-			
+
 				var dvelocity = [dx, dy, dz ];
 				Gremlin.playerCameraReverseRotation(dvelocity);
-				
+
 				if (accelRate > 0 && (dx != 0 || dy != 0 || dz != 0)) {
 					player.updateVelocity(dvelocity[0], dvelocity[1], dvelocity[2]);
 					player.accelerate(elapsed);
 				}
-				
+
 				player.update(elapsed);
-				
+
 				Gremlin.setPlayerCamera(player.position[0],player.position[1],player.position[2]);
-				
+
 				// Pew Pew
 				if(_keyState("PewPew")) {
 					if (player.canFire()) {
@@ -183,7 +183,7 @@ function _Game() {
 						vec3.normalize(v);
 						vec3.scale(v,player.weaponSpeed);
 						vec3.add(v,player.velocity);
-						
+
 						spawnProjectile({ 
 							"position": pos,
 							"velocity": v,
@@ -191,18 +191,18 @@ function _Game() {
 							"damage": 40000,
 							"lifetime": 30000, 
 							"friendly": true }); // specification of damage of projectile should not be here
-                        getSound("fire").play();
+						getSound("fire").play();
 						player.fire();
 					}
 				}
-				
+
 				if (GremlinInput.keyDown("Esc")) {
 					updateGameState("InMenu");
 					pause();
 					GremlinGUI.pause();
 				}
-			
-			
+
+
 				// Update HUD
 				GremlinHUD.updateHud( 
 				{ 
@@ -210,10 +210,10 @@ function _Game() {
 					shield: { index: shieldBar, value: (player.shieldPoints/player.shieldMax) },
 					energy: { index: energyBar, value: (player.energyPoints/player.energyMax) } 
 				});
-				
+
 				// Update Motes
 				updateMotes(player.position, player.velocity); 
-				
+
 				// Update Projectiles
 				projectileObject.animate(elapsed);
 				for(var i = 0; i < projectiles.length; i++) {
@@ -230,25 +230,25 @@ function _Game() {
 					}
 				}
 			}
-            else {
-                // This is useful for menus etc too!
-                // TODO: Should probably run every X frames
-                levelThink();
-            }
-			
-        }
-        lastTime = timeNow;
-    }
+			else {
+				// This is useful for menus etc too!
+				// TODO: Should probably run every X frames
+				levelThink();
+			}
 
-    function tick() {
-        if(controller.isRunning()) { requestAnimFrame(tick); }
-		
+		}
+		lastTime = timeNow;
+	}
+
+	function tick() {
+		if(controller.isRunning()) { requestAnimFrame(tick); }
+
 		if(gameState == "Loading") {
 			// Wait for all assets to load
 			if(assetsLoading) return;
 			else gameState = loadingTargetState;
 		}
-		
+
 		// Render Scene
 		Gremlin.prepareScene();
 		for(key in gameObjects)
@@ -257,7 +257,7 @@ function _Game() {
 				Gremlin.renderObject(gameObjects[key]);
 			}
 		}
-		
+
 		var dustMotesMax = dustMotes.length; // This won't change in the loop so don't evaluate it each time
 		for(var i = 0; i < dustMotesMax; i++)
 		{
@@ -265,7 +265,7 @@ function _Game() {
 			// We can get away with this because it's only ~100 objects
 			Gremlin.renderObject(dustMotes[i]);
 		}
-		
+
 		var projectilesMax = projectiles.length; // This won't change in the loop so don't evaluate it each time
 		for(var n = 0; n < projectilesMax; n++) 
 		{
@@ -277,18 +277,18 @@ function _Game() {
 			projectileObject.setColor(colour[0], colour[1], colour[2], colour[3], colour[4]);
 			Gremlin.renderObject(projectileObject);
 		}
-		
+
 		ShipManager.renderShips();
-		
+
 		// WebGL HUD
 		if(gameState == "InGame") {
 			GremlinHUD.renderHud();
 		}
-		
-		
+
+
 		// Animate Scene
-        animate();
-    }
+		animate();
+	}
 	// Game Objects
 	var gameObjects = [];
 	var gamePointLights = [];
@@ -299,16 +299,16 @@ function _Game() {
 		if(!(this instanceof GameObject)) {
 			return new GameObject(parameters);
 		}
-		
+
 		// TODO: Make properties private by using var instead of this or add to prototype.
-		
+
 		this.position = parameters.position ? vec3.create(parameters.position) : [0,0,0];
 		this.velocity = parameters.velocity ? vec3.create(parameters.velocity) : [0,0,0]; 
 		this.rotation = parameters.rotation ? mat4.create(parameters.rotation) : mat4.identity(mat4.create());
 		this.scale = parameters.scale ? vec3.create(parameters.scale) : [1, 1, 1];
-		
+
 		this.buffers = [];
-		
+
 		// TODO: Proper Material System?
 		// TODO: Make into array for multiple texture IDs
 		this.texture;
@@ -318,16 +318,16 @@ function _Game() {
 		this.setUseLighting = setUseLighting;
 		this.shininess = 0;
 		this.setShininess = setShininess;
-		
+
 		this.isSkyBox = false;
 		this.setIsSkyBox = setIsSkyBox;
-		
+
 		this.move = move;
 		this.setPosition = setPosition;
 		this.setVelocity = setVelocity;
 		this.updateVelocity = updateVelocity;
 		this.update = update;
-		
+
 		this.rotate = rotate;
 		this.setRotation = setRotation;
 		this.setScale = setScale;
@@ -339,7 +339,7 @@ function _Game() {
 		this.visible = true;
 		this.useIndices = false;
 		this.useTextures = false;
-		
+
 		function setPosition(x,y,z) {
 			this.position = [x,y,z];
 		}
@@ -378,19 +378,20 @@ function _Game() {
 		function setColor(r,g,b,a) { this.color = [r,g,b,a]; }
 		function setUseLighting(val) { this.useLighting = val; }
 		function setShininess(val) { this.shininess = val; }
-		
+
 		function setIsSkyBox(val) { this.isSkyBox = val; if(this.isSkyBox) this.useLighting = false; } 
-		
+
 		function defaultAnimation() { /* Blank */ }
 		function assignBuffer(index) {
 			this.buffers = index;
 		}
 	}
-	
+
 	// Creation Objection
-	// parameters: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush, color, useLighting
+	// parameters: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush,
+	// color, useLighting, outerRadius, innerRadius, thickness, numberOfSides
 	function createObjectPrimitive(parameters) {
-		
+
 		// Required parameters
 		if(!parameters.primType) {
 			throw new Error("Required argument missing for createObjectPrimitive: 'primType'");
@@ -401,7 +402,7 @@ function _Game() {
 		if(!parameters.scale) {
 			throw new Error("Required argument missing for createObjectPrimitive: 'scale'");
 		}
-		
+
 		var object = new GameObject({ "position": parameters.position });
 		if (parameters.textureName) { 
 			object.useTextures = true;
@@ -409,14 +410,14 @@ function _Game() {
 		else {
 			object.useTextures = false;
 		}
-		
+
 		if(parameters.scale.length) {
 			object.setScale(parameters.scale);
 		}
 		else {
 			object.setScale(parameters.scale,parameters.scale,parameters.scale);
 		}
-		
+
 		switch(parameters.primType) {
 		case "pyramid":
 			object.assignBuffer(Gremlin.Primitives.createPyramid());
@@ -426,6 +427,9 @@ function _Game() {
 			break;
 		case "sphere":
 			object.assignBuffer(Gremlin.Primitives.createSphere({ latBands: parameters.latBands, longBands: parameters.longBands }));
+			break;
+		case "ring":
+			object.assignBuffer(Gremlin.Primitives.createRing({ outerRadius: parameters.outerRadius, innerRadius: parameters.innerRadius, thickness: parameters.thickness, numberOfSides: parameters.numberOfSides }));
 			break;
 		case "ray":
 			object.assignBuffer(Gremlin.Primitives.createRay());
@@ -459,9 +463,9 @@ function _Game() {
 		{
 			gameObjects.push(object);
 		}
-		
+
 		return object;
-		
+
 	}
 
 	// parameters: position, modelName, textureName, scale, animation, shininess
@@ -489,9 +493,9 @@ function _Game() {
 		else {
 			object.setScale(parameters.scale, parameters.scale, parameters.scale);
 		}
-		
+
 		Gremlin.loadModel(object, parameters.modelName); // TODO: do not pass object, use callback
-		
+
 		if(parameters.textureName) {
 			object.texture = Gremlin.createTexture(parameters.textureName);
 		}
@@ -506,15 +510,15 @@ function _Game() {
 		}
 		gameObjects.push(object);
 	}
-			
+
 	// Game Init
 	function gameInit() {
 		assetsLoading = false;
-		
+
 		// TODO: Player Init
-		
+
 		// TODO: Projectile Init
-		
+
 		// Bindings
 		GremlinBindings.Bind({Name: "Forward", PrimaryKey: "w", SecondaryKey: "Up" });
 		GremlinBindings.Bind({Name: "Backward", PrimaryKey: "s", SecondaryKey: "Down"});
@@ -526,18 +530,18 @@ function _Game() {
 		GremlinBindings.Bind({Name: "RollRight", PrimaryKey: "e"});
 		GremlinBindings.Bind({Name: "Look", PrimaryKey: "RightMouseButton"});
 		GremlinBindings.Bind({Name: "PewPew", PrimaryKey: "LeftMouseButton"});
-		
+
 		// Create Projectiles
 		projectileObject.assignBuffer(Gremlin.Primitives.createTetrahedron());
 		projectileObject.setScale(0.03,0.03,0.03);
 		projectileObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); }
 
-        loadLevel("menu.js", "InMenu");
-        
-        // Preload Some Sounds
-        setSound("space-ambient", GremlinAudio.load("sounds/space-ambient.ogg")).setVolume(0.2);
-        setSound("fire", GremlinAudio.load("sounds/neutron-disruptor.wav"));
-        setSound("impact", GremlinAudio.load("sounds/impact.ogg"));
+		loadLevel("menu.js", "InMenu");
+
+		// Preload Some Sounds
+		setSound("space-ambient", GremlinAudio.load("sounds/space-ambient.ogg")).setVolume(0.2);
+		setSound("fire", GremlinAudio.load("sounds/neutron-disruptor.wav"));
+		setSound("impact", GremlinAudio.load("sounds/impact.ogg"));
 	}
 
 	// Player / Ships
@@ -557,7 +561,7 @@ function _Game() {
 		else {
 			object.firingPeriod = 300;	
 		}
-		// TODO: Weapon Damamge
+		// TODO: Weapon Damage
 		object.firingTimer = 300;
 		object.firingCost = 5;
 		object.weaponSpeed = 0.1;
@@ -588,20 +592,20 @@ function _Game() {
 		object.accelerationRate = function(elapsed) {
 			var accelerationAmount = 0.00005 * elapsed;
 			accelerationAmount/=this.mass
-			
+
 			return accelerationAmount;
 		}
 		object.accelerate = function(elapsed) {
 			// Nothing Doing
 		}
 		object.takeDamage = function(velocity, mass, damage) { //damage = damage per unit mass 
-			
+
 			// TODO: extract method - should not be in ship takeDamage method 
 			var relativeVelocity = vec3.create();
 			vec3.subtract(velocity, this.velocity, relativeVelocity);
 			var v = vec3.length(relativeVelocity);
 			var keneticAdjustedDamage = 0.5*mass*damage*v*v;  
-			
+
 			if(this.shieldPoints > 0) {
 				this.shieldPoints -= keneticAdjustedDamage;
 				if(this.shieldPoints < 0) {
@@ -626,21 +630,21 @@ function _Game() {
 	var player = new GameObject({ "position": [0,0,0] });
 	attachShip(player);
 
-    var sounds = [];
+	var sounds = [];
 
-    function getSound(name) {
-        return sounds[name];
-    }
-    function setSound(name, sound) {
-        sounds[name] = sound;
-        return sounds[name];
-    }
+	function getSound(name) {
+		return sounds[name];
+	}
+	function setSound(name, sound) {
+		sounds[name] = sound;
+		return sounds[name];
+	}
 
 	// Player HUD Values
 	var healthBar;
 	var shieldBar;
 	var energyBar;// Om Nom Nom Nom
-	
+
 	// Player Access Functions
 	// TODO: Remove these and just use the player object
 	function setPlayerPosition(position) {
@@ -669,7 +673,7 @@ function _Game() {
 	function getPlayerProjectileSpeed() {
 		return (vec3.length(player.velocity)+player.weaponSpeed);
 	}
-	
+
 	// Basic Projectile System
 	// TODO: namespace
 	var projectiles = [];
@@ -678,12 +682,12 @@ function _Game() {
 	projectileObject.setUseLighting(false); //TODO: Would be better with lighting true and emissive material
 	// Would also be better if when we had a particle system that it would leave a short lived trail.
 	// Also don't know if we want more than one protecile object... but we do want more than one colour.
-	
+
 	function Projectile(parameters) {
 		if(!this instanceof Projectile) {
 			return new Projectile(parameters);
 		}
-		
+
 		// Required parameters
 		if(!parameters.position) {
 			throw new Error("Projectile position must be specified: 'position'");
@@ -694,7 +698,7 @@ function _Game() {
 		if (!parameters.damage) {
 			throw new Error("Projectile damage per unit mass must be specified: 'damage'");
 		}
-		
+
 		this.position = vec3.create(parameters.position); 
 		this.velocity = vec3.create(parameters.velocity); 
 		this.mass = parameters.mass || 0.1; 
@@ -702,11 +706,11 @@ function _Game() {
 		this.lifetime = parameters.lifetime || 30000;
 		this.friendly = parameters.friendly || false;
 		this.color = parameters.color || [1, 1, 1, 1] ;
-		
+
 		this.getColor = getColor;
 		this.getPosition = getPosition;
 		this.updatePosition = updatePosition;
-		
+
 		function getPosition() {
 			return this.position;
 		}
@@ -722,23 +726,23 @@ function _Game() {
 			this.position[2] += this.velocity[2]*elapsed;
 		}
 	}
-	
+
 	function spawnProjectile(parameters) {
 		var newproj = new Projectile(parameters);
 		projectiles.push(newproj);
 	}
-	
+
 	function removeProjectile(index) {
 		projectiles.splice(index,1);
 	}
-	
+
 	// Dust Motes
 	var dustMotes = [];
 	var maxMotes, randomFactor, rootThree;
 	rootThree = 1.73205; // Approximately
 	randomFactor = 10; // To Be Adjusted
 	maxMotes = 100; // To Be Adjusted
-	
+
 	function createMotes() {
 		// Remove Existing Motes
 		dustMotes.splice(0,dustMotes.length);
@@ -757,7 +761,7 @@ function _Game() {
 			dustMotes.push(obj); 
 		}
 	}
- 
+
 	function updateMotes(position, velocity) {
 		if (vec3.length(velocity)) {
 			for(var i = 0; i < dustMotes.length; i++){
@@ -782,29 +786,29 @@ function _Game() {
 			}
 		}
 	}
-	
+
 	// WebGL Start
-	
-    function webGLStart(resScale) {
+
+	function webGLStart(resScale) {
 		canvas = document.getElementById("gremlinCanvas");
 		resolutionScale = resScale;
 		setCanvasSize();
-		
+
 		// Initialise
 		Gremlin.init();
-        GremlinAudio.init(); // TODO: move this and any other inits into Gremlin's
+		GremlinAudio.init(); // TODO: move this and any other inits into Gremlin's
 		gameInit();
-		
+
 		// Start Game Loop
-        tick();
-		
-    }
-	
+		tick();
+
+	}
+
 	// Controller Bar
 	function _controller() {
 		var running = true;
 		var windowPaused = false;
-		
+
 		function handlePause() { 
 			if(running) { 
 				_pause();
@@ -813,20 +817,20 @@ function _Game() {
 				_unpause();
 			}
 		}
-		
+
 		function handleUnpause() {
 			if(!running) {
 				_unpause();
 			}
 		}
-		
+
 		function handleWindowBlur() {
 			if(running) {
 				windowPaused = true;
 				_pause();
 			}
 		}
-		
+
 		function handleWindowFocus() {
 			if(windowPaused) {
 				windowPaused = false;
@@ -837,7 +841,7 @@ function _Game() {
 		function _pause() { running = false; }
 		// TODO: if/when the game timer moves to an object adjust this		
 		function _unpause() { running = true; lastTime = new Date().getTime(); requestAnimFrame(tick); }
-		
+
 		return { 
 			isRunning: isRunning, 
 			handlePause: handlePause, 
@@ -847,7 +851,7 @@ function _Game() {
 		};
 	}
 	var controller = _controller();
-	
+
 	function pause() {
 		controller.handlePause();
 	}
@@ -876,30 +880,30 @@ function _Game() {
 	function getCanvasSize() {
 		return [canvas.width, canvas.height];
 	}
-	
+
 	GremlinEventHandler.bindEvent("onblur", controller.handleWindowBlur);
 	GremlinEventHandler.bindEvent("onfocus", controller.handleWindowFocus);
 	GremlinEventHandler.bindEvent("onresize", setCanvasSize);
 	GremlinEventHandler.bindEvent("onresize", Gremlin.resize);
-	
+
 	// Level Functions - Own namespace?
 	var levelThink = function() { /* Blank! */ };
 	var levelCleanUp = function() { /* Blank! */ };
 	var levelVars = [];
-	
+
 	function setLevelThink(func) {
 		levelThink = func;
 	}
 	function setLevelCleanUp(func) {
-        levelCleanUp = func;
-    }
+		levelCleanUp = func;
+	}
 	function getLevelVar(key) {
 		return levelVars[key];
 	}
 	function setLevelVar(key, value) {
 		levelVars[key] = value;
 	}
-	
+
 	function loadLevel(fileName, targetState) {
 		// Reset Player Object - should be method on player
 		Gremlin.setPlayerCamera(0,0,0);
@@ -911,8 +915,8 @@ function _Game() {
 		player.shieldPoints = player.shieldMax;
 		player.energyPoints = player.energyMax;
 		// End Reset Player 
-		
-		// Load HUD
+
+		// Load HUD - Should this really be here? I think not.
 		healthBar = GremlinHUD.createBar(
 			[-0.9, -0.65],
 			[0.04, 0.3],
@@ -931,33 +935,33 @@ function _Game() {
 			[0.5,0.15,0.05,1],
 			[1,0.8,0.5,1], 
 			"Horizontal");
-		
+
 		gameState = "Loading";
 		loadingTargetState = targetState;
-		
+
 		var fileref=document.createElement('script');
 		fileref.setAttribute("type","text/javascript");
 		fileref.setAttribute("src", fileName);
 		if (typeof fileref!="undefined") document.getElementsByTagName("head")[0].appendChild(fileref);
-		
+
 	}
 	function unloadLevel() {
-        levelCleanUp()
+		levelCleanUp()
 		for(key in levelVars)
 		{
 			if(levelVars.hasOwnProperty(key)) { levelVars[key] = null; }
 		}
 		ShipManager.destroyShips();
 		setLevelThink(function() { /* Blank! */ });
-        setLevelCleanUp(function() { /* Blank! */});
+		setLevelCleanUp(function() { /* Blank! */});
 		gameObjects.splice(0, gameObjects.length);
 		projectiles.splice(0, projectiles.length);
 		dustMotes.splice(0, dustMotes.length); // Looks like we need a level manager! ;D
 		Gremlin.removeLights();
 		GremlinHUD.clearHud();
 	}
-	
-	
+
+
 	return {
 		attachShip:					attachShip,
 		createObjectPrimitive: 		createObjectPrimitive,
@@ -968,7 +972,7 @@ function _Game() {
 		loadLevel: 					loadLevel,
 		unloadLevel:				unloadLevel,
 		setLevelThink:				setLevelThink,
-        setLevelCleanUp:            setLevelCleanUp,
+		setLevelCleanUp:            setLevelCleanUp,
 		getLevelVar:				getLevelVar,
 		setLevelVar:				setLevelVar,
 		getPlayerPosition:			getPlayerPosition, 		// Replace with reference to player object
@@ -978,8 +982,8 @@ function _Game() {
 		setPlayerPosition:          setPlayerPosition,
 		setPlayerVelocity:			setPlayerVelocity,
 		setPlayerRotation:			setPlayerRotation,
-        getSound:                   getSound,
-        setSound:                   setSound,
+		getSound:                   getSound,
+		setSound:                   setSound,
 		spawnProjectile:			spawnProjectile,
 		applyOptions:				applyOptions,
 		getCanvasSize:				getCanvasSize,
@@ -1000,14 +1004,14 @@ var Game = _Game();
 // Enemy Ship Mananger
 
 function _ShipManager() {
-	
+
 	// Public
 	var shipList = [];
 
 	function numberOfShips() {
 		return shipList.length;
 	}
-	
+
 	function createShip(parameters) {
 		// Check for required parameters
 		if(!parameters.position) { 
@@ -1024,7 +1028,7 @@ function _ShipManager() {
 		});
 		var color = parameters.color ? parameters.color : [1, 1, 1, 1];
 		tmpShip.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
-		
+
 		// Create HUD elements
 		var canvasSize = Game.getCanvasSize();
 		var separation = vec3.create();
@@ -1048,7 +1052,7 @@ function _ShipManager() {
 		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.healthBar);
 		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.shieldBar);
 		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.targetBrace);
-		
+
 		// Attach Ship parameters
 		var parameters = {};
 		parameters.FiringPeriod = 600;
@@ -1059,7 +1063,7 @@ function _ShipManager() {
 
 		// Add to List
 		var index = shipList.push(tmpShip)-1;
-		
+
 		// Update HUD Element size
 		_updateHudElements(shipList[index]); // This prevents the HUD elements from taking up the entire screen for 1 frame on ship creation
 	}
@@ -1078,7 +1082,7 @@ function _ShipManager() {
 			for(var i = 0; i < shipListMax; i++) {	
 				// Run AI - Argueably should be in separate function
 				shipList[i].runAI(shipList[i], elapsed);
-								
+
 				shipList[i].update(elapsed);
 				shipList[i].updateShip(elapsed);
 				shipList[i].animate(elapsed); // Argueably should be in separate function
@@ -1095,7 +1099,7 @@ function _ShipManager() {
 			Gremlin.renderObject(shipList[i]);
 		}
 	}
-	
+
 	function checkShipsCollision(position, velocity, mass, radius, dmg) {
 		for(var i = 0; i < shipList.length; i++) {
 			// TODO: Remove hardcoded ship radius - add radius method to gameobject (returns average scale)
@@ -1114,14 +1118,14 @@ function _ShipManager() {
 		}
 		return false;
 	}
-	
+
 	// Private
 	function _updateHudElements(ship) {
-		
+
 		var separation = vec3.create();
 		vec3.subtract(ship.position, Game.getPlayerPosition(), separation);
 		var projectileVelocity = vec3.create();
-		
+
 		// Update Aim at Element
 		// Calculate required velocity to hit target
 		if(GremlinMaths.calculateProjectileVelocity(separation, ship.velocity, Game.getPlayerProjectileSpeed(), projectileVelocity)) {
@@ -1139,7 +1143,7 @@ function _ShipManager() {
 
 			// Move to Global Coordinate System
 			vec3.add(aimAtPoint, Game.getPlayerPosition());
-							
+
 			var coords = [0,0];
 
 			if(Gremlin.reversePick(aimAtPoint[0],aimAtPoint[1],aimAtPoint[2], coords)) {
@@ -1172,14 +1176,14 @@ function _ShipManager() {
 		else {
 			GremlinHUD.hideGroupElements(ship.infoContainer);
 		}
-		
+
 		// Update Health and Shield Bars
 		GremlinHUD.updateHud({ 
 			health: { index: ship.healthBar, value: (ship.healthPoints/ship.healthMax) },
 			shield: { index: ship.shieldBar, value: (ship.shieldPoints/ship.shieldMax) }
 		});
 	}
-		
+
 	return {
 		createShip:				createShip,
 		destroyShip:			destroyShip,
@@ -1190,7 +1194,7 @@ function _ShipManager() {
 		checkShipsCollision:	checkShipsCollision
 	}
 }
-	
+
 var ShipManager = _ShipManager();
 
 //     _      _____ 
@@ -1206,7 +1210,7 @@ function _ShipAI() {
 		// AI State - enum - 0, Idle; 1, Close; 2, Attack; 3, Flee; 4, Evasive; 5, Patrol
 		obj.AiState = 0;
 		obj.AiStateTimer = 0;
-		
+
 		// AI friendly - bool 
 		// TODO: Create enum for factions including neutral, to make for more complex interactions
 		if(parameters && parameters["Friendly"]) {
@@ -1215,10 +1219,10 @@ function _ShipAI() {
 		else {
 			obj.AiFriendly = false;
 		}
-		
+
 		// AI In Combat - bool
 		obj.AiInCombat = false;
-		
+
 		// AI Skill - number - skill factor
 		if(parameters && parameters["Skill"]) {
 			obj.AiSkill = parameters["Skill"];
@@ -1226,7 +1230,7 @@ function _ShipAI() {
 		else {
 			obj.AiSkill = 1;
 		}
-		
+
 		// AI Confidence - number - affects state changes
 		if(parameters && parameters["Confidence"]) {
 			obj.AiConfidence = parameters["Confidence"];
@@ -1234,7 +1238,7 @@ function _ShipAI() {
 		else {
 			obj.AiConfidence = obj.AiSkill; 
 		}
-		
+
 		// AI Engage Distance - number - number of units at which non-friendly AI engages.
 		if(parameters && parameters["EngageDistance"]) {
 			obj.AiEngageDistance = parameters["EngageDistance"];
@@ -1242,7 +1246,7 @@ function _ShipAI() {
 		else {
 			obj.AiEngageDistance = 100*obj.AiSkill; // TODO: Tweak once units have been actually figured out!
 		}
-		
+
 		// AI Disengage Distance - number - number of units at which AI stops pursuing.
 		if(parameters && parameters["DisengageDistance"]) {
 			obj.AiDisengageDistance = parameters["DisengageDistance"];
@@ -1254,7 +1258,7 @@ function _ShipAI() {
 		obj.runAI = _runAI;
 		obj.takeDamageAi = _takeDamageAi;
 	}
-	
+
 	function _takeDamageAi(aggressor) {
 		// If currently idle switch to attack
 		if(this.AiState == 0) {
@@ -1262,7 +1266,7 @@ function _ShipAI() {
 			//TODO: if / when AI has targets, rather than just the player then target aggressor
 		}
 	}
-	
+
 	function _runAI(ship, elapsed) {
 		this.AiStateTimer += elapsed;		
 		// Check state and change if necessary.
@@ -1279,7 +1283,7 @@ function _ShipAI() {
 					stateChanged = true;
 					break;
 				}
-				
+
 				// Check distance and relative velocity is close enough switch to attack
 				separation = vec3.create();
 				velocityDifference = vec3.create();
@@ -1290,7 +1294,7 @@ function _ShipAI() {
 					stateChanged = true;
 					break;
 				}
-				
+
 				// if > disengage, then change attribute and idle
 				if (vec3.length(separation) > this.AiDisengageDistance) {
 					this.AiState = 0;
@@ -1307,7 +1311,7 @@ function _ShipAI() {
 					stateChanged = true;
 					break;
 				}
-				
+
 				// Check distance and relative velocity and change to close if necessary
 				separation = vec3.create();
 				velocityDifference = vec3.create();
@@ -1318,7 +1322,7 @@ function _ShipAI() {
 					stateChanged = true;
 					break;
 				}
-				
+
 				break;
 			//Flee
 			case 3: 
@@ -1368,7 +1372,7 @@ function _ShipAI() {
 				break;				
 			}
 		}
-		
+
 		// Run current state
 		if(!stateChanged)
 		{
@@ -1379,7 +1383,7 @@ function _ShipAI() {
 			var relativeVelocity = vec3.create();
 			vec3.subtract(playerPos, this.position, separation);
 			vec3.subtract(playerVel, this.velocity, relativeVelocity);
-				
+
 			switch(this.AiState) {
 			// Close
 			case 1:
@@ -1409,15 +1413,15 @@ function _ShipAI() {
 					// Caculate desired velocity
 					var pos = vec3.create(this.position);
 					var projectileVelocity = vec3.create();
-					
+
 					// Create Estimated player position - Skill Accuracy Effect
 					var estimatedSeparation = vec3.create();
-					
+
 					// At 20 units skill of 1 has 0-1 unit inaccuracy
 					// TODO: link this to target size.
 					var scalingFactor = vec3.length(separation) / (20 * this.AiSkill);
 					vec3.add(separation, [ (Math.random()-0.5)*scalingFactor, (Math.random()-0.5)*scalingFactor, (Math.random()-0.5)*scalingFactor], estimatedSeparation);
-	
+
 					if(GremlinMaths.calculateProjectileVelocity(estimatedSeparation, playerVel, (this.weaponSpeed+vec3.length(this.velocity)), projectileVelocity))
 					{
 						// Spawn new projectile
@@ -1444,15 +1448,15 @@ function _ShipAI() {
 				this.updateVelocity(direction[0], direction[1], direction[2]);
 				this.accelerate(elapsed);
 				break;
-				
+
 			// TODO: Implement	
 			//case 4:
-				// Accelerate in a random direction mostly away from aggresor
+				// Accelerate in a random direction mostly away from aggressor
 				// break;
 			// case 5:
 				// Patrol along path
 				// break;
-			
+
 			default:
 				// Slow to Stop
 				if (vec3.length(this.velocity) > accelRate)
