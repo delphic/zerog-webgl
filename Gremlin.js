@@ -5,7 +5,7 @@
 //  \____/|_|  \___|_| |_| |_|_|_|_| |_|  \___|_| |_|\__, |_|_| |_|\___|
 //                                                   |___/             
 // 		A simultaneous learning WebGL & JavaScript Experiment!
-//		v0.8
+//		v0.8.1
 // 		Delph 2011
 
 function _Gremlin() {
@@ -429,7 +429,7 @@ function _Gremlin() {
 		}
 
 		// Model now loading
-		_increaseAssetsLoading();
+		increaseAssetsLoading();
 		buffersNameList[fileName] = -1;
 		// Create Object List and callbacks for use on model load
 		modelLoadingInfo[fileName] = new Array();
@@ -457,7 +457,7 @@ function _Gremlin() {
 			return textureFileList[fileName];
 		}
 		else {
-			_increaseAssetsLoading();
+			increaseAssetsLoading();
 			var texture;
 			texture = _gl.createTexture();
 			texture.image = new Image();
@@ -469,12 +469,12 @@ function _Gremlin() {
 		}
 	}
 
-	function createTextureFromCanvas(canvasId) {
-		_increaseAssetsLoading();
+	function createTextureFromCanvas(canvasId, callback) {
+		increaseAssetsLoading();
 		var texture = _gl.createTexture();
 		texture.image = document.getElementById(canvasId);
 		var index = textureList.push(texture)-1;
-		_handleLoadedTexture(textureList[index], 3); 
+		_handleLoadedTexture(textureList[index], 3, callback);
 		return index;
 	}
 
@@ -697,17 +697,17 @@ function _Gremlin() {
 
 	// Assets (Buffers, Models, Textures)
 	var assetsLoading = 0; 
-	function _increaseAssetsLoading() {
+	function increaseAssetsLoading() {
 		if(!assetsLoading) { Game.setLoading(true); }
 		assetsLoading++;
 	}
-	function _decreaseAssetsLoading() {
+	function decreaseAssetsLoading() {
 		if(assetsLoading) { assetsLoading--; }
 		if(!assetsLoading) { Game.setLoading(false); }
 	}
 
 	// Textures
-	function _handleLoadedTexture(texture, quality) {
+	function _handleLoadedTexture(texture, quality, callback) {
 		// Quality
 		// 1 = Nearest Filtering, 2 = Linear Fitlering, 3 = Mipmaps
 		_gl.bindTexture(_gl.TEXTURE_2D, texture);
@@ -727,7 +727,8 @@ function _Gremlin() {
 			_gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.NEAREST);
 		}
 		_gl.bindTexture(_gl.TEXTURE_2D, null);
-		_decreaseAssetsLoading();
+		decreaseAssetsLoading();
+		if (callback) { callback(); }
 	}
 
 	// Model Functions
@@ -777,7 +778,7 @@ function _Gremlin() {
 		}
 		// Delete Loading Info
 		modelLoadingInfo[fileName].objectsLoading.splice(0,modelLoadingInfo[fileName].objectsLoading.length);
-		_decreaseAssetsLoading();
+		decreaseAssetsLoading();
 	}
 
 
@@ -1113,7 +1114,8 @@ function _Gremlin() {
 			var offset = [0, 0, 0];
 			if(parameters && parameters.scale) { scale = parameters.scale; }
 			if(parameters && parameters.offset) { offset = parameters.offset; }
-			var key = "cube-scale:"+scale.toString()+"-offset:"+offset.toString();
+
+            var key = "cube-scale:"+scale.toString()+"-offset:"+offset.toString();
 
 			if (isNaN(buffersNameList[key]) || (parameters && parameters.jsonOut)){
 				var buffers = [];
@@ -1173,88 +1175,44 @@ function _Gremlin() {
 				cubeVertexTextureCoordBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
 
-				var textureCoords = [];
-				if (!parameters.multiSide) {
-					textureCords = [
-					  // Front face
-					  0.0, 0.0,
-					  1.0, 0.0,
-					  1.0, 1.0,
-					  0.0, 1.0,
+				var textureCoords = [
+				  // Front face
+				  0.0, 0.0,
+				  1.0, 0.0,
+				  1.0, 1.0,
+				  0.0, 1.0,
 
-					  // Back face
-					  1.0, 0.0,
-					  1.0, 1.0,
-					  0.0, 1.0,
-					  0.0, 0.0,
+				  // Back face
+				  1.0, 0.0,
+				  1.0, 1.0,
+				  0.0, 1.0,
+				  0.0, 0.0,
 
-					  // Top face
-					  0.0, 1.0,
-					  0.0, 0.0,
-					  1.0, 0.0,
-					  1.0, 1.0,
+				  // Top face
+				  0.0, 1.0,
+				  0.0, 0.0,
+				  1.0, 0.0,
+				  1.0, 1.0,
 
-					  // Bottom face
-					  1.0, 1.0,
-					  0.0, 1.0,
-					  0.0, 0.0,
-					  1.0, 0.0,
+				  // Bottom face
+				  1.0, 1.0,
+				  0.0, 1.0,
+				  0.0, 0.0,
+				  1.0, 0.0,
 
-					  // Right face
-					  1.0, 0.0,
-					  1.0, 1.0,
-					  0.0, 1.0,
-					  0.0, 0.0,
+				  // Right face
+				  1.0, 0.0,
+				  1.0, 1.0,
+				  0.0, 1.0,
+				  0.0, 0.0,
 
-					  // Left face
-					  0.0, 0.0,
-					  1.0, 0.0,
-					  1.0, 1.0,
-					  0.0, 1.0
-					];
-				}
-				else {
-					// 6 sides in a texture
-					// Top row: Forward, Up, Left
-					// Bottom row: Back, Down, Right
-					textureCords = [
-						// Front face
-						0.0, 0.0,
-						0.0, 0.5,
-						0.333333, 0.0,
-						0.333333, 0.5,
+				  // Left face
+				  0.0, 0.0,
+				  1.0, 0.0,
+				  1.0, 1.0,
+				  0.0, 1.0
+				];
 
-						// Back face
-						0.0, 0.5,
-						0.0, 1.0,
-						0.333333, 0.5,
-						0.333333, 1.0,
-
-						// Top face
-						0.333334, 0.0,
-						0.333334, 0.5,
-						0.666666, 0.0,
-						0.666666, 0.5,
-
-						// Bottom face
-						0.333334, 0.5,
-						0.333334, 1.0,
-						0.666666, 0.5,
-						0.666666, 1.0,
-
-						// Right face
-						0.666667, 0.5,
-						0.666667, 1.0,
-						1.0, 0.5,
-						1.0, 1.0,
-
-						// Left face
-						0.666667, 0.0,
-						0.666667, 0.5,
-						1.0, 0.0,
-						1.0, 0.5
-					];
-				}
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
 				cubeVertexTextureCoordBuffer.itemSize = 2;
 				cubeVertexTextureCoordBuffer.numItems = 24;
@@ -1983,6 +1941,8 @@ function _Gremlin() {
 		playerCameraReverseTransform:	playerCameraReverseTransform,
 		pickPosition:				pickPosition,
 		reversePick:				reversePick,
+		increaseAssetsLoading:      increaseAssetsLoading,
+		decreaseAssetsLoading:      decreaseAssetsLoading,
 		degToRad: 					degToRad 
 	};
 }
@@ -3073,3 +3033,21 @@ function _GremlinAudio() {
 }
 
 var GremlinAudio = _GremlinAudio();
+
+var GremlinUtilities = function() {
+	function createUtilityCanvas() {
+		var canvasId = "utilityCanvas-"+Math.random()/Math.random();
+		$("body").append("<canvas id='"+canvasId+"' style='display: none;'></canvas>"); // TODO: Remove JQuery dependency
+		return canvasId;
+	}
+
+	function destroyUtilityCanvas(id) {
+        // This doesn't appear to work!
+		$("#"+id).remove(); // TODO: Remove JQuery dependency
+	}
+
+	return {
+		createUtilityCanvas:        createUtilityCanvas,
+		destroyUtilityCanvas:       destroyUtilityCanvas
+	}
+}();

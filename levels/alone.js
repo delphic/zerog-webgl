@@ -3,7 +3,7 @@
 	// Lighting
 	Gremlin.setLightEnvironment(0.05,0.05,0.05,0.75,0.75,0.6,-1.0,0.0,0.0);
 	Gremlin.setLightingFlags("lighting", true);
-		
+
 	// Game Objects
 	// Parameters: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush
 	Game.createObjectPrimitive({
