@@ -5,7 +5,7 @@
 //  \____/|_|  \___|_| |_| |_|_|_|_| |_|  \___|_| |_|\__, |_|_| |_|\___|
 //                                                   |___/             
 // 		A simultaneous learning WebGL & JavaScript Experiment!
-//		v0.8.1
+//		v0.8.2
 // 		Delph 2011
 
 function _Gremlin() {
@@ -454,7 +454,7 @@ function _Gremlin() {
 	var textureList = [];			// Stores the textures
 	var textureFileList = [];		// Stores which textures have already been loaded
 
-	function createTexture(fileName) {
+	function createTexture(fileName, quality) {
 		if (!isNaN(textureFileList[fileName])) {
 			return textureFileList[fileName];
 		}
@@ -465,7 +465,7 @@ function _Gremlin() {
 			texture.image = new Image();
 			texture.image.src = fileName;
 			var index = textureList.push(texture)-1;
-			textureList[index].image.onload = function() { _handleLoadedTexture(textureList[index], 3); }
+			textureList[index].image.onload = function() { _handleLoadedTexture(textureList[index], (quality)? quality : 3); }
 			textureFileList[fileName] = index;
 			return index;
 		}
@@ -1662,10 +1662,10 @@ function _Gremlin() {
 				squareVertexTextureCoordBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
 				var textureCoords = [
-				  0.02, 0.02,
-				  0.98, 0.02,
-				  0.98, 0.98,
-				  0.02, 0.98
+				  0.0, 0.0,
+				  1.0, 0.0,
+				  1.0, 1.0,
+				  0.0, 1.0
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
 				squareVertexTextureCoordBuffer.itemSize = 2;

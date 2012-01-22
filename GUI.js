@@ -304,7 +304,7 @@ function _HUD() {
 		element.assignBuffer(Gremlin.Primitives.createSquare());
 
 		if(textureName) {
-			element.texture = Gremlin.createTexture(textureName);
+			element.texture = Gremlin.createTexture(textureName, 1);
 		}
 
 		return hudElements.push(element)-1;
