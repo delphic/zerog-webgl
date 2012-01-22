@@ -1,5 +1,8 @@
 	// Alone in space, except for a teapot
-	
+
+    // Player HUD
+    Game.createPlayerHud();
+
 	// Lighting
 	Gremlin.setLightEnvironment(0.05,0.05,0.05,0.75,0.75,0.6,-1.0,0.0,0.0);
 	Gremlin.setLightingFlags("lighting", true);

@@ -333,7 +333,9 @@ function _Gremlin() {
 		mat4.identity(pMatrix);
 		mat4.identity(mvMatrix);
 
-		mat4.translate(mvMatrix, [object.position[0], object.position[1],object.position[2]]);
+		mat4.translate(mvMatrix, object.position);
+
+		mat4.multiply(mvMatrix, object.rotation, mvMatrix);
 
 		if(object.size != [1,1]) mat4.scale(mvMatrix, [object.size[0],object.size[1],1], mvMatrix);
 
@@ -1115,7 +1117,7 @@ function _Gremlin() {
 			if(parameters && parameters.scale) { scale = parameters.scale; }
 			if(parameters && parameters.offset) { offset = parameters.offset; }
 
-            var key = "cube-scale:"+scale.toString()+"-offset:"+offset.toString();
+			var key = "cube-scale:"+scale.toString()+"-offset:"+offset.toString();
 
 			if (isNaN(buffersNameList[key]) || (parameters && parameters.jsonOut)){
 				var buffers = [];
@@ -1660,10 +1662,10 @@ function _Gremlin() {
 				squareVertexTextureCoordBuffer = _gl.createBuffer();
 				_gl.bindBuffer(_gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
 				var textureCoords = [
-				  0.0, 0.0,
-				  1.0, 0.0,
-				  1.0, 1.0,
-				  0.0, 1.0
+				  0.02, 0.02,
+				  0.98, 0.02,
+				  0.98, 0.98,
+				  0.02, 0.98
 				];
 				_gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(textureCoords), _gl.STATIC_DRAW);
 				squareVertexTextureCoordBuffer.itemSize = 2;
@@ -3042,7 +3044,7 @@ var GremlinUtilities = function() {
 	}
 
 	function destroyUtilityCanvas(id) {
-        // This doesn't appear to work!
+		// This doesn't appear to work!
 		$("#"+id).remove(); // TODO: Remove JQuery dependency
 	}
 

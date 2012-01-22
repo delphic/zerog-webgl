@@ -1,3 +1,6 @@
+	// Player HUD
+    Game.createPlayerHud();
+
 	// Lighting
 	Gremlin.setLightEnvironment(0.3,0.3,0.3,0,0,0,0.0,0.0,0.0);
 	Gremlin.setLightingFlags("lighting", true);

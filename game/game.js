@@ -369,7 +369,7 @@ function _Game() {
 			mat4.identity(this.rotation);
 			mat4.rotate(this.rotation, Gremlin.degToRad(yaw), [0,1,0]);
 			mat4.rotate(this.rotation, Gremlin.degToRad(pitch), [1,0,0]);
-			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,0]);
+			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,1]);
 		}
 		function setScale(x,y,z) { 
 			if(y && z) { this.scale = [x,y,z]; } 
@@ -673,6 +673,26 @@ function _Game() {
 	function getPlayerProjectileSpeed() {
 		return (vec3.length(player.velocity)+player.weaponSpeed);
 	}
+	function createPlayerHud() {
+		healthBar = GremlinHUD.createBar(
+			[-0.9, -0.65],
+			[0.04, 0.3],
+			[0.1, 0.5, 0.1, 1],
+			[0.7, 1, 0.7, 1],
+			"Vertical");
+		shieldBar = GremlinHUD.createBar(
+			[0.9,-0.65],
+			[0.04,0.3],
+			[0.1,0.1,0.5,1],
+			[0.7,0.7,1,1],
+			"Vertical");
+		energyBar = GremlinHUD.createBar(
+			[0,-0.9],
+			[0.4,0.04],
+			[0.5,0.15,0.05,1],
+			[1,0.8,0.5,1],
+			"Horizontal");
+	}
 
 	// Basic Projectile System
 	// TODO: namespace
@@ -906,6 +926,7 @@ function _Game() {
 
 	function loadLevel(fileName, targetState) {
 		// Reset Player Object - should be method on player
+		// Also we should only reset the camera!
 		Gremlin.setPlayerCamera(0,0,0);
 		Gremlin.setPlayerCameraRotation(0,0,0);
 		player.position = [0,0,0];
@@ -915,26 +936,6 @@ function _Game() {
 		player.shieldPoints = player.shieldMax;
 		player.energyPoints = player.energyMax;
 		// End Reset Player 
-
-		// Load HUD - Should this really be here? I think not.
-		healthBar = GremlinHUD.createBar(
-			[-0.9, -0.65],
-			[0.04, 0.3],
-			[0.1, 0.5, 0.1, 1],
-			[0.7, 1, 0.7, 1], 
-			"Vertical");
-		shieldBar = GremlinHUD.createBar(
-			[0.9,-0.65],
-			[0.04,0.3],
-			[0.1,0.1,0.5,1],
-			[0.7,0.7,1,1], 
-			"Vertical");
-		energyBar = GremlinHUD.createBar(
-			[0,-0.9],
-			[0.4,0.04],
-			[0.5,0.15,0.05,1],
-			[1,0.8,0.5,1], 
-			"Horizontal");
 
 		gameState = "Loading";
 		loadingTargetState = targetState;
@@ -975,6 +976,7 @@ function _Game() {
 		setLevelCleanUp:            setLevelCleanUp,
 		getLevelVar:				getLevelVar,
 		setLevelVar:				setLevelVar,
+		createPlayerHud:            createPlayerHud,
 		getPlayerPosition:			getPlayerPosition, 		// Replace with reference to player object
 		getPlayerVelocity:			getPlayerVelocity,
 		getPlayerRotation:			getPlayerRotation,
@@ -1049,6 +1051,7 @@ function _ShipManager() {
 			"Vertical");
 		tmpShip.targetBrace = GremlinHUD.createWireframe("Brace",[0,0,0], [0.9,0.9],[1,0,0,1]);
 		tmpShip.infoContainer = GremlinHUD.createGroup([0,0,0],[0.25,0.25]);
+		tmpShip.offScreenArrow = GremlinHUD.createElement([0,0,0], [0.02, 0.02], [1,1,1,1], "textures/arrow.png");
 		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.healthBar);
 		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.shieldBar);
 		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.targetBrace);
@@ -1132,7 +1135,7 @@ function _ShipManager() {
 			// Remove Player Component, as it is removed from aiming calculation, arguably it shouldn't be
 			vec3.subtract(projectileVelocity, Game.getPlayerVelocity());
 
-			// Reverse Pick at z=-500 units in z-direction (this is currenlty hardcoded in aiming) along velocity vector.
+			// Reverse Pick at z=-500 units in z-direction (this is currently hardcoded in aiming) along velocity vector.
 			var aimAtPoint = vec3.create(projectileVelocity);
 			vec3.normalize(aimAtPoint);
 			var scaleFactor = - 500 / aimAtPoint[2];			
@@ -1145,18 +1148,26 @@ function _ShipManager() {
 			vec3.add(aimAtPoint, Game.getPlayerPosition());
 
 			var coords = [0,0];
+			var separation = vec3.create();
+			vec3.subtract(ship.position, Game.getPlayerPosition(),separation);
+			scaleFactor = 1/vec3.length(separation);
 
 			if(Gremlin.reversePick(aimAtPoint[0],aimAtPoint[1],aimAtPoint[2], coords)) {
-				var separation = vec3.create();
-				vec3.subtract(ship.position, Game.getPlayerPosition(),separation);
-				scaleFactor = 1/vec3.length(separation);
-				GremlinHUD.showElement(ship.aimAtIndex);
 				GremlinHUD.updateElement(ship.aimAtIndex, [coords[0],coords[1],-1], [scaleFactor,scaleFactor]);
+				if(Math.abs(coords[0]) < 1 && Math.abs(coords[1]) < 1) {
+					GremlinHUD.showElement(ship.aimAtIndex);
+					GremlinHUD.hideElement(ship.offScreenArrow);
+				} else {
+					GremlinHUD.showElement(ship.offScreenArrow);
+					GremlinHUD.hideElement(ship.aimAtIndex);
+				}
 			}
 			else {
-				// Aim at position not infront of player
+				// Aim at position not in front of player
 				GremlinHUD.hideElement(ship.aimAtIndex);
+				GremlinHUD.showElement(ship.offScreenArrow);
 			}
+			_updateOffScreenArrow(ship, separation, scaleFactor);
 		}
 		else {
 			// Player can not hit ship
@@ -1182,6 +1193,31 @@ function _ShipManager() {
 			health: { index: ship.healthBar, value: (ship.healthPoints/ship.healthMax) },
 			shield: { index: ship.shieldBar, value: (ship.shieldPoints/ship.shieldMax) }
 		});
+	}
+
+	function _updateOffScreenArrow(ship, separation, scaleFactor) {
+		var screenHeight, screenWidth, x, y, offset, adjustedScaleFactor,rotationAngle;
+		var coords = [];
+		offset = 32;
+		screenWidth = Game.getCanvasSize()[0];
+		screenHeight = Game.getCanvasSize()[1];
+		var transformedSeparation = vec3.create(separation);
+		Gremlin.playerCameraRotation(transformedSeparation);
+		x = transformedSeparation[0];
+		y = transformedSeparation[1];
+		if(Math.abs(x)*(screenHeight/(2*Math.abs(y))) > screenWidth/2 ) {
+			coords[0] = (x>0) ? screenWidth-offset : offset;
+			coords[1] = ((screenWidth-offset)/(2*Math.abs(x)))*y + screenHeight/2;
+		} else {
+			coords[0] = ((screenHeight-offset)/(2*Math.abs(y)))*x + screenWidth/2;
+			coords[1] = (y>0) ? screenHeight-offset : offset;
+		}
+		rotationAngle = -Math.asin(x/Math.sqrt(x*x+y*y))*180/Math.PI;
+		if(y<0) { rotationAngle = 180 - rotationAngle; }
+		coords = GremlinHUD.transformToHudCoords(coords);
+		adjustedScaleFactor = scaleFactor + 0.01; // This may need a fudge factor depending on size of texture.
+		GremlinHUD.updateElement(ship.offScreenArrow, [coords[0], coords[1], -1], [adjustedScaleFactor, adjustedScaleFactor], [0,0,rotationAngle]);
+
 	}
 
 	return {

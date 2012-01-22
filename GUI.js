@@ -166,7 +166,8 @@ function _HUD() {
 			return new HudElement(position, size, color);
 		}
 
-		this.position = [position[0],position[1],position[2]]; 
+		this.position = [position[0],position[1],position[2]];
+		this.rotation = mat4.identity(mat4.create());
 		this.size = [size[0],size[1]];
 		this.color = [color[0],color[1],color[2],color[3]];
 
@@ -180,6 +181,17 @@ function _HUD() {
 		this.setColor = function(color) { this.color = [color[0],color[1],color[2],color[3]]; }
 		this.assignBuffer = function(index) { this.buffers = index; }
 		this.setVisibility = function(value) { this.visible = value; }
+
+		this.rotate = function(amount, X, Y, Z) { mat4.rotate(this.rotation, Gremlin.degToRad(amount), [X, Y, Z]); }
+		this.setRotation = function(yaw, pitch, roll) {
+			mat4.identity(this.rotation);
+			mat4.rotate(this.rotation, Gremlin.degToRad(yaw), [0,1,0]);
+			mat4.rotate(this.rotation, Gremlin.degToRad(pitch), [1,0,0]);
+			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,1]);
+		}
+		this.getRotation = function() {
+			return mat4.create(this.rotation);
+		}
 
 		// Render Flags
 		this.visible = true;
@@ -491,9 +503,10 @@ function _HUD() {
 		}		
 	}
 
-	function updateElement(index, position, size) {
-		hudElements[index].setPosition(position);
-		hudElements[index].setSize([size[0]/viewPortRatio, size[1]]);	
+	function updateElement(index, position, size, rotation) {
+		if (position) { hudElements[index].setPosition(position); }
+		if (size) { hudElements[index].setSize([size[0]/viewPortRatio, size[1]]); }
+		if(rotation) { hudElements[index].setRotation(rotation[0],rotation[1], rotation[2]); }
 	}
 
 	function showElement(index) {
@@ -502,6 +515,15 @@ function _HUD() {
 
 	function hideElement(index) {
 		hudElements[index].setVisibility(false);
+	}
+
+	function transformToHudCoords(coords) {
+		var result = [0,0];
+		var canvasSize = Game.getCanvasSize();
+		for(var i = 0; i<2; i++) {
+			result[i] = (coords[i]-(canvasSize[i]/2))/(canvasSize[i]/2);
+		}
+		return result;
 	}
 
 	return {
@@ -518,6 +540,7 @@ function _HUD() {
 		clearHud:			clearHud,
 		renderHud:			renderHud,	
 		rescaleHud:			rescaleHud,
+		transformToHudCoords:   transformToHudCoords,
 		updateHud:			updateHud,
 		updateElement:		updateElement,
 		showElement:		showElement,
