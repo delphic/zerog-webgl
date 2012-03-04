@@ -1,156 +1,4 @@
-//     ___                    _ _           ___        _____ 
-//    / _ \_ __ ___ _ __ ___ | (_)_ __     / _ \/\ /\  \_   \
-//   / /_\/ '__/ _ \ '_ ` _ \| | | '_ \   / /_\/ / \ \  / /\/
-//  / /_\\| | |  __/ | | | | | | | | | | / /_\\\ \_/ /\/ /_  
-//  \____/|_|  \___|_| |_| |_|_|_|_| |_| \____/ \___/\____/  
-
-/*
-* GUI is created and controlled by a number of attributes:
-* gui-role, gui-id & gui-target
-* Essentially role defines what events to bind, and target and id tell you want to hide and show in these events
-* role is also used to perform actions as well as navigate, e.g. starting the game, saving values, etc
-*/
-
-function _GUI() {
-	var resolutionScale, lighting, lightingType, specularLighting;
-	// Functions to be called on hover / click of links and buttons
-	var onHover = function() { /*Blank*/ }
-	var onClick = function() { /*Blank*/ }
-	function setOnHover(func) { onHover = func; }
-	function setOnClick(func) { onClick = func; }
-
-	function startGame(val) {
-		$("#menuContainer").hide();
-		Game.unloadLevel();
-		switch(val) {
-			case "1":
-				Game.loadLevel("levels/deepspace.js", "InGame");
-				break;
-			case "2":
-				Game.loadLevel("levels/alone.js", "InGame");
-				break;
-			default:
-				alert("Level not Found!");
-				return;
-		}
-	}
-	function endGame(message) {
-		$('div[gui-role="menu"]').hide();
-		$('div[gui-role="menu"][gui-id="endGameMenu"]').show();
-		$("#endGameMessage").html(message);
-		$("#menuContainer").show();
-		Game.updateGameState("InMenu");
-		Game.pause();
-	}
-	function resumeGame() {
-		$("#menuContainer").hide();
-		Game.updateGameState("InGame");
-		Game.unpause();
-	}
-	function pauseGame() {
-		$("#menuContainer").show();
-		Game.updateGameState("InMenu");
-		Game.pause();
-	}
-	function exitToMenu() {
-		Game.unpause();
-		Game.unloadLevel();
-		Game.loadLevel("menu.js", "InMenu"); 
-	}
-	function applyOptions() {
-		resolutionScale = document.getElementById("optionsResolution").value;
-		lighting = document.getElementById("optionsLighting").value;
-		if (lighting != "false") { lightingType = lighting; lighting = true; }
-		else { lighting = false; }		
-		specularLighting = document.getElementById("optionsSpecularLighting").value;
-		Game.applyOptions(resolutionScale, lighting, lightingType, specularLighting);
-	}
-
-	function pause() {
-		$('div[gui-role="menu"]').hide();
-		$('div[gui-role="menu"][gui-id="pauseMenu"]').show();
-		$('#menuContainer').show();
-	}
-
-	function setStyleSize() { 
-		// Adds explicit height (and width for good measure) and font size for GUI scaling
-		$("#menuContainer").css("width",window.innerWidth*1);
-		$("#menuContainer").css("height",window.innerHeight*1);
-		$("#menuContainer").css("font-size",window.innerHeight/20);
-	}
-
-
-	$(document).ready( function() {
-
-		setStyleSize();
-
-		$('div[gui-role="menu"]').addClass("menu").hide();
-		$('div[gui-role="menu"][gui-id="mainMenu"]').show();
-		$('[gui-role="links"]').addClass("links");
-		$('[gui-role="links"] a').each(function() {
-			$(this).click(function() { 
-				$(this).parents('[gui-role="menu"]').hide();
-				$('[gui-role="menu"][gui-id="'+$(this).attr("gui-target")+'"]').show();
-				onClick();
-			});
-			$(this).mouseover(function(){
-				onHover();
-			});
-		});
-
-		$('[gui-role*="navButton"]').each(function() {
-			$(this).click(function() {
-				$(this).parents('[gui-role="menu"]').hide();
-				$('[gui-role="menu"][gui-id="'+$(this).attr("gui-target")+'"]').show();
-				onClick();
-			});
-			$(this).mouseover(function(){
-				onHover();
-			});
-		});
-
-		$('[gui-role*="resumeGame"]').each(function() {
-			$(this).click(function() {
-				resumeGame();
-			});
-		});
-		$('[gui-role*="startGame"]').each(function() {
-			$(this).click(function() {
-				startGame($(this).attr("gui-level"));
-			});
-		});
-		$('[gui-role*="applyOptions"]').each(function() {
-			$(this).click(function() {
-				applyOptions();
-			});
-		});
-		// On exit we don't want the renderer to be paused.
-		$('[gui-role*="menuResume"]').each(function() {
-			$(this).click(function() {
-				exitToMenu();
-			});
-		});
-
-		// Value Visualiser for Resolution Slider
-		$('#optionsResolution').change(function() { 
-			var factor = parseFloat($(this).val(),10);
-			$('#optionsResolutionOutput').html(factor.toFixed(1)); 
-		});
-
-		GremlinEventHandler.bindEvent("onresize", setStyleSize);
-	});
-
-	return { 
-		setStyleSize: 	setStyleSize,
-		setOnClick:     setOnClick,
-		setOnHover:     setOnHover,
-		pause: 			pause,
-		endGame:		endGame
-	}
-}
-var GremlinGUI = _GUI();
-
-function _HUD() {
+var HUD = function() {
 	var viewPortRatio = 1.6; // Height is used to calculate size of elements, so horizonal sizes need to be resized.
 	var hudActive = false; // TODO: Actually use this!
 
@@ -182,12 +30,12 @@ function _HUD() {
 		this.assignBuffer = function(index) { this.buffers = index; }
 		this.setVisibility = function(value) { this.visible = value; }
 
-		this.rotate = function(amount, X, Y, Z) { mat4.rotate(this.rotation, Gremlin.degToRad(amount), [X, Y, Z]); }
+		this.rotate = function(amount, X, Y, Z) { mat4.rotate(this.rotation, Gizmo.degToRad(amount), [X, Y, Z]); }
 		this.setRotation = function(yaw, pitch, roll) {
 			mat4.identity(this.rotation);
-			mat4.rotate(this.rotation, Gremlin.degToRad(yaw), [0,1,0]);
-			mat4.rotate(this.rotation, Gremlin.degToRad(pitch), [1,0,0]);
-			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,1]);
+			mat4.rotate(this.rotation, Gizmo.degToRad(yaw), [0,1,0]);
+			mat4.rotate(this.rotation, Gizmo.degToRad(pitch), [1,0,0]);
+			mat4.rotate(this.rotation, Gizmo.degToRad(roll), [0,0,1]);
 		}
 		this.getRotation = function() {
 			return mat4.create(this.rotation);
@@ -301,10 +149,10 @@ function _HUD() {
 			element.useTextures = false;
 		}
 
-		element.assignBuffer(Gremlin.Primitives.createSquare());
+		element.assignBuffer(Primitives.createSquare());
 
 		if(textureName) {
-			element.texture = Gremlin.createTexture(textureName, 1);
+			element.texture = Gizmo.createTexture(textureName, 1);
 		}
 
 		return hudElements.push(element)-1;
@@ -313,9 +161,9 @@ function _HUD() {
 	function createTextElement(position, text, textSize, colour, alignment, font, maxWidth) {
 		maxWidth = maxWidth || 0;
 
-		var textureCanvas = GremlinUtilities.createUtilityCanvas();
-		var size = GremlinTextWriter.drawText(text, textSize, alignment, colour, font, maxWidth, textureCanvas);
-		var textureId = Gremlin.createTextureFromCanvas(textureCanvas, function() { GremlinUtilities.destroyUtilityCanvas(textureCanvas); });
+		var textureCanvas = Utilities.createUtilityCanvas();
+		var size = TextWriter.drawText(text, textSize, alignment, colour, font, maxWidth, textureCanvas);
+		var textureId = Gizmo.createTextureFromCanvas(textureCanvas, function() { Utilities.destroyUtilityCanvas(textureCanvas); });
 
 		// convert size to faction of canvas
 		var canvasSize = Game.getCanvasSize();
@@ -339,13 +187,13 @@ function _HUD() {
 
 		switch(type) {
 			case "Cross":
-				element.assignBuffer(Gremlin.Primitives.createCross());
+				element.assignBuffer(Primitives.createCross());
 				break;
 			case "Brace":
-				element.assignBuffer(Gremlin.Primitives.createBrace());
+				element.assignBuffer(Primitives.createBrace());
 				break;
 			case "Box":
-				element.assignBuffer(Gremlin.Primitives.createBox());
+				element.assignBuffer(Primitives.createBox());
 				break;
 			default:
 				throw("Unknown wireframe type "+type);
@@ -359,7 +207,7 @@ function _HUD() {
 		// Create Containing Box
 		var boxElement = new HudElement([position[0],position[1], -1],[size[0]/viewPortRatio,size[1]],boxColor);
 
-		boxElement.assignBuffer(Gremlin.Primitives.createBox());
+		boxElement.assignBuffer(Primitives.createBox());
 
 		var boxIndex = 	hudElements.push(boxElement)-1;
 
@@ -453,10 +301,10 @@ function _HUD() {
 			barElement.useTextures = false;
 		}
 
-		barElement.assignBuffer(Gremlin.Primitives.createSquare());
+		barElement.assignBuffer(Primitives.createSquare());
 
 		if(textureName) {
-			barElement.texture = Gremlin.createTexture(textureName);
+			barElement.texture = Gizmo.createTexture(textureName);
 		}
 
 		return hudElements.push(barElement)-1;
@@ -470,7 +318,7 @@ function _HUD() {
 		renderQueue.sort(function(a,b){ return b.position[2] - a.position[2]; }); // Render deepest first
 
 		for (var i=0; i < hudElementsMax; i++) {
-			Gremlin.renderPlane(renderQueue[i]);
+			Gizmo.renderPlane(renderQueue[i]);
 		}
 	}
 
@@ -488,7 +336,7 @@ function _HUD() {
 		viewPortRatio = newRatio;
 	}
 
-	GremlinEventHandler.bindEvent("onresize", rescaleHud); // TODO: This should probably go in an init
+	EventHandler.bindEvent("onresize", rescaleHud); // TODO: This should probably go in an init
 
 	function clearHud() {
 		hudElements.splice(0, hudElements.length);
@@ -546,120 +394,4 @@ function _HUD() {
 		showElement:		showElement,
 		hideElement:		hideElement
 	}	
-}
-var GremlinHUD = _HUD(); 
-
-function _TextWriter() {
-	function _getPowerOfTwo(value, pow) {
-		var pow = pow || 1;
-		while(pow<value) {
-			pow *= 2;
-		}
-		return pow;
-	}
-
-	function _measureText(ctx, textToMeasure) {
-		return ctx.measureText(textToMeasure).width;
-	}
-
-	function _createMultilineText(ctx, textToWrite, maxWidth, text) {
-		// TODO: take account of new line / carriage returns in splitting lines
-		var currentText = textToWrite;
-		var futureText;
-		var subWidth = 0;
-		var maxLineWidth = 0;
-
-		var wordArray = textToWrite.split(" ");
-		var wordsInCurrent, wordArrayLength;
-		wordsInCurrent = wordArrayLength = wordArray.length;
-
-		while (_measureText(ctx, currentText) > maxWidth && wordsInCurrent > 1) {
-			wordsInCurrent--;
-			var linebreak = false;
-
-			currentText = futureText = "";
-			for(var i = 0; i < wordArrayLength; i++) {
-				if (i < wordsInCurrent) {
-					currentText += wordArray[i];
-					if (i+1 < wordsInCurrent) { currentText += " "; }
-				}
-				else {
-					futureText += wordArray[i];
-					if( i+1 < wordArrayLength) { futureText += " "; }
-				}
-			}
-		}
-		text.push(currentText);
-		maxLineWidth = _measureText(ctx, currentText);
-
-		if(futureText) {
-			subWidth = _createMultilineText(ctx, futureText, maxWidth, text);
-			if (subWidth > maxLineWidth) { 
-				maxLineWidth = subWidth;
-			}
-		}
-
-		return maxLineWidth;
-	}
-
-	function drawText(textToWrite, textHeight, textAlignment, textColour, fontFamily, maxWidth, canvasId) {
-		var canvasX, canvasY;
-		var textX, textY;
-
-		var text = [];
-
-		var canvas = document.getElementById(canvasId);
-		var ctx = canvas.getContext('2d');
-
-		ctx.font = textHeight+"px "+fontFamily;
-		if (maxWidth && _measureText(ctx, textToWrite) > maxWidth ) {
-			maxWidth = _createMultilineText(ctx, textToWrite, maxWidth, text);
-			canvasX = _getPowerOfTwo(maxWidth);
-		} else {
-			text.push(textToWrite);
-			canvasX = _getPowerOfTwo(ctx.measureText(textToWrite).width);
-		}
-		canvasY = _getPowerOfTwo(textHeight*(text.length+1));
-
-		canvas.width = canvasX;
-		canvas.height = canvasY;
-
-		switch(textAlignment) {
-			case "left":
-				textX = 0;
-				break;
-			case "center":
-				textX = canvasX/2;
-				break;
-			case "right":
-				textX = canvasX;
-				break;
-		}
-		textY = canvasY/2;	
-
-		ctx.fillStyle = "rgba(0,0,0,0)"; //TODO: Argument
-		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-		ctx.fillStyle = textColour;
-		ctx.textAlign = textAlignment;
-
-		ctx.textBaseline = 'middle'; // top, middle, bottom
-		ctx.font = textHeight+"px "+fontFamily;
-
-		var offset = (canvasY - textHeight*(text.length+1)) * 0.5;
-
-		for(var i = 0; i < text.length; i++) {
-			if(text.length > 1) {
-				textY = (i+1)*textHeight + offset;
-			}
-			ctx.fillText(text[i], textX,  textY);
-		}
-
-		return [canvasX, canvasY];
-	}
-
-	return {
-		drawText: 		drawText
-	}
-}
-var GremlinTextWriter = _TextWriter();
+}(); 

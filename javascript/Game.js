@@ -11,7 +11,7 @@
 //  \___/ \__,_| \_/ \__,_\__/\___|_|  |_| .__/ \__|
 //                                       |_|     
 
-function _Game() {
+var Game = function() {
 	// TODO: Change naming to public / private functions...
 	// TODO: Extract all things that should be in their own namespace (e.g. projectiles, gameobjects etc)
 	// TODO: add /** comments to functions to make their use clearer. 
@@ -34,10 +34,10 @@ function _Game() {
 
 	// Returns if a key is down for the specified binding
 	function _keyState(binding) {
-		var bind = GremlinBindings.GetBinding(binding);
+		var bind = Gremlin.Bindings.GetBinding(binding);
 		if (bind.Enabled) {
-			return (((_isMouseButton(bind.PrimaryKey)) ? GremlinInput.mouseDown(bind.PrimaryKey) : GremlinInput.keyDown(bind.PrimaryKey)) 
-				|| ((_isMouseButton(bind.SecondaryKey)) ? GremlinInput.mouseDown(bind.SecondaryKey) : GremlinInput.keyDown(bind.SecondaryKey)));
+			return (((_isMouseButton(bind.PrimaryKey)) ? Gremlin.Input.mouseDown(bind.PrimaryKey) : Gremlin.Input.keyDown(bind.PrimaryKey)) 
+				|| ((_isMouseButton(bind.SecondaryKey)) ? Gremlin.Input.mouseDown(bind.SecondaryKey) : Gremlin.Input.keyDown(bind.SecondaryKey)));
 		} else {
 			return false;
 		}
@@ -74,11 +74,11 @@ function _Game() {
 						i--; // Prevent skipping of next projectile after splice
 					}
 					// TODO: remove hardcoded radi
-					else if(!(projectiles[i].friendly) && GremlinCollision.sphereToSphereIntersect(projectiles[i].position, 0.03, player.position, 1)) {
+					else if(!(projectiles[i].friendly) && Gremlin.Collision.sphereToSphereIntersect(projectiles[i].position, 0.03, player.position, 1)) {
 						getSound("impact").play();
 						if(player.takeDamage(projectiles[i].velocity, projectiles[i].mass, projectiles[i].dmg)){
 							// GAME OVER
-							GremlinGUI.endGame("<h2>Game Over</h2>")
+							Gremlin.GUI.endGame("<h2>Game Over</h2>")
 						}
 						removeProjectile(i);
 						i--; // Prevent skipping of next projectile after splice
@@ -99,16 +99,16 @@ function _Game() {
 				var width = parseInt(canvas.style.width, 10);
 				var height = parseInt(canvas.style.height, 10);
 				var mousePos;
-				mousePos = GremlinInput.getMousePos();
+				mousePos = Gremlin.Input.getMousePos();
 
-				var dyaw, dpitch, droll, dx, dz;
+				var dyaw, dpitch, droll, dx, dy, dz;
 				dyaw = 0.05 * elapsed * ((width*0.5)-mousePos[0])/(0.5*width);
 				dpitch = 0.05 * elapsed * ((height*0.5)-mousePos[1])/(0.5*height);
 				droll = 0;
 				if (_keyState("RollLeft")) { droll += 0.1 * elapsed; }
 				if (_keyState("RollRight")) { droll -= 0.1 * elapsed; }
-				if (_keyState("Look")) Gremlin.rotatePlayerCamera(dyaw, dpitch, droll);
-				else if (_keyState("RollLeft") || _keyState("RollRight")) { Gremlin.rotatePlayerCamera(0, 0, droll); }
+				if (_keyState("Look")) Gremlin.Gizmo.rotatePlayerCamera(dyaw, dpitch, droll);
+				else if (_keyState("RollLeft") || _keyState("RollRight")) { Gremlin.Gizmo.rotatePlayerCamera(0, 0, droll); }
 
 				var accelRate = player.accelerationRate(elapsed);
 				dx = 0;
@@ -160,7 +160,7 @@ function _Game() {
 				}
 
 				var dvelocity = [dx, dy, dz ];
-				Gremlin.playerCameraReverseRotation(dvelocity);
+				Gremlin.Gizmo.playerCameraReverseRotation(dvelocity);
 
 				if (accelRate > 0 && (dx != 0 || dy != 0 || dz != 0)) {
 					player.updateVelocity(dvelocity[0], dvelocity[1], dvelocity[2]);
@@ -169,15 +169,15 @@ function _Game() {
 
 				player.update(elapsed);
 
-				Gremlin.setPlayerCamera(player.position[0],player.position[1],player.position[2]);
+				Gremlin.Gizmo.setPlayerCamera(player.position[0],player.position[1],player.position[2]);
 
 				// Pew Pew
 				if(_keyState("PewPew")) {
 					if (player.canFire()) {
 						var pos = vec3.create(player.position);
 						// TODO: Also this needs to be turret attach point rather than camera position
-						var aimtAt = [0,0,0];
-						aimAt = Gremlin.pickPosition(mousePos[0], mousePos[1], 500); // TODO: 500 should be replaced by z-component of distance to target - if this is altered, update aimAt reticle
+						var aimAt = [0,0,0];
+						aimAt = Gremlin.Gizmo.pickPosition(mousePos[0], mousePos[1], 500); // TODO: 500 should be replaced by z-component of distance to target - if this is altered, update aimAt reticle
 						var v = [0,0,0]; 
 						vec3.subtract(aimAt, pos, v);
 						vec3.normalize(v);
@@ -196,15 +196,15 @@ function _Game() {
 					}
 				}
 
-				if (GremlinInput.keyDown("Esc")) {
+				if (Gremlin.Input.keyDown("Esc")) {
 					updateGameState("InMenu");
 					pause();
-					GremlinGUI.pause();
+					Gremlin.GUI.pause();
 				}
 
 
 				// Update HUD
-				GremlinHUD.updateHud( 
+				Gremlin.HUD.updateHud( 
 				{ 
 					health: { index: healthBar, value: (player.healthPoints/player.healthMax) },
 					shield: { index: shieldBar, value: (player.shieldPoints/player.shieldMax) },
@@ -216,7 +216,7 @@ function _Game() {
 
 				// Update Projectiles
 				projectileObject.animate(elapsed);
-				for(var i = 0; i < projectiles.length; i++) {
+				for(i = 0; i < projectiles.length; i++) {
 					// Update Lifetime
 					projectiles[i].lifetime -= elapsed;
 					// Despawn if lifetime has expired
@@ -250,11 +250,12 @@ function _Game() {
 		}
 
 		// Render Scene
-		Gremlin.prepareScene();
+		var gizmo = Gremlin.Gizmo;
+		gizmo.prepareScene();
 		for(key in gameObjects)
 		{
 			if(gameObjects.hasOwnProperty(key) && gameObjects[key].visible) {
-				Gremlin.renderObject(gameObjects[key]);
+				gizmo.renderObject(gameObjects[key]);
 			}
 		}
 
@@ -263,7 +264,7 @@ function _Game() {
 		{
 			// Note: Not an efficient method of rendering particles...
 			// We can get away with this because it's only ~100 objects
-			Gremlin.renderObject(dustMotes[i]);
+			gizmo.renderObject(dustMotes[i]);
 		}
 
 		var projectilesMax = projectiles.length; // This won't change in the loop so don't evaluate it each time
@@ -275,14 +276,14 @@ function _Game() {
 			colour = projectiles[n].getColor();
 			projectileObject.setPosition(position[0], position[1], position[2]);
 			projectileObject.setColor(colour[0], colour[1], colour[2], colour[3], colour[4]);
-			Gremlin.renderObject(projectileObject);
+			gizmo.renderObject(projectileObject);
 		}
 
 		ShipManager.renderShips();
 
 		// WebGL HUD
 		if(gameState == "InGame") {
-			GremlinHUD.renderHud();
+			Gremlin.HUD.renderHud();
 		}
 
 
@@ -363,13 +364,13 @@ function _Game() {
 		}
 
 		function rotate(amount, X, Y, Z) {
-			mat4.rotate(this.rotation, Gremlin.degToRad(amount), [X, Y, Z]);
+			mat4.rotate(this.rotation, Gremlin.Gizmo.degToRad(amount), [X, Y, Z]);
 		}
 		function setRotation(yaw, pitch, roll) {
 			mat4.identity(this.rotation);
-			mat4.rotate(this.rotation, Gremlin.degToRad(yaw), [0,1,0]);
-			mat4.rotate(this.rotation, Gremlin.degToRad(pitch), [1,0,0]);
-			mat4.rotate(this.rotation, Gremlin.degToRad(roll), [0,0,1]);
+			mat4.rotate(this.rotation, Gremlin.Gizmo.degToRad(yaw), [0,1,0]);
+			mat4.rotate(this.rotation, Gremlin.Gizmo.degToRad(pitch), [1,0,0]);
+			mat4.rotate(this.rotation, Gremlin.Gizmo.degToRad(roll), [0,0,1]);
 		}
 		function setScale(x,y,z) { 
 			if(y && z) { this.scale = [x,y,z]; } 
@@ -404,13 +405,8 @@ function _Game() {
 		}
 
 		var object = new GameObject({ "position": parameters.position });
-		if (parameters.textureName) { 
-			object.useTextures = true;
-		}
-		else {
-			object.useTextures = false;
-		}
-
+		object.useTextures = (parameters.textureName) ? true : false;
+	    
 		if(parameters.scale.length) {
 			object.setScale(parameters.scale);
 		}
@@ -438,11 +434,10 @@ function _Game() {
 			object.assignBuffer(Gremlin.Primitives.createPoint());
 			break;
 		default:
-			alert("Invalid Prim Type: "+parameters.primType+"");
-			return;
+			throw new Error("Invalid Prim Type: "+parameters.primType+"");
 		}
 		if(parameters.textureName) {
-			object.texture = Gremlin.createTexture(parameters.textureName);
+			object.texture = Gremlin.Gizmo.createTexture(parameters.textureName);
 		}
 		if(parameters.shininess) {
 			object.setShininess(parameters.shininess);
@@ -481,12 +476,8 @@ function _Game() {
 			throw new Error("Required argument missing for createObjectModel: 'scale'");
 		}
 		var object = new GameObject({ "position": parameters.position });
-		if (parameters.textureName) { 
-			object.useTextures = true;
-		}
-		else {
-			object.useTextures = false;
-		}
+		object.useTextures = (parameters.textureName)? true : false;
+
 		if(parameters.scale.length) {
 			object.setScale(parameters.scale);
 		}
@@ -494,10 +485,10 @@ function _Game() {
 			object.setScale(parameters.scale, parameters.scale, parameters.scale);
 		}
 
-		Gremlin.loadModel(object, parameters.modelName); // TODO: do not pass object, use callback
+		Gremlin.Gizmo.loadModel(object, parameters.modelName); // TODO: do not pass object, use callback
 
 		if(parameters.textureName) {
-			object.texture = Gremlin.createTexture(parameters.textureName);
+			object.texture = Gremlin.Gizmo.createTexture(parameters.textureName);
 		}
 		if(parameters.shininess) {
 			object.setShininess(parameters.shininess);
@@ -520,28 +511,28 @@ function _Game() {
 		// TODO: Projectile Init
 
 		// Bindings
-		GremlinBindings.Bind({Name: "Forward", PrimaryKey: "w", SecondaryKey: "Up" });
-		GremlinBindings.Bind({Name: "Backward", PrimaryKey: "s", SecondaryKey: "Down"});
-		GremlinBindings.Bind({Name: "Left", PrimaryKey: "a", SecondaryKey: "Left"});
-		GremlinBindings.Bind({Name: "Right", PrimaryKey: "d", SecondaryKey: "Right"});
-		GremlinBindings.Bind({Name: "Up", PrimaryKey: "Space"});
-		GremlinBindings.Bind({Name: "Down", PrimaryKey: "Shift"});
-		GremlinBindings.Bind({Name: "RollLeft", PrimaryKey: "q"});
-		GremlinBindings.Bind({Name: "RollRight", PrimaryKey: "e"});
-		GremlinBindings.Bind({Name: "Look", PrimaryKey: "RightMouseButton"});
-		GremlinBindings.Bind({Name: "PewPew", PrimaryKey: "LeftMouseButton"});
+		Gremlin.Bindings.Bind({Name: "Forward", PrimaryKey: "w", SecondaryKey: "Up" });
+		Gremlin.Bindings.Bind({Name: "Backward", PrimaryKey: "s", SecondaryKey: "Down"});
+		Gremlin.Bindings.Bind({Name: "Left", PrimaryKey: "a", SecondaryKey: "Left"});
+		Gremlin.Bindings.Bind({Name: "Right", PrimaryKey: "d", SecondaryKey: "Right"});
+		Gremlin.Bindings.Bind({Name: "Up", PrimaryKey: "Space"});
+		Gremlin.Bindings.Bind({Name: "Down", PrimaryKey: "Shift"});
+		Gremlin.Bindings.Bind({Name: "RollLeft", PrimaryKey: "q"});
+		Gremlin.Bindings.Bind({Name: "RollRight", PrimaryKey: "e"});
+		Gremlin.Bindings.Bind({Name: "Look", PrimaryKey: "RightMouseButton"});
+		Gremlin.Bindings.Bind({Name: "PewPew", PrimaryKey: "LeftMouseButton"});
 
 		// Create Projectiles
 		projectileObject.assignBuffer(Gremlin.Primitives.createTetrahedron());
 		projectileObject.setScale(0.03,0.03,0.03);
-		projectileObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); }
+		projectileObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); };
 
 		loadLevel("menu.js", "InMenu");
 
 		// Preload Some Sounds
-		setSound("space-ambient", GremlinAudio.load("sounds/space-ambient.ogg")).setVolume(0.2);
-		setSound("fire", GremlinAudio.load("sounds/neutron-disruptor.wav"));
-		setSound("impact", GremlinAudio.load("sounds/impact.ogg"));
+		setSound("space-ambient", Gremlin.Audio.load("sounds/space-ambient.ogg")).setVolume(0.2);
+		setSound("fire", Gremlin.Audio.load("sounds/neutron-disruptor.wav"));
+		setSound("impact", Gremlin.Audio.load("sounds/impact.ogg"));
 	}
 
 	// Player / Ships
@@ -566,13 +557,8 @@ function _Game() {
 		object.firingCost = 5;
 		object.weaponSpeed = 0.1;
 		object.canFire = function() { 
-			if(this.firingTimer > this.firingPeriod && (this.energyPoints > this.firingCost)) { 
-				return true; 
-			} 
-			else {			
-				return false; 
-			}
-		}
+			return (this.firingTimer > this.firingPeriod && (this.energyPoints > this.firingCost));
+		};
 		object.fire = function() { 
 			if(this.canFire()) { 
 				if (this.energyPoints > 0.8*this.energyMax) {
@@ -583,21 +569,21 @@ function _Game() {
 				}
 				this.energyPoints -= this.firingCost;
 			}
-		}
+		};
 		object.updateShip = function(elapsed) {
 			this.shieldPoints += elapsed*this.shieldRegen; if(this.shieldPoints>this.shieldMax) this.shieldPoints = this.shieldMax;
 			this.energyPoints += elapsed*this.energyRegen; if(this.energyPoints>this.energyMax) this.energyPoints = this.energyMax;
 			this.firingTimer += elapsed;
-		}
+		};
 		object.accelerationRate = function(elapsed) {
 			var accelerationAmount = 0.00005 * elapsed;
-			accelerationAmount/=this.mass
+			accelerationAmount/=this.mass;
 
 			return accelerationAmount;
-		}
+		};
 		object.accelerate = function(elapsed) {
-			// Nothing Doing
-		}
+		    /* Nothing Doing*/
+        };
 		object.takeDamage = function(velocity, mass, damage) { //damage = damage per unit mass 
 
 			// TODO: extract method - should not be in ship takeDamage method 
@@ -616,16 +602,11 @@ function _Game() {
 			else {
 				this.healthPoints -= keneticAdjustedDamage;
 			}
-			if(this.healthPoints<=0){
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
+			return (this.healthPoints<=0);
+		};
 		object.setWeaponSpeed = function(speed) {
 			this.weaponSpeed = speed;
-		}
+		};
 	}
 	var player = new GameObject({ "position": [0,0,0] });
 	attachShip(player);
@@ -659,7 +640,7 @@ function _Game() {
 		// TODO: Check input is vector
 		// TODO: Update game code to use player object rotation not Engine Camera Rotation
 		//player.setRotation(rotation[0], rotation[1], rotation[2]);
-		Gremlin.setPlayerCameraRotation(rotation[0], rotation[1], rotation[2]);
+		Gremlin.Gizmo.setPlayerCameraRotation(rotation[0], rotation[1], rotation[2]);
 	}
 	function getPlayerPosition() {
 		return player.position;
@@ -674,19 +655,19 @@ function _Game() {
 		return (vec3.length(player.velocity)+player.weaponSpeed);
 	}
 	function createPlayerHud() {
-		healthBar = GremlinHUD.createBar(
+		healthBar = Gremlin.HUD.createBar(
 			[-0.9, -0.65],
 			[0.04, 0.3],
 			[0.1, 0.5, 0.1, 1],
 			[0.7, 1, 0.7, 1],
 			"Vertical");
-		shieldBar = GremlinHUD.createBar(
+		shieldBar = Gremlin.HUD.createBar(
 			[0.9,-0.65],
 			[0.04,0.3],
 			[0.1,0.1,0.5,1],
 			[0.7,0.7,1,1],
 			"Vertical");
-		energyBar = GremlinHUD.createBar(
+		energyBar = Gremlin.HUD.createBar(
 			[0,-0.9],
 			[0.4,0.04],
 			[0.5,0.15,0.05,1],
@@ -815,8 +796,8 @@ function _Game() {
 		setCanvasSize();
 
 		// Initialise
-		Gremlin.init();
-		GremlinAudio.init(); // TODO: move this and any other inits into Gremlin's
+		Gremlin.Gizmo.init();
+		Gremlin.Audio.init(); // TODO: move this and any other inits into Gremlin's
 		gameInit();
 
 		// Start Game Loop
@@ -881,30 +862,32 @@ function _Game() {
 	function applyOptions(resScale, _lighting, _lightingType, _specularLighting) {
 		resolutionScale = resScale;
 		setCanvasSize();
-		Gremlin.setLightingFlags("lighting", _lighting);
-		Gremlin.setLightingFlags("specularLighting", _specularLighting);
-		Gremlin.setShader(_lightingType);
+		Gremlin.Gizmo.setLightingFlags("lighting", _lighting);
+		Gremlin.Gizmo.setLightingFlags("specularLighting", _specularLighting);
+		Gremlin.Gizmo.setShader(_lightingType);
 	}
 	function setCanvasSize() {
+        var windowWidth = window.innerWidth;
+        var windowHeight = window.innerHeight;
 		if (resolutionScale) {
-			canvas.width = resolutionScale*document.width;
-			canvas.height = resolutionScale*window.innerHeight;
+			canvas.width = resolutionScale*windowWidth;
+			canvas.height = resolutionScale*windowHeight;
 		}
 		else {
-			canvas.width = document.width;
-			canvas.height = window.innerHeight;
+			canvas.width = windowWidth;
+			canvas.height = windowHeight;
 		}
-		canvas.style.width = document.width+"px";
-		canvas.style.height = window.innerHeight+"px";
+		canvas.style.width = windowWidth+"px";
+		canvas.style.height = windowHeight+"px";
 	}
 	function getCanvasSize() {
 		return [canvas.width, canvas.height];
 	}
 
-	GremlinEventHandler.bindEvent("onblur", controller.handleWindowBlur);
-	GremlinEventHandler.bindEvent("onfocus", controller.handleWindowFocus);
-	GremlinEventHandler.bindEvent("onresize", setCanvasSize);
-	GremlinEventHandler.bindEvent("onresize", Gremlin.resize);
+	Gremlin.EventHandler.bindEvent("onblur", controller.handleWindowBlur);
+	Gremlin.EventHandler.bindEvent("onfocus", controller.handleWindowFocus);
+	Gremlin.EventHandler.bindEvent("onresize", setCanvasSize);
+	Gremlin.EventHandler.bindEvent("onresize", Gremlin.Gizmo.resize);
 
 	// Level Functions - Own namespace?
 	var levelThink = function() { /* Blank! */ };
@@ -927,8 +910,8 @@ function _Game() {
 	function loadLevel(fileName, targetState) {
 		// Reset Player Object - should be method on player
 		// Also we should only reset the camera!
-		Gremlin.setPlayerCamera(0,0,0);
-		Gremlin.setPlayerCameraRotation(0,0,0);
+		Gremlin.Gizmo.setPlayerCamera(0,0,0);
+		Gremlin.Gizmo.setPlayerCameraRotation(0,0,0);
 		player.position = [0,0,0];
 		player.velocity = [0,0,0];
 		player.firingTimer = 1000;
@@ -947,7 +930,7 @@ function _Game() {
 
 	}
 	function unloadLevel() {
-		levelCleanUp()
+		levelCleanUp();
 		for(key in levelVars)
 		{
 			if(levelVars.hasOwnProperty(key)) { levelVars[key] = null; }
@@ -958,8 +941,8 @@ function _Game() {
 		gameObjects.splice(0, gameObjects.length);
 		projectiles.splice(0, projectiles.length);
 		dustMotes.splice(0, dustMotes.length); // Looks like we need a level manager! ;D
-		Gremlin.removeLights();
-		GremlinHUD.clearHud();
+		Gremlin.Gizmo.removeLights();
+		Gremlin.HUD.clearHud();
 	}
 
 
@@ -993,532 +976,4 @@ function _Game() {
 		unpause:					unpause,
 		webGLStart: 				webGLStart
 	}
-}
-var Game = _Game();
-
-//   __ _     _                                                  
-//  / _\ |__ (_)_ __     /\/\   __ _ _ __   __ _  __ _  ___ _ __ 
-//  \ \| '_ \| | '_ \   /    \ / _` | '_ \ / _` |/ _` |/ _ \ '__|
-//  _\ \ | | | | |_) | / /\/\ \ (_| | | | | (_| | (_| |  __/ |   
-//  \__/_| |_|_| .__/  \/    \/\__,_|_| |_|\__,_|\__, |\___|_|   
-//             |_|                               |___/         
-
-// Enemy Ship Mananger
-
-function _ShipManager() {
-
-	// Public
-	var shipList = [];
-
-	function numberOfShips() {
-		return shipList.length;
-	}
-
-	function createShip(parameters) {
-		// Check for required parameters
-		if(!parameters.position) { 
-			throw new Error("Missing required attribute for createShip: 'position'");
-		}
-		// They're all evil spinning crates for now!
-		var tmpShip = Game.createObjectPrimitive({
-			"position": parameters.position, 
-			"primType": "cube", 
-			"textureName": "textures/crate.gif", 
-			"scale": 1.0, 
-			"animation": function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); }, 
-			"stopPush": true
-		});
-		var color = parameters.color ? parameters.color : [1, 1, 1, 1];
-		tmpShip.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
-
-		// Create HUD elements
-		var canvasSize = Game.getCanvasSize();
-		var separation = vec3.create();
-		vec3.subtract(parameters.position, Game.getPlayerPosition(), separation);
-		var scaleFactor = 1/vec3.length(separation);
-		tmpShip.aimAtIndex = GremlinHUD.createWireframe("Box",[0,0,0], [scaleFactor,scaleFactor], [1,0,0,1]);
-		tmpShip.healthBar = GremlinHUD.createBar(
-			[-0.95, 0],
-			[0.1, 0.7],
-			[0.1, 0.5, 0.1, 1],
-			[0,0,0,0], 
-			"Vertical");
-		tmpShip.shieldBar = GremlinHUD.createBar(
-			[0.95,0],
-			[0.1,0.7],
-			[0.1,0.1,0.5,1],
-			[0,0,0,0], 
-			"Vertical");
-		tmpShip.targetBrace = GremlinHUD.createWireframe("Brace",[0,0,0], [0.9,0.9],[1,0,0,1]);
-		tmpShip.infoContainer = GremlinHUD.createGroup([0,0,0],[0.25,0.25]);
-		tmpShip.offScreenArrow = GremlinHUD.createElement([0,0,0], [0.02, 0.02], [1,1,1,1], "textures/arrow.png");
-		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.healthBar);
-		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.shieldBar);
-		GremlinHUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.targetBrace);
-
-		// Attach Ship parameters
-		var parameters = {};
-		parameters.FiringPeriod = 600;
-		Game.attachShip(tmpShip, parameters);
-
-		// Attach AI
-		ShipAI.attachAI(tmpShip);
-
-		// Add to List
-		var index = shipList.push(tmpShip)-1;
-
-		// Update HUD Element size
-		_updateHudElements(shipList[index]); // This prevents the HUD elements from taking up the entire screen for 1 frame on ship creation
-	}
-	function destroyShip(index) {
-		GremlinHUD.hideElement(shipList[index].aimAtIndex);
-		GremlinHUD.hideGroupElements(shipList[index].infoContainer);
-		shipList.splice(index,1);
-	}
-	function destroyShips() {
-		shipList.splice(0,shipList.length);
-	}
-
-	function updateShips(elapsed, playerPos, playerVel) {
-		if(shipList.length > 0) {
-			var shipListMax = shipList.length;
-			for(var i = 0; i < shipListMax; i++) {	
-				// Run AI - Argueably should be in separate function
-				shipList[i].runAI(shipList[i], elapsed);
-
-				shipList[i].update(elapsed);
-				shipList[i].updateShip(elapsed);
-				shipList[i].animate(elapsed); // Argueably should be in separate function
-				_updateHudElements(shipList[i]);
-			}
-		}
-		else {
-			// No Ships .. possibly pass victory condition, really this should be dealt with by the level think function
-			// Need to think about a way to couple that more strongly.
-		}
-	}
-	function renderShips() {
-		for(var i = 0; i < shipList.length; i++) {
-			Gremlin.renderObject(shipList[i]);
-		}
-	}
-
-	function checkShipsCollision(position, velocity, mass, radius, dmg) {
-		for(var i = 0; i < shipList.length; i++) {
-			// TODO: Remove hardcoded ship radius - add radius method to gameobject (returns average scale)
-			if(GremlinCollision.sphereToSphereIntersect(position, radius, shipList[i].position, 1)){
-				shipList[i].takeDamageAi();
-				if (shipList[i].takeDamage(velocity, mass, dmg))
-				{
-					this.destroyShip(i);
-					i--; 
-					// Because we are removing an element from the array, 
-					// the index needs to be decreased as next element now 
-					// has the index of the element we just removed,
-				}
-				return true;
-			}
-		}
-		return false;
-	}
-
-	// Private
-	function _updateHudElements(ship) {
-
-		var separation = vec3.create();
-		vec3.subtract(ship.position, Game.getPlayerPosition(), separation);
-		var projectileVelocity = vec3.create();
-
-		// Update Aim at Element
-		// Calculate required velocity to hit target
-		if(GremlinMaths.calculateProjectileVelocity(separation, ship.velocity, Game.getPlayerProjectileSpeed(), projectileVelocity)) {
-			// Remove Player Component, as it is removed from aiming calculation, arguably it shouldn't be
-			vec3.subtract(projectileVelocity, Game.getPlayerVelocity());
-
-			// Reverse Pick at z=-500 units in z-direction (this is currently hardcoded in aiming) along velocity vector.
-			var aimAtPoint = vec3.create(projectileVelocity);
-			vec3.normalize(aimAtPoint);
-			var scaleFactor = - 500 / aimAtPoint[2];			
-			if(aimAtPoint[2] > 0) {
-				scaleFactor *= -1;
-			}
-			vec3.scale(aimAtPoint, scaleFactor);
-
-			// Move to Global Coordinate System
-			vec3.add(aimAtPoint, Game.getPlayerPosition());
-
-			var coords = [0,0];
-			var separation = vec3.create();
-			vec3.subtract(ship.position, Game.getPlayerPosition(),separation);
-			scaleFactor = 1/vec3.length(separation);
-
-			if(Gremlin.reversePick(aimAtPoint[0],aimAtPoint[1],aimAtPoint[2], coords)) {
-				GremlinHUD.updateElement(ship.aimAtIndex, [coords[0],coords[1],-1], [scaleFactor,scaleFactor]);
-				if(Math.abs(coords[0]) < 1 && Math.abs(coords[1]) < 1) {
-					GremlinHUD.showElement(ship.aimAtIndex);
-					GremlinHUD.hideElement(ship.offScreenArrow);
-				} else {
-					GremlinHUD.showElement(ship.offScreenArrow);
-					GremlinHUD.hideElement(ship.aimAtIndex);
-				}
-			}
-			else {
-				// Aim at position not in front of player
-				GremlinHUD.hideElement(ship.aimAtIndex);
-				GremlinHUD.showElement(ship.offScreenArrow);
-			}
-			_updateOffScreenArrow(ship, separation, scaleFactor);
-		}
-		else {
-			// Player can not hit ship
-			GremlinHUD.hideElement(ship.aimAtIndex);
-		}
-
-		// Update Elements Group Position
-		var shipPosition = [0,0];
-		if(Gremlin.reversePick(ship.position[0],ship.position[1],ship.position[2],shipPosition))
-		{
-			var groupScale = 5*scaleFactor;
-			if(groupScale < 0.01) { groupScale = 0.01; } 
-			GremlinHUD.showGroupElements(ship.infoContainer);
-			GremlinHUD.setGroupPosition(ship.infoContainer, [shipPosition[0],shipPosition[1],0]);
-			GremlinHUD.setGroupSize(ship.infoContainer, [groupScale,groupScale]);
-		}
-		else {
-			GremlinHUD.hideGroupElements(ship.infoContainer);
-		}
-
-		// Update Health and Shield Bars
-		GremlinHUD.updateHud({ 
-			health: { index: ship.healthBar, value: (ship.healthPoints/ship.healthMax) },
-			shield: { index: ship.shieldBar, value: (ship.shieldPoints/ship.shieldMax) }
-		});
-	}
-
-	function _updateOffScreenArrow(ship, separation, scaleFactor) {
-		var screenHeight, screenWidth, x, y, offset, adjustedScaleFactor,rotationAngle;
-		var coords = [];
-		offset = 32;
-		screenWidth = Game.getCanvasSize()[0];
-		screenHeight = Game.getCanvasSize()[1];
-		var transformedSeparation = vec3.create(separation);
-		Gremlin.playerCameraRotation(transformedSeparation);
-		x = transformedSeparation[0];
-		y = transformedSeparation[1];
-		if(Math.abs(x)*(screenHeight/(2*Math.abs(y))) > screenWidth/2 ) {
-			coords[0] = (x>0) ? screenWidth-offset : offset;
-			coords[1] = ((screenWidth-offset)/(2*Math.abs(x)))*y + screenHeight/2;
-		} else {
-			coords[0] = ((screenHeight-offset)/(2*Math.abs(y)))*x + screenWidth/2;
-			coords[1] = (y>0) ? screenHeight-offset : offset;
-		}
-		rotationAngle = -Math.asin(x/Math.sqrt(x*x+y*y))*180/Math.PI;
-		if(y<0) { rotationAngle = 180 - rotationAngle; }
-		coords = GremlinHUD.transformToHudCoords(coords);
-		adjustedScaleFactor = scaleFactor + 0.01; // This may need a fudge factor depending on size of texture.
-		GremlinHUD.updateElement(ship.offScreenArrow, [coords[0], coords[1], -1], [adjustedScaleFactor, adjustedScaleFactor], [0,0,rotationAngle]);
-
-	}
-
-	return {
-		createShip:				createShip,
-		destroyShip:			destroyShip,
-		destroyShips:			destroyShips,
-		updateShips:			updateShips,
-		renderShips:			renderShips,
-		numberOfShips:			numberOfShips,
-		checkShipsCollision:	checkShipsCollision
-	}
-}
-
-var ShipManager = _ShipManager();
-
-//     _      _____ 
-//    /_\     \_   \
-//   //_\\     / /\/
-//  /  _  \_/\/ /__ 
-//  \_/ \_(_)____(_)
-
-function _ShipAI() {
-
-	// Attach Ship AI
-	function attachAI(obj, parameters) {
-		// AI State - enum - 0, Idle; 1, Close; 2, Attack; 3, Flee; 4, Evasive; 5, Patrol
-		obj.AiState = 0;
-		obj.AiStateTimer = 0;
-
-		// AI friendly - bool 
-		// TODO: Create enum for factions including neutral, to make for more complex interactions
-		if(parameters && parameters["Friendly"]) {
-			obj.AiFiendly = parameters["Friendly"];
-		}
-		else {
-			obj.AiFriendly = false;
-		}
-
-		// AI In Combat - bool
-		obj.AiInCombat = false;
-
-		// AI Skill - number - skill factor
-		if(parameters && parameters["Skill"]) {
-			obj.AiSkill = parameters["Skill"];
-		}
-		else {
-			obj.AiSkill = 1;
-		}
-
-		// AI Confidence - number - affects state changes
-		if(parameters && parameters["Confidence"]) {
-			obj.AiConfidence = parameters["Confidence"];
-		}
-		else {
-			obj.AiConfidence = obj.AiSkill; 
-		}
-
-		// AI Engage Distance - number - number of units at which non-friendly AI engages.
-		if(parameters && parameters["EngageDistance"]) {
-			obj.AiEngageDistance = parameters["EngageDistance"];
-		}
-		else {
-			obj.AiEngageDistance = 100*obj.AiSkill; // TODO: Tweak once units have been actually figured out!
-		}
-
-		// AI Disengage Distance - number - number of units at which AI stops pursuing.
-		if(parameters && parameters["DisengageDistance"]) {
-			obj.AiDisengageDistance = parameters["DisengageDistance"];
-		}
-		else {
-			obj.AiDisengageDistance = 10*obj.AiEngageDistance;
-		}		
-
-		obj.runAI = _runAI;
-		obj.takeDamageAi = _takeDamageAi;
-	}
-
-	function _takeDamageAi(aggressor) {
-		// If currently idle switch to attack
-		if(this.AiState == 0) {
-			this.AiState = 2;
-			//TODO: if / when AI has targets, rather than just the player then target aggressor
-		}
-	}
-
-	function _runAI(ship, elapsed) {
-		this.AiStateTimer += elapsed;		
-		// Check state and change if necessary.
-		// Simple minimum of 1 sec in state currently
-		var stateChanged = false;
-		if(this.AiStateTimer > 1000) {
-			switch(this.AiState){
-			// Close
-			case 1:
-				// Check own health/shield - if below certain amount change to Flee / Evasive
-				if (this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax < 0.5/this.AiConfidence)
-				{
-					this.AiState = 3;
-					stateChanged = true;
-					break;
-				}
-
-				// Check distance and relative velocity is close enough switch to attack
-				separation = vec3.create();
-				velocityDifference = vec3.create();
-				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
-				vec3.subtract(Game.getPlayerVelocity(), this.velocity, velocityDifference);
-				if (vec3.length(separation) < 100 && vec3.length(velocityDifference) < 25) {
-					this.AiState = 2;
-					stateChanged = true;
-					break;
-				}
-
-				// if > disengage, then change attribute and idle
-				if (vec3.length(separation) > this.AiDisengageDistance) {
-					this.AiState = 0;
-					stateChanged = true;
-					break;
-				}
-				break;
-			// Attack
-			case 2: 
-				// Check health and shield and if low switch to flee / evasive
-				if (this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax < 0.5/this.AiConfidence)
-				{
-					this.AiState = 3;
-					stateChanged = true;
-					break;
-				}
-
-				// Check distance and relative velocity and change to close if necessary
-				separation = vec3.create();
-				velocityDifference = vec3.create();
-				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
-				vec3.subtract(Game.getPlayerVelocity(), this.velocity, velocityDifference);
-				if (vec3.length(separation) > 150 || vec3.length(velocityDifference) > 40) {
-					this.AiState = 1;
-					stateChanged = true;
-					break;
-				}
-
-				break;
-			//Flee
-			case 3: 
-				separation = vec3.create();
-				velocityDifference = vec3.create();
-				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
-				// Check distance if greater than a safety distance (disengage distance?)
-				if (this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax > 0.5/this.AiConfidence
-					|| vec3.length(separation) > this.AiDisengageDistance)
-				{
-					// Check relative health and shield and switch to either close or idle
-					this.AiState = 0;
-					stateChanged = true;
-					break;
-				}
-				// Check distance if less than safety distance (disengage distance?)
-					// Check relative health and shield and attack if safe appropriate
-				break;
-			// Evade
-			case 4:
-				separation = vec3.create();
-				velocityDifference = vec3.create();
-				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
-				// As Above
-				if (vec3.length(separation) > this.AiDisengageDistance
-					&& this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax > 0.5/this.AiConfidence)
-				{
-					// Check relative health and shield and switch to either close or idle
-					this.AiState = 1;
-					stateChanged = true;
-					break;
-				}
-				break;
-			// Default / Idle
-			default:
-				// Check Aggro distance, and attack if within range and is not friendly.
-				if(!this.AiFriendly) {
-					separation = vec3.create();
-					velocityDifference = vec3.create();
-					vec3.subtract(Game.getPlayerPosition(), this.position, separation);
-					if(vec3.length(separation) < this.AiEngageDistance) {
-						this.AiState = 2;
-						stateChanged = true;
-						break;
-					}
-				}
-				break;				
-			}
-		}
-
-		// Run current state
-		if(!stateChanged)
-		{
-			var accelRate = this.accelerationRate(elapsed);
-			var playerPos = Game.getPlayerPosition();
-			var playerVel = Game.getPlayerVelocity();
-			var separation = vec3.create();
-			var relativeVelocity = vec3.create();
-			vec3.subtract(playerPos, this.position, separation);
-			vec3.subtract(playerVel, this.velocity, relativeVelocity);
-
-			switch(this.AiState) {
-			// Close
-			case 1:
-				// Accelerate to minimise relative velocity and separation
-				var direction = [
-					(separation[0]+relativeVelocity[0]), 
-					(separation[1]+relativeVelocity[1]),
-					(separation[2]+relativeVelocity[2])];
-				vec3.normalize(direction);
-				vec3.scale(direction,accelRate);
-				this.updateVelocity(direction[0], direction[1], direction[2]);
-				this.accelerate(elapsed);
-				break;
-			// Attack
-			case 2:
-				// Maintain distance / velocity within range
-				if(vec3.length(relativeVelocity) > 5)
-				{
-					var direction = vec3.create(relativeVelocity);
-					vec3.normalize(direction);
-					vec3.scale(direction,accelRate);
-					this.updateVelocity(direction[0],direction[1],direction[2]);
-					this.accelerate(elapsed);
-				}
-				// Check firing timer and fire if possible
-				if (this.canFire()) {
-					// Caculate desired velocity
-					var pos = vec3.create(this.position);
-					var projectileVelocity = vec3.create();
-
-					// Create Estimated player position - Skill Accuracy Effect
-					var estimatedSeparation = vec3.create();
-
-					// At 20 units skill of 1 has 0-1 unit inaccuracy
-					// TODO: link this to target size.
-					var scalingFactor = vec3.length(separation) / (20 * this.AiSkill);
-					vec3.add(separation, [ (Math.random()-0.5)*scalingFactor, (Math.random()-0.5)*scalingFactor, (Math.random()-0.5)*scalingFactor], estimatedSeparation);
-
-					if(GremlinMaths.calculateProjectileVelocity(estimatedSeparation, playerVel, (this.weaponSpeed+vec3.length(this.velocity)), projectileVelocity))
-					{
-						// Spawn new projectile
-						Game.spawnProjectile({
-								"position": pos, 
-								"velocity": projectileVelocity, 
-								"color": this.color, 
-								"damage": 20000, 
-								"lifetime": 30000 
-						});
-						this.fire();	
-					}
-				}
-				break;
-			// Flee
-			case 3:
-				// Accelerate to maximize relative velocity and separation
-				var direction = [
-					(-separation[0]-relativeVelocity[0]), 
-					(-separation[1]-relativeVelocity[1]),
-					(-separation[2]-relativeVelocity[2])];
-				vec3.normalize(direction);
-				vec3.scale(direction,accelRate);
-				this.updateVelocity(direction[0], direction[1], direction[2]);
-				this.accelerate(elapsed);
-				break;
-
-			// TODO: Implement	
-			//case 4:
-				// Accelerate in a random direction mostly away from aggressor
-				// break;
-			// case 5:
-				// Patrol along path
-				// break;
-
-			default:
-				// Slow to Stop
-				if (vec3.length(this.velocity) > accelRate)
-				{
-					var direction = vec3.create();
-					vec3.negate(this.velocity, direction);
-					vec3.normalize(direction);
-					vec3.scale(direction,accelRate);
-					this.updateVelocity(direction[0], direction[1], direction[2]);
-					this.accelerate(elapsed);
-				}
-				else if (vec3.length(this.velocity) != 0)
-				{
-					this.setVelocity(0,0,0);
-				}
-				break;
-			}
-		}
-		else {
-			this.AiStateTimer = 0;
-		}
-	}
-
-	return {
-		attachAI:				attachAI
-	}
-}
-
-var ShipAI = _ShipAI();
+}();

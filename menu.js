@@ -1,17 +1,17 @@
-		var onClick = GremlinAudio.load("sounds/buttonclick.wav");
-		var onHover = GremlinAudio.load("sounds/buttonrollover.wav");
-		var bgMusic = GremlinAudio.load("sounds/menu1.mp3", true);
+		var onClick = ZeroG.Gremlin.Audio.load("sounds/buttonclick.wav");
+		var onHover = ZeroG.Gremlin.Audio.load("sounds/buttonrollover.wav");
+		var bgMusic = ZeroG.Gremlin.Audio.load("sounds/menu1.mp3", true);
 
-		GremlinGUI.setOnClick(function(){ onClick.play(); });
-		GremlinGUI.setOnHover(function(){ onHover.play(); });
+		ZeroG.Gremlin.GUI.setOnClick(function(){ onClick.play(); });
+		ZeroG.Gremlin.GUI.setOnHover(function(){ onHover.play(); });
 
 		// Lighting
-		Gremlin.setLightEnvironment(0.05,0.05,0.05,0.75,0.75,0.6,-1.0,0.0,0.0);
-		Gremlin.setLightingFlags("lighting", true);
-		Gremlin.setLightingFlags("specularLighting", false);
+		ZeroG.Gremlin.Gizmo.setLightEnvironment(0.05,0.05,0.05,0.75,0.75,0.6,-1.0,0.0,0.0);
+		ZeroG.Gremlin.Gizmo.setLightingFlags("lighting", true);
+		ZeroG.Gremlin.Gizmo.setLightingFlags("specularLighting", false);
 
 		// Game Objects
-		Game.createObjectPrimitive({
+		ZeroG.Game.createObjectPrimitive({
 			"position": [0, 0, -5000],
 			"primType": "sphere",
 			"textureName": "textures/earth.jpg",
@@ -20,7 +20,7 @@
 			"latBands": 30,
 			"animation": function(elapsed) { this.rotate( ( (5 * elapsed) / 1000.0), 0, 1, 0); }
 		});
-		Game.createObjectPrimitive({
+		ZeroG.Game.createObjectPrimitive({
 			"position": [0, 0, 0],
 			"primType": "sphere", 
 			"textureName": "textures/huge_stars.png", 
@@ -32,11 +32,11 @@
 
 		bgMusic.setVolume(0.1);
 
-		Game.setLevelThink(function(){
-			if(!Game.getLevelVar("loaded") && !bgMusic.isLoading){
+		ZeroG.Game.setLevelThink(function(){
+			if(!ZeroG.Game.getLevelVar("loaded") && !bgMusic.isLoading){
 				bgMusic.play(0, true);
-				Game.setLevelVar("loaded", true);
+				ZeroG.Game.setLevelVar("loaded", true);
 			}
 		});
 
-		Game.setLevelCleanUp(function() { bgMusic.stop(); });
+		ZeroG.Game.setLevelCleanUp(function() { bgMusic.stop(); });

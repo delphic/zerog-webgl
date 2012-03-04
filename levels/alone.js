@@ -1,15 +1,15 @@
 	// Alone in space, except for a teapot
 
     // Player HUD
-    Game.createPlayerHud();
+    ZeroG.Game.createPlayerHud();
 
 	// Lighting
-	Gremlin.setLightEnvironment(0.05,0.05,0.05,0.75,0.75,0.6,-1.0,0.0,0.0);
-	Gremlin.setLightingFlags("lighting", true);
+	ZeroG.Gremlin.Gizmo.setLightEnvironment(0.05,0.05,0.05,0.75,0.75,0.6,-1.0,0.0,0.0);
+	ZeroG.Gremlin.Gizmo.setLightingFlags("lighting", true);
 
 	// Game Objects
 	// Parameters: position, primType, textureName, scale, latBands, longBands, animation, shininess, isSkyBox, stopPush
-	Game.createObjectPrimitive({
+	ZeroG.Game.createObjectPrimitive({
 		"position": [0, 0, -5000],
 		"primType": "sphere", 
 		"textureName": "textures/earth.jpg",
@@ -20,7 +20,7 @@
 		"isSkyBox": true,
 		"useLighting": true
 	});
-	Game.createObjectPrimitive({
+	ZeroG.Game.createObjectPrimitive({
 		"position": [10000, 0, -5000],
 		"primType": "sphere",
 		"textureName": "textures/Sun.jpg",
@@ -31,7 +31,7 @@
 	});
 	// Whilst the scales and distances are completely wrong, as they are both in the sky box is doesn't matter
 	
-	Game.createObjectPrimitive({
+	ZeroG.Game.createObjectPrimitive({
 		"position": [0, 0, 0],
 		"primType": "sphere", 
 		"textureName": "textures/huge_stars.png", 
@@ -42,7 +42,7 @@
 	});
 	
 	// Parameters: position, modelName, textureName, scale, animation, shininess
-	Game.createObjectModel({
+	ZeroG.Game.createObjectModel({
 		"position": [0, 0, -300],
 		"modelName": "Teapot.json", 
 		"textureName": "textures/metal.jpg",
@@ -51,17 +51,17 @@
 		"shininess": 100
 	});
 
-    Game.setLevelThink(
+    ZeroG.Game.setLevelThink(
 		function() {
             // Play Ambient Noise
-            if(!Game.getLevelVar("loaded") && !Game.getSound("space-ambient").isLoading){
-                Game.getSound("space-ambient").play(0, true);
-                Game.setLevelVar("loaded", true);
+            if(!ZeroG.Game.getLevelVar("loaded") && !ZeroG.Game.getSound("space-ambient").isLoading){
+                ZeroG.Game.getSound("space-ambient").play(0, true);
+                ZeroG.Game.setLevelVar("loaded", true);
             }
         }
     );
 
-    Game.setLevelCleanUp(function() { Game.getSound("space-ambient").stop(); });
+    ZeroG.Game.setLevelCleanUp(function() { ZeroG.Game.getSound("space-ambient").stop(); });
 	
-	Game.createMotes();
+	ZeroG.Game.createMotes();
 	
