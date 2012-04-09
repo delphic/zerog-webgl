@@ -21,7 +21,7 @@ var ShipManager = function() {
 			throw new Error("Missing required attribute for createShip: 'position'");
 		}
 		// They're all evil spinning crates for now!
-		var tmpShip = Game.createObjectPrimitive({
+		var tmpShip = Game.World.createObjectPrimitive({
 			"position": parameters.position, 
 			"primType": "cube", 
 			"textureName": "textures/crate.gif", 
@@ -33,9 +33,9 @@ var ShipManager = function() {
 		tmpShip.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
 
 		// Create HUD elements
-		var canvasSize = Game.getCanvasSize();
+        // Smacking stuff straight on the ship GameObject, possibly not the best approach
 		var separation = vec3.create();
-		vec3.subtract(parameters.position, Game.getPlayerPosition(), separation);
+		vec3.subtract(parameters.position, Game.Player.position(), separation);
 		var scaleFactor = 1/vec3.length(separation);
 		tmpShip.aimAtIndex = Gremlin.HUD.createWireframe("Box",[0,0,0], [scaleFactor,scaleFactor], [1,0,0,1]);
 		tmpShip.healthBar = Gremlin.HUD.createBar(
@@ -60,10 +60,9 @@ var ShipManager = function() {
 		// Attach Ship parameters
 		var parameters = {};
 		parameters.FiringPeriod = 600;
-		Game.attachShip(tmpShip, parameters);
-
+        tmpShip.attach(new Game.Components.Ship(parameters));
 		// Attach AI
-		ShipAI.attachAI(tmpShip);
+		tmpShip.attach(ShipAI.Create());
 
 		// Add to List
 		var index = shipList.push(tmpShip)-1;
@@ -80,16 +79,16 @@ var ShipManager = function() {
 		shipList.splice(0,shipList.length);
 	}
 
-	function updateShips(elapsed, playerPos, playerVel) {
+	function updateShips(elapsed) {
 		if(shipList.length > 0) {
 			var shipListMax = shipList.length;
 			for(var i = 0; i < shipListMax; i++) {	
 				// Run AI - Argueably should be in separate function
-				shipList[i].runAI(shipList[i], elapsed);
+				shipList[i].shipAi.runAI(elapsed);
 
 				shipList[i].update(elapsed);
-				shipList[i].updateShip(elapsed);
-				shipList[i].animate(elapsed); // Argueably should be in separate function
+				shipList[i].ship.updateShip(elapsed);
+				shipList[i].animate(elapsed); // Arguably should be in separate function
 				_updateHudElements(shipList[i]);
 			}
 		}
@@ -107,10 +106,10 @@ var ShipManager = function() {
 
 	function checkShipsCollision(position, velocity, mass, radius, dmg) {
 		for(var i = 0; i < shipList.length; i++) {
-			// TODO: Remove hardcoded ship radius - add radius method to gameobject (returns average scale)
+			// TODO: Remove hardcoded ship radius - add radius method to GameObject (returns average scale)
 			if(Gremlin.Collision.sphereToSphereIntersect(position, radius, shipList[i].position, 1)){
-				shipList[i].takeDamageAi();
-				if (shipList[i].takeDamage(velocity, mass, dmg))
+				shipList[i].shipAi.takeDamageAi();
+				if (shipList[i].ship.takeDamage(velocity, mass, dmg))
 				{
 					this.destroyShip(i);
 					i--; 
@@ -128,14 +127,14 @@ var ShipManager = function() {
 	function _updateHudElements(ship) {
 
 		var separation = vec3.create();
-		vec3.subtract(ship.position, Game.getPlayerPosition(), separation);
+		vec3.subtract(ship.position, Game.Player.position(), separation);
 		var projectileVelocity = vec3.create();
 
 		// Update Aim at Element
 		// Calculate required velocity to hit target
-		if(Gremlin.Maths.calculateProjectileVelocity(separation, ship.velocity, Game.getPlayerProjectileSpeed(), projectileVelocity)) {
+		if(Gremlin.Maths.calculateProjectileVelocity(separation, ship.velocity, Game.Player.projectileSpeed(), projectileVelocity)) {
 			// Remove Player Component, as it is removed from aiming calculation, arguably it shouldn't be
-			vec3.subtract(projectileVelocity, Game.getPlayerVelocity());
+			vec3.subtract(projectileVelocity, Game.Player.velocity());
 
 			// Reverse Pick at z=-500 units in z-direction (this is currently hardcoded in aiming) along velocity vector.
 			var aimAtPoint = vec3.create(projectileVelocity);
@@ -147,11 +146,11 @@ var ShipManager = function() {
 			vec3.scale(aimAtPoint, scaleFactor);
 
 			// Move to Global Coordinate System
-			vec3.add(aimAtPoint, Game.getPlayerPosition());
+			vec3.add(aimAtPoint, Game.Player.position());
 
 			var coords = [0,0];
 			var separation = vec3.create();
-			vec3.subtract(ship.position, Game.getPlayerPosition(),separation);
+			vec3.subtract(ship.position, Game.Player.position(),separation);
 			scaleFactor = 1/vec3.length(separation);
 
 			if(Gremlin.Gizmo.reversePick(aimAtPoint[0],aimAtPoint[1],aimAtPoint[2], coords)) {
@@ -192,8 +191,8 @@ var ShipManager = function() {
 
 		// Update Health and Shield Bars
 		Gremlin.HUD.updateHud({ 
-			health: { index: ship.healthBar, value: (ship.healthPoints/ship.healthMax) },
-			shield: { index: ship.shieldBar, value: (ship.shieldPoints/ship.shieldMax) }
+			health: { index: ship.healthBar, value: (ship.ship.healthPoints/ship.ship.healthMax) },
+			shield: { index: ship.shieldBar, value: (ship.ship.shieldPoints/ship.ship.shieldMax) }
 		});
 	}
 

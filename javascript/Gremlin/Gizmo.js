@@ -700,7 +700,8 @@ var Gizmo = function() {
 	// Init functions
 	function _initGL(canvas) {
 		try {
-			_gl = WebGLDebugUtils.makeDebugContext(canvas.getContext("experimental-webgl"));
+            // Debug WebGLDebugUtils.makeDebugContext()
+			_gl = canvas.getContext("experimental-webgl");
 			_gl.viewportWidth = canvas.width;
 			_gl.viewportHeight = canvas.height;
 		} catch (e) {

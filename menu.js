@@ -11,7 +11,7 @@
 		ZeroG.Gremlin.Gizmo.setLightingFlags("specularLighting", false);
 
 		// Game Objects
-		ZeroG.Game.createObjectPrimitive({
+		ZeroG.Game.World.createObjectPrimitive({
 			"position": [0, 0, -5000],
 			"primType": "sphere",
 			"textureName": "textures/earth.jpg",
@@ -20,7 +20,7 @@
 			"latBands": 30,
 			"animation": function(elapsed) { this.rotate( ( (5 * elapsed) / 1000.0), 0, 1, 0); }
 		});
-		ZeroG.Game.createObjectPrimitive({
+		ZeroG.Game.World.createObjectPrimitive({
 			"position": [0, 0, 0],
 			"primType": "sphere", 
 			"textureName": "textures/huge_stars.png", 
@@ -32,11 +32,11 @@
 
 		bgMusic.setVolume(0.1);
 
-		ZeroG.Game.setLevelThink(function(){
-			if(!ZeroG.Game.getLevelVar("loaded") && !bgMusic.isLoading){
+		ZeroG.Game.World.setLevelThink(function(){
+			if(!ZeroG.Game.World.getLevelVar("loaded") && !bgMusic.isLoading){
 				bgMusic.play(0, true);
-				ZeroG.Game.setLevelVar("loaded", true);
+				ZeroG.Game.World.setLevelVar("loaded", true);
 			}
 		});
 
-		ZeroG.Game.setLevelCleanUp(function() { bgMusic.stop(); });
+		ZeroG.Game.World.setLevelCleanUp(function() { bgMusic.stop(); });

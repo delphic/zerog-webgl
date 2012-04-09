@@ -21,13 +21,13 @@ var GUI = function() {
 
 	function startGame(val) {
 		$("#menuContainer").hide();
-		Game.unloadLevel();
+		Game.World.unloadLevel();
 		switch(val) {
 			case "1":
-				Game.loadLevel("levels/deepspace.js", "InGame");
+				Game.World.loadLevel("levels/deepspace.js", "InGame");
 				break;
 			case "2":
-				Game.loadLevel("levels/alone.js", "InGame");
+				Game.World.loadLevel("levels/alone.js", "InGame");
 				break;
 			default:
 				alert("Level not Found!");
@@ -54,8 +54,8 @@ var GUI = function() {
 	}
 	function exitToMenu() {
 		Game.unpause();
-		Game.unloadLevel();
-		Game.loadLevel("menu.js", "InMenu"); 
+		Game.World.unloadLevel();
+		Game.World.loadLevel("menu.js", "InMenu");
 	}
 	function applyOptions() {
 		resolutionScale = document.getElementById("optionsResolution").value;

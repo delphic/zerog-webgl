@@ -57,7 +57,7 @@ var Audio = function() {
 		}
 
 		this.stop = function(time) {
-			this.instance.stop(time);
+            if(this.instance) { this.instance.stop(time); }
 		}
 
 		this.setVolume = function(value) {

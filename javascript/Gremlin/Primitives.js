@@ -1,5 +1,3 @@
-// TODO: This used to be inside Gizmo, check for scope dependances, e.g. bufferList
-
 var Primitives = function() {
 	// Primitive Creation Functions
 	// NOTE: scale and offset should be used with caution

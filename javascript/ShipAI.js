@@ -6,58 +6,66 @@
 
 var ShipAI = function() {
 
-	// Attach Ship AI
-	function attachAI(obj, parameters) {
+    function Create(parameters) {
+        return new ShipAI(parameters);
+    }
+
+    // Dependancy on Ship on parent
+	function ShipAI(parameters) {
+        if(!this instanceof ShipAI) {
+            return new ShipAI(parameters);
+        }
+
 		// AI State - enum - 0, Idle; 1, Close; 2, Attack; 3, Flee; 4, Evasive; 5, Patrol
-		obj.AiState = 0;
-		obj.AiStateTimer = 0;
+		this.AiState = 0;
+		this.AiStateTimer = 0;
 
 		// AI friendly - bool 
 		// TODO: Create enum for factions including neutral, to make for more complex interactions
 		if(parameters && parameters["Friendly"]) {
-			obj.AiFiendly = parameters["Friendly"];
+			this.AiFiendly = parameters["Friendly"];
 		}
 		else {
-			obj.AiFriendly = false;
+			this.AiFriendly = false;
 		}
 
 		// AI In Combat - bool
-		obj.AiInCombat = false;
+		this.AiInCombat = false;
 
 		// AI Skill - number - skill factor
 		if(parameters && parameters["Skill"]) {
-			obj.AiSkill = parameters["Skill"];
+			this.AiSkill = parameters["Skill"];
 		}
 		else {
-			obj.AiSkill = 1;
+			this.AiSkill = 1;
 		}
 
 		// AI Confidence - number - affects state changes
 		if(parameters && parameters["Confidence"]) {
-			obj.AiConfidence = parameters["Confidence"];
+			this.AiConfidence = parameters["Confidence"];
 		}
 		else {
-			obj.AiConfidence = obj.AiSkill; 
+			this.AiConfidence = this.AiSkill;
 		}
 
 		// AI Engage Distance - number - number of units at which non-friendly AI engages.
 		if(parameters && parameters["EngageDistance"]) {
-			obj.AiEngageDistance = parameters["EngageDistance"];
+			this.AiEngageDistance = parameters["EngageDistance"];
 		}
 		else {
-			obj.AiEngageDistance = 100*obj.AiSkill; // TODO: Tweak once units have been actually figured out!
+			this.AiEngageDistance = 100*this.AiSkill; // TODO: Tweak once units have been actually figured out!
 		}
 
 		// AI Disengage Distance - number - number of units at which AI stops pursuing.
 		if(parameters && parameters["DisengageDistance"]) {
-			obj.AiDisengageDistance = parameters["DisengageDistance"];
+			this.AiDisengageDistance = parameters["DisengageDistance"];
 		}
 		else {
-			obj.AiDisengageDistance = 10*obj.AiEngageDistance;
+			this.AiDisengageDistance = 10*this.AiEngageDistance;
 		}		
 
-		obj.runAI = _runAI;
-		obj.takeDamageAi = _takeDamageAi;
+		this.runAI = _runAI;
+		this.takeDamageAi = _takeDamageAi;
 	}
 
 	function _takeDamageAi(aggressor) {
@@ -68,7 +76,8 @@ var ShipAI = function() {
 		}
 	}
 
-	function _runAI(ship, elapsed) {
+	function _runAI(elapsed) {
+        var ship = this.parent.ship;
 		this.AiStateTimer += elapsed;		
 		// Check state and change if necessary.
 		// Simple minimum of 1 sec in state currently
@@ -78,7 +87,7 @@ var ShipAI = function() {
 			// Close
 			case 1:
 				// Check own health/shield - if below certain amount change to Flee / Evasive
-				if (this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax < 0.5/this.AiConfidence)
+				if (ship.healthPoints/ship.healthMax + ship.shieldPoints/ship.shieldMax < 0.5/this.AiConfidence)
 				{
 					this.AiState = 3;
 					stateChanged = true;
@@ -87,9 +96,9 @@ var ShipAI = function() {
 
 				// Check distance and relative velocity is close enough switch to attack
 				separation = vec3.create();
-				velocityDifference = vec3.create();
-				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
-				vec3.subtract(Game.getPlayerVelocity(), this.velocity, velocityDifference);
+				var velocityDifference = vec3.create();
+				vec3.subtract(Game.Player.position(), this.parent.position, separation);
+				vec3.subtract(Game.Player.velocity(), this.parent.velocity, velocityDifference);
 				if (vec3.length(separation) < 100 && vec3.length(velocityDifference) < 25) {
 					this.AiState = 2;
 					stateChanged = true;
@@ -106,7 +115,7 @@ var ShipAI = function() {
 			// Attack
 			case 2: 
 				// Check health and shield and if low switch to flee / evasive
-				if (this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax < 0.5/this.AiConfidence)
+				if (ship.healthPoints/ship.healthMax + ship.shieldPoints/ship.shieldMax < 0.5/this.AiConfidence)
 				{
 					this.AiState = 3;
 					stateChanged = true;
@@ -116,8 +125,8 @@ var ShipAI = function() {
 				// Check distance and relative velocity and change to close if necessary
 				separation = vec3.create();
 				velocityDifference = vec3.create();
-				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
-				vec3.subtract(Game.getPlayerVelocity(), this.velocity, velocityDifference);
+				vec3.subtract(Game.Player.position(), this.parent.position, separation);
+				vec3.subtract(Game.Player.velocity(), this.parent.velocity, velocityDifference);
 				if (vec3.length(separation) > 150 || vec3.length(velocityDifference) > 40) {
 					this.AiState = 1;
 					stateChanged = true;
@@ -129,9 +138,9 @@ var ShipAI = function() {
 			case 3: 
 				separation = vec3.create();
 				velocityDifference = vec3.create();
-				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
+				vec3.subtract(Game.Player.position(), this.parent.position, separation);
 				// Check distance if greater than a safety distance (disengage distance?)
-				if (this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax > 0.5/this.AiConfidence
+				if (ship.healthPoints/ship.healthMax + ship.shieldPoints/ship.shieldMax > 0.5/this.AiConfidence
 					|| vec3.length(separation) > this.AiDisengageDistance)
 				{
 					// Check relative health and shield and switch to either close or idle
@@ -146,10 +155,10 @@ var ShipAI = function() {
 			case 4:
 				separation = vec3.create();
 				velocityDifference = vec3.create();
-				vec3.subtract(Game.getPlayerPosition(), this.position, separation);
+				vec3.subtract(Game.Player.Position(), this.parent.position, separation);
 				// As Above
 				if (vec3.length(separation) > this.AiDisengageDistance
-					&& this.healthPoints/this.healthMax + this.shieldPoints/this.shieldMax > 0.5/this.AiConfidence)
+					&& ship.healthPoints/ship.healthMax + ship.shieldPoints/ship.shieldMax > 0.5/this.AiConfidence)
 				{
 					// Check relative health and shield and switch to either close or idle
 					this.AiState = 1;
@@ -163,7 +172,7 @@ var ShipAI = function() {
 				if(!this.AiFriendly) {
 					separation = vec3.create();
 					velocityDifference = vec3.create();
-					vec3.subtract(Game.getPlayerPosition(), this.position, separation);
+					vec3.subtract(Game.Player.position(), this.parent.position, separation);
 					if(vec3.length(separation) < this.AiEngageDistance) {
 						this.AiState = 2;
 						stateChanged = true;
@@ -177,13 +186,13 @@ var ShipAI = function() {
 		// Run current state
 		if(!stateChanged)
 		{
-			var accelRate = this.accelerationRate(elapsed);
-			var playerPos = Game.getPlayerPosition();
-			var playerVel = Game.getPlayerVelocity();
+			var accelRate = ship.accelerationRate(elapsed);
+			var playerPos = Game.Player.position();
+			var playerVel = Game.Player.velocity();
 			var separation = vec3.create();
 			var relativeVelocity = vec3.create();
-			vec3.subtract(playerPos, this.position, separation);
-			vec3.subtract(playerVel, this.velocity, relativeVelocity);
+			vec3.subtract(playerPos, this.parent.position, separation);
+			vec3.subtract(playerVel, this.parent.velocity, relativeVelocity);
 
 			switch(this.AiState) {
 			// Close
@@ -195,8 +204,8 @@ var ShipAI = function() {
 					(separation[2]+relativeVelocity[2])];
 				vec3.normalize(direction);
 				vec3.scale(direction,accelRate);
-				this.updateVelocity(direction[0], direction[1], direction[2]);
-				this.accelerate(elapsed);
+				this.parent.updateVelocity(direction[0], direction[1], direction[2]);
+				ship.accelerate(elapsed);
 				break;
 			// Attack
 			case 2:
@@ -206,13 +215,13 @@ var ShipAI = function() {
 					var direction = vec3.create(relativeVelocity);
 					vec3.normalize(direction);
 					vec3.scale(direction,accelRate);
-					this.updateVelocity(direction[0],direction[1],direction[2]);
-					this.accelerate(elapsed);
+					this.parent.updateVelocity(direction[0],direction[1],direction[2]);
+					ship.accelerate(elapsed);
 				}
 				// Check firing timer and fire if possible
-				if (this.canFire()) {
+				if (ship.canFire()) {
 					// Caculate desired velocity
-					var pos = vec3.create(this.position);
+					var pos = vec3.create(this.parent.position);
 					var projectileVelocity = vec3.create();
 
 					// Create Estimated player position - Skill Accuracy Effect
@@ -223,17 +232,17 @@ var ShipAI = function() {
 					var scalingFactor = vec3.length(separation) / (20 * this.AiSkill);
 					vec3.add(separation, [ (Math.random()-0.5)*scalingFactor, (Math.random()-0.5)*scalingFactor, (Math.random()-0.5)*scalingFactor], estimatedSeparation);
 
-					if(Gremlin.Maths.calculateProjectileVelocity(estimatedSeparation, playerVel, (this.weaponSpeed+vec3.length(this.velocity)), projectileVelocity))
+					if(Gremlin.Maths.calculateProjectileVelocity(estimatedSeparation, playerVel, (ship.weaponSpeed+vec3.length(this.parent.velocity)), projectileVelocity))
 					{
 						// Spawn new projectile
-						Game.spawnProjectile({
+						Game.World.spawnProjectile({
 								"position": pos, 
 								"velocity": projectileVelocity, 
-								"color": this.color, 
+								"color": this.parent.color,
 								"damage": 20000, 
 								"lifetime": 30000 
 						});
-						this.fire();	
+						ship.fire();
 					}
 				}
 				break;
@@ -246,8 +255,8 @@ var ShipAI = function() {
 					(-separation[2]-relativeVelocity[2])];
 				vec3.normalize(direction);
 				vec3.scale(direction,accelRate);
-				this.updateVelocity(direction[0], direction[1], direction[2]);
-				this.accelerate(elapsed);
+				this.parent.updateVelocity(direction[0], direction[1], direction[2]);
+				ship.accelerate(elapsed);
 				break;
 
 			// TODO: Implement	
@@ -260,18 +269,18 @@ var ShipAI = function() {
 
 			default:
 				// Slow to Stop
-				if (vec3.length(this.velocity) > accelRate)
+				if (vec3.length(this.parent.velocity) > accelRate)
 				{
 					var direction = vec3.create();
-					vec3.negate(this.velocity, direction);
+					vec3.negate(this.parent.velocity, direction);
 					vec3.normalize(direction);
 					vec3.scale(direction,accelRate);
-					this.updateVelocity(direction[0], direction[1], direction[2]);
-					this.accelerate(elapsed);
+					this.parent.updateVelocity(direction[0], direction[1], direction[2]);
+					ship.accelerate(elapsed);
 				}
-				else if (vec3.length(this.velocity) != 0)
+				else if (vec3.length(this.parent.velocity) != 0)
 				{
-					this.setVelocity(0,0,0);
+					this.parent.setVelocity(0,0,0);
 				}
 				break;
 			}
@@ -282,6 +291,7 @@ var ShipAI = function() {
 	}
 
 	return {
-		attachAI:				attachAI
+		Create:	Create,
+        Type: ShipAI
 	}
 }();
