@@ -66,6 +66,11 @@ var ShipAI = function() {
 
 		this.runAI = _runAI;
 		this.takeDamageAi = _takeDamageAi;
+
+        this.attachInstructions = function(parent) {
+            parent.shipAi = this;
+            this.parent = parent;
+        }
 	}
 
 	function _takeDamageAi(aggressor) {
@@ -291,7 +296,6 @@ var ShipAI = function() {
 	}
 
 	return {
-		Create:	Create,
-        Type: ShipAI
+		Create:	Create
 	}
 }();

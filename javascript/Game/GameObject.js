@@ -8,13 +8,11 @@ function GameObject(parameters) {
 
     this.position = parameters.position ? vec3.create(parameters.position) : [0,0,0];
     this.attach = function(object) {
-        if(object instanceof Components.Ship) {
-            this.ship = object;
-            this.ship.parent = this;
+        if(object && typeof object.attachInstructions == "function") {
+            object.attachInstructions(this);
         }
-        else if(object instanceof ShipAI.Type) {
-            this.shipAi = object;
-            this.shipAi.parent = this;
+        else {
+            throw new Error("Passed object did not have attachInstructions function.");
         }
     }
 
