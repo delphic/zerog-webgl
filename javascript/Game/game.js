@@ -329,8 +329,15 @@ function webGLStart(resScale) {
 	setCanvasSize();
 
 	// Initialise
-	Gremlin.Gizmo.init();
-	Gremlin.Audio.init(); // TODO: move this and any other inits into Gremlin's
+    try {
+	    Gremlin.Gizmo.init();
+    }
+    catch (error) {
+        $("#errorInfo").html(error.message);
+        $("#container").hide();
+        $("#errorContainer").show();
+        return;
+    }
 	_gameInit();
 
 	// Start Game Loop

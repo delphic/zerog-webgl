@@ -10,8 +10,8 @@ var Audio = function() {
 		try {
 			_audioContext = new webkitAudioContext();
 		}
-		catch(e) {
-			alert('Web Audio API is not supported in this browser');
+		catch(error) {
+			throw new Error('Web Audio API is not supported in this browser');
 		}
 	}
 

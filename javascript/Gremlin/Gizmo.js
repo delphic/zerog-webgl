@@ -24,9 +24,13 @@ var Gizmo = function() {
 
 	function init() {
 		var canvas = document.getElementById("gremlinCanvas");
-		_initGL(canvas);        
-		_initShaders();
-
+        try {
+		    _initGL(canvas);
+		    _initShaders();
+            Audio.init();
+        } catch (error) {
+            throw error;
+        }
 		_gl.clearColor(0.0, 0.0, 0.0, 1.0);
 		_gl.enable(_gl.DEPTH_TEST);
 	}
@@ -704,10 +708,8 @@ var Gizmo = function() {
 			_gl = canvas.getContext("experimental-webgl");
 			_gl.viewportWidth = canvas.width;
 			_gl.viewportHeight = canvas.height;
-		} catch (e) {
-		}
-		if (!_gl) {
-			alert("Could not initialise WebGL");
+		} catch (error) {
+            throw new Error("Could not initialise WebGL");
 		}
 	}
 
@@ -869,8 +871,7 @@ var Gizmo = function() {
 		gl.compileShader(shader);
 
 		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-			alert(gl.getShaderInfoLog(shader));
-			return null;
+			throw new Error("Could not initialise shaders " + gl.getShaderInfoLog(shader));
 		}
 
 		return shader;
@@ -886,7 +887,7 @@ var Gizmo = function() {
 		_gl.linkProgram(program);
 
 		if (!_gl.getProgramParameter(program, _gl.LINK_STATUS)) {
-			alert("Could not initialise shaders");
+			throw new Error("Could not initialise shaders");
 		}
 
 		program.vertexPositionAttribute = _gl.getAttribLocation(program, "aVertexPosition");

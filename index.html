@@ -24,6 +24,7 @@
             #menuContainer input[type=button]:hover { color: #46F; }
 			#menuContainer div.small { font-size: 0.5em; height: 80%; }
 			#menuContainer div.small img { width: 10%; }
+            #errorContainer { display: none; color: #333; padding: 1em; }
 		</style>
 	</head>
 	<body onload="ZeroG.Game.webGLStart(1);">
@@ -139,5 +140,13 @@
 			</div>
 			<canvas id="gremlinCanvas" oncontextmenu="return false;"></canvas>
 		</div>
+        <div id="errorContainer">
+            <h1>Sorry, something went wrong!</h1>
+            <p>The ZeroG alpha currently only runs in Chrome.</p>
+            <p>It looks like your browser doesn't support either WebGL or the Web Audio API.</p>
+            <p>Currently only Chrome supports both of these, I hope to create an Audio Data API sound implementation so that Firefox users can play ZeroG as well.</p>
+            <p>For more information on WebGL visit <a href="http://get.webgl.org/">http://get.webgl.org/</a></p>
+            <p><strong>Error information</strong>: <span id="errorInfo"></span></p>
+        </div>
 	</body>
 </html>
