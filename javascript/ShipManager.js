@@ -21,7 +21,7 @@ var ShipManager = function() {
 			throw new Error("Missing required attribute for createShip: 'position'");
 		}
 		// They're all evil spinning crates for now!
-		var tmpShip = Game.World.createObjectPrimitive({
+		var gameObject = Game.World.createObjectPrimitive({
 			"position": parameters.position, 
 			"primType": "cube", 
 			"textureName": "textures/crate.gif", 
@@ -30,49 +30,49 @@ var ShipManager = function() {
 			"stopPush": true
 		});
 		var color = parameters.color ? parameters.color : [1, 1, 1, 1];
-		tmpShip.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
+		gameObject.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
 
 		// Create HUD elements
-        // Smacking stuff straight on the ship GameObject, possibly not the best approach
-		var separation = vec3.create();
+        if (!gameObject.Hud) { gameObject.Hud = {}; }
+        var separation = vec3.create();
 		vec3.subtract(parameters.position, Game.Player.position(), separation);
 		var scaleFactor = 1/vec3.length(separation);
-		tmpShip.aimAtIndex = Gremlin.HUD.createWireframe("Box",[0,0,0], [scaleFactor,scaleFactor], [1,0,0,1]);
-		tmpShip.healthBar = Gremlin.HUD.createBar(
+		gameObject.Hud.aimAtIndex = Gremlin.HUD.createWireframe("Box",[0,0,0], [scaleFactor,scaleFactor], [1,0,0,1]);
+		gameObject.Hud.healthBar = Gremlin.HUD.createBar(
 			[-0.95, 0],
 			[0.1, 0.7],
 			[0.1, 0.5, 0.1, 1],
 			[0,0,0,0], 
 			"Vertical");
-		tmpShip.shieldBar = Gremlin.HUD.createBar(
+		gameObject.Hud.shieldBar = Gremlin.HUD.createBar(
 			[0.95,0],
 			[0.1,0.7],
 			[0.1,0.1,0.5,1],
 			[0,0,0,0], 
 			"Vertical");
-		tmpShip.targetBrace = Gremlin.HUD.createWireframe("Brace",[0,0,0], [0.9,0.9],[1,0,0,1]);
-		tmpShip.infoContainer = Gremlin.HUD.createGroup([0,0,0],[0.25,0.25]);
-		tmpShip.offScreenArrow = Gremlin.HUD.createElement([0,0,0], [0.02, 0.02], [1,1,1,1], "textures/arrow.png");
-		Gremlin.HUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.healthBar);
-		Gremlin.HUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.shieldBar);
-		Gremlin.HUD.attachElementToGroup(tmpShip.infoContainer, tmpShip.targetBrace);
+		gameObject.Hud.targetBrace = Gremlin.HUD.createWireframe("Brace",[0,0,0], [0.9,0.9],[1,0,0,1]);
+		gameObject.Hud.infoContainer = Gremlin.HUD.createGroup([0,0,0],[0.25,0.25]);
+		gameObject.Hud.offScreenArrow = Gremlin.HUD.createElement([0,0,0], [0.02, 0.02], [1,1,1,1], "textures/arrow.png");
+		Gremlin.HUD.attachElementToGroup(gameObject.Hud.infoContainer, gameObject.Hud.healthBar);
+		Gremlin.HUD.attachElementToGroup(gameObject.Hud.infoContainer, gameObject.Hud.shieldBar);
+		Gremlin.HUD.attachElementToGroup(gameObject.Hud.infoContainer, gameObject.Hud.targetBrace);
 
 		// Attach Ship parameters
 		var parameters = {};
 		parameters.FiringPeriod = 600;
-        tmpShip.attach(new Game.Components.Ship(parameters));
+        gameObject.attach(new Game.Components.Ship(parameters));
 		// Attach AI
-		tmpShip.attach(ShipAI.Create());
+		gameObject.attach(ShipAI.Create());
 
 		// Add to List
-		var index = shipList.push(tmpShip)-1;
+		var index = shipList.push(gameObject)-1;
 
 		// Update HUD Element size
 		_updateHudElements(shipList[index]); // This prevents the HUD elements from taking up the entire screen for 1 frame on ship creation
 	}
 	function destroyShip(index) {
-		Gremlin.HUD.hideElement(shipList[index].aimAtIndex);
-		Gremlin.HUD.hideGroupElements(shipList[index].infoContainer);
+		Gremlin.HUD.hideElement(shipList[index].Hud.aimAtIndex);
+		Gremlin.HUD.hideGroupElements(shipList[index].Hud.infoContainer);
 		shipList.splice(index,1);
 	}
 	function destroyShips() {
@@ -83,9 +83,8 @@ var ShipManager = function() {
 		if(shipList.length > 0) {
 			var shipListMax = shipList.length;
 			for(var i = 0; i < shipListMax; i++) {	
-				// Run AI - Argueably should be in separate function
+				// Run AI - Arguably should be in separate function
 				shipList[i].shipAi.runAI(elapsed);
-
 				shipList[i].update(elapsed);
 				shipList[i].ship.updateShip(elapsed);
 				shipList[i].animate(elapsed); // Arguably should be in separate function
@@ -124,15 +123,15 @@ var ShipManager = function() {
 	}
 
 	// Private
-	function _updateHudElements(ship) {
-
+	function _updateHudElements(gameObject) {
+        var hud = gameObject.Hud;
 		var separation = vec3.create();
-		vec3.subtract(ship.position, Game.Player.position(), separation);
+		vec3.subtract(gameObject.position, Game.Player.position(), separation);
 		var projectileVelocity = vec3.create();
 
 		// Update Aim at Element
 		// Calculate required velocity to hit target
-		if(Gremlin.Maths.calculateProjectileVelocity(separation, ship.velocity, Game.Player.projectileSpeed(), projectileVelocity)) {
+		if(Gremlin.Maths.calculateProjectileVelocity(separation, gameObject.velocity, Game.Player.projectileSpeed(), projectileVelocity)) {
 			// Remove Player Component, as it is removed from aiming calculation, arguably it shouldn't be
 			vec3.subtract(projectileVelocity, Game.Player.velocity());
 
@@ -150,53 +149,53 @@ var ShipManager = function() {
 
 			var coords = [0,0];
 			var separation = vec3.create();
-			vec3.subtract(ship.position, Game.Player.position(),separation);
+			vec3.subtract(gameObject.position, Game.Player.position(),separation);
 			scaleFactor = 1/vec3.length(separation);
 
 			if(Gremlin.Gizmo.reversePick(aimAtPoint[0],aimAtPoint[1],aimAtPoint[2], coords)) {
-				Gremlin.HUD.updateElement(ship.aimAtIndex, [coords[0],coords[1],-1], [scaleFactor,scaleFactor]);
+				Gremlin.HUD.updateElement(hud.aimAtIndex, [coords[0],coords[1],-1], [scaleFactor,scaleFactor]);
 				if(Math.abs(coords[0]) < 1 && Math.abs(coords[1]) < 1) {
-					Gremlin.HUD.showElement(ship.aimAtIndex);
-					Gremlin.HUD.hideElement(ship.offScreenArrow);
+					Gremlin.HUD.showElement(hud.aimAtIndex);
+					Gremlin.HUD.hideElement(hud.offScreenArrow);
 				} else {
-					Gremlin.HUD.showElement(ship.offScreenArrow);
-					Gremlin.HUD.hideElement(ship.aimAtIndex);
+					Gremlin.HUD.showElement(hud.offScreenArrow);
+					Gremlin.HUD.hideElement(hud.aimAtIndex);
 				}
 			}
 			else {
 				// Aim at position not in front of player
-				Gremlin.HUD.hideElement(ship.aimAtIndex);
-				Gremlin.HUD.showElement(ship.offScreenArrow);
+				Gremlin.HUD.hideElement(hud.aimAtIndex);
+				Gremlin.HUD.showElement(hud.offScreenArrow);
 			}
-			_updateOffScreenArrow(ship, separation, scaleFactor);
+			_updateOffScreenArrow(hud.offScreenArrow, separation, scaleFactor);
 		}
 		else {
 			// Player can not hit ship
-			Gremlin.HUD.hideElement(ship.aimAtIndex);
+			Gremlin.HUD.hideElement(hud.aimAtIndex);
 		}
 
 		// Update Elements Group Position
 		var shipPosition = [0,0];
-		if(Gremlin.Gizmo.reversePick(ship.position[0],ship.position[1],ship.position[2],shipPosition))
+		if(Gremlin.Gizmo.reversePick(gameObject.position[0],gameObject.position[1],gameObject.position[2],shipPosition))
 		{
 			var groupScale = 5*scaleFactor;
 			if(groupScale < 0.01) { groupScale = 0.01; } 
-			Gremlin.HUD.showGroupElements(ship.infoContainer);
-			Gremlin.HUD.setGroupPosition(ship.infoContainer, [shipPosition[0],shipPosition[1],0]);
-			Gremlin.HUD.setGroupSize(ship.infoContainer, [groupScale,groupScale]);
+			Gremlin.HUD.showGroupElements(hud.infoContainer);
+			Gremlin.HUD.setGroupPosition(hud.infoContainer, [shipPosition[0],shipPosition[1],0]);
+			Gremlin.HUD.setGroupSize(hud.infoContainer, [groupScale,groupScale]);
 		}
 		else {
-			Gremlin.HUD.hideGroupElements(ship.infoContainer);
+			Gremlin.HUD.hideGroupElements(hud.infoContainer);
 		}
 
 		// Update Health and Shield Bars
 		Gremlin.HUD.updateHud({ 
-			health: { index: ship.healthBar, value: (ship.ship.healthPoints/ship.ship.healthMax) },
-			shield: { index: ship.shieldBar, value: (ship.ship.shieldPoints/ship.ship.shieldMax) }
+			health: { index: hud.healthBar, value: (gameObject.ship.healthPoints/gameObject.ship.healthMax) },
+			shield: { index: hud.shieldBar, value: (gameObject.ship.shieldPoints/gameObject.ship.shieldMax) }
 		});
 	}
 
-	function _updateOffScreenArrow(ship, separation, scaleFactor) {
+	function _updateOffScreenArrow(hudIndex, separation, scaleFactor) {
 		var screenHeight, screenWidth, x, y, offset, adjustedScaleFactor,rotationAngle;
 		var coords = [];
 		offset = 32;
@@ -217,7 +216,7 @@ var ShipManager = function() {
 		if(y<0) { rotationAngle = 180 - rotationAngle; }
 		coords = Gremlin.HUD.transformToHudCoords(coords);
 		adjustedScaleFactor = scaleFactor + 0.01; // This may need a fudge factor depending on size of texture.
-		Gremlin.HUD.updateElement(ship.offScreenArrow, [coords[0], coords[1], -1], [adjustedScaleFactor, adjustedScaleFactor], [0,0,rotationAngle]);
+		Gremlin.HUD.updateElement(hudIndex, [coords[0], coords[1], -1], [adjustedScaleFactor, adjustedScaleFactor], [0,0,rotationAngle]);
 
 	}
 
