@@ -16,7 +16,7 @@ var Maths = function() {
 		if (results) {			
 			if (results.length == 1) {
 				// Single Root
-				// This implies that the objects are on top of each other... should never happen, but do not want to explictly forbid it.
+				// This implies that the objects are on top of each other... should never happen, but do not want to explicitly forbid it.
 				return results[0];
 			}
 			else {
@@ -30,10 +30,10 @@ var Maths = function() {
 				}
 				else {
 					if (results[0] > 0 && results[1] > 0) {
-						throw ("Both solutions to projectile calculation positive, check arguments");
+						throw new Error("Both solutions to projectile calculation positive ("+results[0]+", "+results[1]+"), check arguments");
 					}
 					else {
-						throw ("Both solutions to projectile calculation negative, check arguments");
+						throw new Error("Both solutions to projectile calculation negative ("+results[0]+", "+results[1]+"), check arguments");
 					}
 				}
 			}

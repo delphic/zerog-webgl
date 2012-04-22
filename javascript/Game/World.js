@@ -30,14 +30,14 @@ var World = function() {
 		if(!parameters.primType) {
 			throw new Error("Required argument missing for createObjectPrimitive: 'primType'");
 		}
-		if(!parameters.position) {
+		if(!parameters.position && !(parameters.gameObjectIndex || parameters.gameObject)) {
 			throw new Error("Required argument missing for createObjectPrimitive: 'position");
 		}
 		if(!parameters.scale) {
-			throw new Error("Required argument missing for createObjectPrimitive: 'scale'");
-		}
+            parameters.scale = [1,1,1];
+        }
 
-		var object = (parameters.gameObjectIndex) ? gameObjects[parameters.gameObject] :
+		var object = (parameters.gameObjectIndex) ? gameObjects[parameters.gameObjectIndex] :
             (parameters.gameObject) ? parameters.gameObject : new GameObject({ "position": parameters.position });
 
         var renderObject = new Components.Render({});

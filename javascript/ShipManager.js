@@ -23,13 +23,37 @@ var ShipManager = function() {
 		// They're all evil spinning crates for now!
 		var gameObject = Game.World.createObjectPrimitive({
 			"position": parameters.position, 
-			"primType": "cube", 
+			"primType": "sphere",
+            "latBands": 30,
+            "longBands": 30,
 			"textureName": "textures/crate.gif", 
 			"scale": 1.0,
             "color":  parameters.color ? parameters.color : [1, 1, 1, 1],
-			"animation": function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); }, 
+			"animation": function(elapsed) { this.rotate( ( (50 * elapsed) / 1000.0), 1, 1, 1); },
 			"stopPush": true
 		});
+        Game.World.createObjectPrimitive({
+            "gameObject" : gameObject,
+            "primType": "ring",
+            outerRadius: 1.25,
+            innerRadius: 1,
+            thickness: 0.3,
+            numberOfSides: 30,
+            textureName: "textures/crate.gif",
+            "color":  parameters.color ? parameters.color : [1, 1, 1, 1],
+            "animation":  function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), -1, -1, -1); }
+        });
+        Game.World.createObjectPrimitive({
+            "gameObject" : gameObject,
+            "primType": "ring",
+            outerRadius: 1.5,
+            innerRadius: 1.25,
+            thickness: 0.2,
+            numberOfSides: 30,
+            textureName: "textures/crate.gif",
+            "color":  parameters.color ? parameters.color : [1, 1, 1, 1],
+            "animation":  function(elapsed) { this.rotate( ( (100 * elapsed) / 1000.0), 1, -1, 1); }
+        });
 
 		// Create HUD elements
         if (!gameObject.Hud) { gameObject.Hud = {}; }
