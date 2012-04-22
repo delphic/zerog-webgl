@@ -22,6 +22,7 @@ function Ship(parameters) {
 	this.firingTimer = 300;
 	this.firingCost = 5;
 	this.weaponSpeed = 0.1;
+    this.color = (parameters && parameters.color) ? parameters.color : [1,1,1,1];
 	this.canFire = function() {
 		return (this.firingTimer > this.firingPeriod && (this.energyPoints > this.firingCost));
 	};

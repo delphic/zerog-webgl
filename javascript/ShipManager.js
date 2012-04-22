@@ -25,12 +25,11 @@ var ShipManager = function() {
 			"position": parameters.position, 
 			"primType": "cube", 
 			"textureName": "textures/crate.gif", 
-			"scale": 1.0, 
+			"scale": 1.0,
+            "color":  parameters.color ? parameters.color : [1, 1, 1, 1],
 			"animation": function(elapsed) { this.rotate( ( (75 * elapsed) / 1000.0), 1, 1, 1); }, 
 			"stopPush": true
 		});
-		var color = parameters.color ? parameters.color : [1, 1, 1, 1];
-		gameObject.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
 
 		// Create HUD elements
         if (!gameObject.Hud) { gameObject.Hud = {}; }
@@ -58,9 +57,10 @@ var ShipManager = function() {
 		Gremlin.HUD.attachElementToGroup(gameObject.Hud.infoContainer, gameObject.Hud.targetBrace);
 
 		// Attach Ship parameters
-		var parameters = {};
-		parameters.FiringPeriod = 600;
-        gameObject.attach(new Game.Components.Ship(parameters));
+		var _parameters = {};
+		_parameters.FiringPeriod = 600;
+        _parameters.color = parameters.color ? parameters.color : [1, 1, 1, 1],
+        gameObject.attach(new Game.Components.Ship(_parameters));
 		// Attach AI
 		gameObject.attach(ShipAI.Create());
 
@@ -87,7 +87,6 @@ var ShipManager = function() {
 				shipList[i].shipAi.runAI(elapsed);
 				shipList[i].update(elapsed);
 				shipList[i].ship.updateShip(elapsed);
-				shipList[i].animate(elapsed); // Arguably should be in separate function
 				_updateHudElements(shipList[i]);
 			}
 		}
@@ -97,9 +96,8 @@ var ShipManager = function() {
 		}
 	}
 	function renderShips() {
-		var gizmo = Gremlin.Gizmo;
 		for(var i = 0; i < shipList.length; i++) {
-			gizmo.renderObject(shipList[i]);
+		    shipList[i].render();
 		}
 	}
 

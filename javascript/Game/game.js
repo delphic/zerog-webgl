@@ -53,7 +53,6 @@ function animate() {
 		for(key in gameObjects)
 		{
 			if(gameObjects.hasOwnProperty(key)) {
-				gameObjects[key].animate(elapsed);
 				gameObjects[key].update(elapsed);
 			}
 		}
@@ -206,7 +205,7 @@ function animate() {
 			World.updateMotes(Player.position(), Player.velocity());
 
 			// Update Projectiles
-			World.projectileObject.animate(elapsed);
+			World.projectileObject.update(elapsed);
 			for(i = 0; i < projectiles.length; i++) {
 				// Update Lifetime
 				projectiles[i].lifetime -= elapsed;
@@ -251,10 +250,10 @@ function tick() {
     var projectileObject = World.projectileObject;
     var dustMotes = World.motes;
     
-    for(key in gameObjects)
+    for(var key in gameObjects)
 	{
-		if(gameObjects.hasOwnProperty(key) && gameObjects[key].visible) {
-			gizmo.renderObject(gameObjects[key]);
+		if(gameObjects.hasOwnProperty(key)) {
+            gameObjects[key].render();
 		}
 	}
 
@@ -263,7 +262,7 @@ function tick() {
 	{
 		// Note: Not an efficient method of rendering particles...
 		// We can get away with this because it's only ~100 objects
-		gizmo.renderObject(dustMotes[i]);
+		dustMotes[i].render();
 	}
 
 	var projectilesMax = projectiles.length; // This won't change in the loop so don't evaluate it each time
@@ -275,7 +274,7 @@ function tick() {
 		colour = projectiles[n].getColor();
 		projectileObject.setPosition(position[0], position[1], position[2]);
 		projectileObject.setColor(colour[0], colour[1], colour[2], colour[3], colour[4]);
-		gizmo.renderObject(projectileObject);
+		projectileObject.render();
 	}
 
 	ShipManager.renderShips();

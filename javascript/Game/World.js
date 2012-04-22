@@ -8,9 +8,18 @@ var World = function() {
     var gameSounds = [];
 
     function init() {
-        projectileObject.assignBuffer(Gremlin.Primitives.createTetrahedron());
-    	projectileObject.setScale(0.03,0.03,0.03);
-    	projectileObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); };
+        projectileObject.rotate(90, 1, 0, 0); // TODO: Should create rotation matrix and hand into GameObject creator
+        var projectileRenderObject = new Components.Render({});
+        projectileObject.addRenderObject(projectileRenderObject);
+        projectileRenderObject.assignBuffer(Gremlin.Primitives.createTetrahedron());
+        projectileRenderObject.setUseLighting(false); //TODO: Would be better with lighting true and emissive material
+        projectileRenderObject.setScale(0.03,0.03,0.03);
+        projectileRenderObject.animate = function(elapsed) { this.rotate( ( (300 * elapsed) / 1000.0), 1, 1, 1); };
+        var prevSetColor = projectileObject.setColor;
+        projectileObject.setColor = function(r,g,b,a) {
+            prevSetColor(r,g,b,a);
+            this.color = [r, g, b, a];
+        }
     }
 
     // Creation Objection
@@ -28,57 +37,61 @@ var World = function() {
 			throw new Error("Required argument missing for createObjectPrimitive: 'scale'");
 		}
 
-		var object = new GameObject({ "position": parameters.position });
-		object.useTextures = (parameters.textureName) ? true : false;
+		var object = (parameters.gameObjectIndex) ? gameObjects[parameters.gameObject] :
+            (parameters.gameObject) ? parameters.gameObject : new GameObject({ "position": parameters.position });
+
+        var renderObject = new Components.Render({});
+        object.addRenderObject(renderObject);
+        renderObject.useTextures = (parameters.textureName) ? true : false;
 
 		if(parameters.scale.length) {
-			object.setScale(parameters.scale);
+            renderObject.setScale(parameters.scale);
 		}
 		else {
-			object.setScale(parameters.scale,parameters.scale,parameters.scale);
+            renderObject.setScale(parameters.scale,parameters.scale,parameters.scale);
 		}
 
 		switch(parameters.primType) {
 		case "pyramid":
-			object.assignBuffer(Gremlin.Primitives.createPyramid());
+            renderObject.assignBuffer(Gremlin.Primitives.createPyramid());
 			break;
 		case "cube":
-			object.assignBuffer(Gremlin.Primitives.createCube());
+            renderObject.assignBuffer(Gremlin.Primitives.createCube());
 			break;
 		case "sphere":
-			object.assignBuffer(Gremlin.Primitives.createSphere({ latBands: parameters.latBands, longBands: parameters.longBands }));
+            renderObject.assignBuffer(Gremlin.Primitives.createSphere({ latBands: parameters.latBands, longBands: parameters.longBands }));
 			break;
 		case "ring":
-			object.assignBuffer(Gremlin.Primitives.createRing({ outerRadius: parameters.outerRadius, innerRadius: parameters.innerRadius, thickness: parameters.thickness, numberOfSides: parameters.numberOfSides }));
+            renderObject.assignBuffer(Gremlin.Primitives.createRing({ outerRadius: parameters.outerRadius, innerRadius: parameters.innerRadius, thickness: parameters.thickness, numberOfSides: parameters.numberOfSides }));
 			break;
 		case "ray":
-			object.assignBuffer(Gremlin.Primitives.createRay());
+            renderObject.assignBuffer(Gremlin.Primitives.createRay());
 			break;
 		case "point":
-			object.assignBuffer(Gremlin.Primitives.createPoint());
+            renderObject.assignBuffer(Gremlin.Primitives.createPoint());
 			break;
 		default:
 			throw new Error("Invalid Prim Type: "+parameters.primType+"");
 		}
 		if(parameters.textureName) {
-			object.texture = Gremlin.Gizmo.createTexture(parameters.textureName);
+            renderObject.texture = Gremlin.Gizmo.createTexture(parameters.textureName);
 		}
 		if(parameters.shininess) {
-			object.setShininess(parameters.shininess);
+            renderObject.setShininess(parameters.shininess);
 		}
 		if(parameters.isSkyBox) {
-			object.setIsSkyBox(true);
+            renderObject.setIsSkyBox(true);
 		}
 		if(parameters.useLighting) {
-			object.setUseLighting(parameters.useLighting);
+            renderObject.setUseLighting(parameters.useLighting);
 		}
 		if(parameters.animation) {
-			object.animate = parameters.animation;
+            renderObject.animate = parameters.animation;
 		}
 		if(parameters.color) {
-			object.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
+            renderObject.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
 		}
-		if(!parameters.stopPush)
+		if(!parameters.stopPush && !(parameters.gameObjectIndex || parameters.gameObject))
 		{
 			gameObjects.push(object);
 		}
@@ -99,31 +112,40 @@ var World = function() {
 		if(!parameters.scale) {
 			throw new Error("Required argument missing for createObjectModel: 'scale'");
 		}
-		var object = new GameObject({ "position": parameters.position });
-		object.useTextures = (parameters.textureName)? true : false;
+
+        var object = (parameters.gameObjectIndex) ? gameObjects[parameters.gameObject] :
+            (parameters.gameObject) ? parameters.gameObject : new GameObject({ "position": parameters.position });
+
+        var renderObject = new Components.Render({});
+        object.addRenderObject(renderObject);
+
+        renderObject.useTextures = (parameters.textureName)? true : false;
 
 		if(parameters.scale.length) {
-			object.setScale(parameters.scale);
+            renderObject.setScale(parameters.scale);
 		}
 		else {
-			object.setScale(parameters.scale, parameters.scale, parameters.scale);
+            renderObject.setScale(parameters.scale, parameters.scale, parameters.scale);
 		}
 
-		Gremlin.Gizmo.loadModel(object, parameters.modelName); // TODO: do not pass object, use callback
+		Gremlin.Gizmo.loadModel(renderObject, parameters.modelName); // TODO: do not pass object, use callback
 
 		if(parameters.textureName) {
-			object.texture = Gremlin.Gizmo.createTexture(parameters.textureName);
+            renderObject.texture = Gremlin.Gizmo.createTexture(parameters.textureName);
 		}
 		if(parameters.shininess) {
-			object.setShininess(parameters.shininess);
+            renderObject.setShininess(parameters.shininess);
 		}
 		if(parameters.animation) {
-			object.animate = parameters.animation;
+            renderObject.animate = parameters.animation;
 		}
 		if(parameters.color) {
-			object.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
+            renderObject.setColor(parameters.color[0], parameters.color[1], parameters.color[2], parameters.color[3]);
 		}
-		gameObjects.push(object);
+        if(!parameters.stopPush && !(parameters.gameObjectIndex || parameters.gameObject))
+        {
+		    gameObjects.push(object);
+        }
 	}
 
 	function getSound(name) {
@@ -138,8 +160,6 @@ var World = function() {
 	// TODO: namespace
 	var projectiles = [];
 	var projectileObject = new GameObject({ "position": [0,0,0] });
-	projectileObject.rotate(90, 1, 0, 0); // TODO: Should create rotation matrix and hand into GameObject creator
-	projectileObject.setUseLighting(false); //TODO: Would be better with lighting true and emissive material
 	// Would also be better if when we had a particle system that it would leave a short lived trail.
 	// Also don't know if we want more than one projectile object... but we do want more than one colour.
 
@@ -170,10 +190,12 @@ var World = function() {
 					[2*randomFactor*(Math.random()-0.5),
 					2*randomFactor*(Math.random()-0.5),
 					2*randomFactor*(Math.random()-0.5)] });
-			obj.assignBuffer(Gremlin.Primitives.createPoint());
-			obj.points = true;
-			obj.useLighting = false; // If we want the motes to be lit properly we'll have to figure out the normal to a point!
-			obj.setColor(0.8,0.8,0.8,1);
+            var renderObj = new Components.Render({});
+            renderObj.assignBuffer(Gremlin.Primitives.createPoint());
+            renderObj.points = true;
+            renderObj.useLighting = false; // If we want the motes to be lit properly we'll have to figure out the normal to a point!
+            renderObj.setColor(0.8,0.8,0.8,1);
+            obj.addRenderObject(renderObj);
 			obj.spawnDistance = rootThree*randomFactor;
 			dustMotes.push(obj);
 		}

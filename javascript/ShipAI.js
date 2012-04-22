@@ -243,7 +243,7 @@ var ShipAI = function() {
 						Game.World.spawnProjectile({
 								"position": pos, 
 								"velocity": projectileVelocity, 
-								"color": this.parent.color,
+								"color": ship.color,
 								"damage": 20000, 
 								"lifetime": 30000 
 						});
