@@ -8,7 +8,7 @@ var Audio = function() {
 
 	function init() {
 		try {
-			_audioContext = new webkitAudioContext();
+			_audioContext = new AudioContext();
 		}
 		catch(error) {
 			throw new Error('Web Audio API is not supported in this browser');
@@ -36,7 +36,7 @@ var Audio = function() {
 				callback(buffer);
 				that.isLoading = false;
 			}
-			_audioContext.decodeAudioData(request.response, metaCallback, null); // Takes time to decode data, hence the extra callback
+			_audioContext.decodeAudioData(request.response, metaCallback); // Takes time to decode data, hence the extra callback
 		}
 		// Perhaps Music should be set as a property in onLoad?
 		this.play = function(time, loop) {
@@ -96,14 +96,13 @@ var Audio = function() {
 		// Create Source
 		this.source = _audioContext.createBufferSource();
 		this.source.buffer = _buffers[bufferId];
-		this.source.gain.value = volume;
-
+		
 		// Create, Set and connect gain nodes
-		this.masterGain = _audioContext.createGainNode();
+		this.masterGain = _audioContext.createGain();
 		this.masterGain.gain.value = _masterGain;
 		this.source.connect(this.masterGain);
-		this.gainNode = _audioContext.createGainNode();
-		this.gainNode.gain.value = (music) ? _musicGain : _fxGain;
+		this.gainNode = _audioContext.createGain();
+		this.gainNode.gain.value = volume * ((music) ? _musicGain : _fxGain);
 		this.masterGain.connect(this.gainNode);
 
 		if(this.is3D) {
@@ -142,17 +141,17 @@ var Audio = function() {
 			this.startTime = _audioContext.currentTime + (time || 0);
 			this.endTime = this.startTime + this.source.duration;
 
-			this.source.noteOn((time || 0));
+			this.source.start((time || 0));
 		}
 		this.stop = function(time) {
-			this.source.noteOff((time || 0));
+			this.source.stop((time || 0));
 		}
 
 		// TODO: Add loop function with cross-fade option
 		// TODO: Add fadeIn and fadeOut options
 
 		this.isPlaying = function() { return (_audioContext.currentTime > this.startTime && _audioContext.currentTime < this.endTime); }
-		this.setVolume = function(value) { this.source.gain.value = value; }
+		this.setVolume = function(value) { this.gainNode.gain.value = value * ((music) ? _musicGain : _fxGain); }
 	}
 
 	function load(url, music) {
